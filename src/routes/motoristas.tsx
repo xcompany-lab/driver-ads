@@ -184,7 +184,7 @@ function DriverLanding() {
               ].map((s) => (
                 <div
                   key={s.l}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm"
+                  className="glass-panel metallic-beam metallic-beam-slow rounded-2xl p-4"
                 >
                   <div className="font-display text-2xl sm:text-3xl font-bold text-gradient-brand">
                     {s.v}
