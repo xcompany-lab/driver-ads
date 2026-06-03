@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
-import { LogOut, LayoutDashboard, Building2, Users, Car, Megaphone, ClipboardCheck } from "lucide-react";
+import { LogOut, LayoutDashboard, Building2, Users, Car, Megaphone, ClipboardCheck, Wallet } from "lucide-react";
 import type { AppRole } from "@/hooks/useSession";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
