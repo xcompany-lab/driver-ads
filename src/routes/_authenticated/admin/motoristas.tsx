@@ -73,6 +73,9 @@ function DriversAdmin() {
                     <span>PIX ({d.pix_key_type}): <span className="text-foreground">{d.pix_key}</span></span>
                   )}
                 </div>
+
+                <DriverDocsReview driverId={d.id} driver={d as unknown as Record<DriverDocKey, string | null>} />
+
                 <div className="flex flex-wrap gap-2 pt-2">
                   {d.status !== "approved" && (
                     <Button size="sm" onClick={() => mut.mutate({ id: d.id, status: "approved" })} disabled={mut.isPending}>
