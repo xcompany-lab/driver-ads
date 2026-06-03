@@ -303,40 +303,80 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.3 }}
             variants={stagger}
           >
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
               {[
                 {
                   step: "01",
                   title: "Cadastre-se",
                   desc: "Crie sua conta de motorista e envie os documentos do CNH e do veículo pelo app.",
                   icon: FileCheck,
+                  accent: "from-brand-cyan/40 via-brand-cyan/10 to-transparent",
+                  ringColor: "ring-brand-cyan/40",
+                  glowColor: "bg-brand-cyan/30",
+                  iconBg: "linear-gradient(135deg, oklch(0.82 0.13 210), oklch(0.60 0.22 258))",
                 },
                 {
                   step: "02",
                   title: "Receba sua campanha",
                   desc: "Nossa equipe vincula você a uma campanha ativa compatível com a sua cidade.",
                   icon: MapPin,
+                  accent: "from-brand-electric/40 via-brand-electric/10 to-transparent",
+                  ringColor: "ring-brand-electric/50",
+                  glowColor: "bg-brand-electric/30",
+                  iconBg: "linear-gradient(135deg, oklch(0.60 0.22 258), oklch(0.45 0.20 270))",
                 },
                 {
                   step: "03",
                   title: "Instale, rode e ganhe",
-                  desc: "Aplique o adesivo, mande as fotos de comprovação e receba mensalmente via PIX.",
+                  desc: "Aplique o kit, mande as fotos de comprovação e receba mensalmente via PIX.",
                   icon: HandCoins,
+                  accent: "from-warning/40 via-brand-cyan/10 to-transparent",
+                  ringColor: "ring-warning/50",
+                  glowColor: "bg-warning/25",
+                  iconBg: "linear-gradient(135deg, oklch(0.78 0.15 75), oklch(0.82 0.13 210))",
                 },
-              ].map(({ step, title, desc, icon: Icon }, i) => (
+              ].map(({ step, title, desc, icon: Icon, accent, ringColor, glowColor, iconBg }, i) => (
                 <motion.div
                   key={step}
                   variants={fadeUp}
                   custom={i}
-                  className="glass-panel metallic-beam relative rounded-2xl p-7 overflow-hidden group"
+                  className="glass-panel metallic-beam relative rounded-3xl p-7 pt-12 overflow-hidden group"
                 >
-                  <span className="absolute right-5 top-4 font-display text-5xl font-extrabold text-gradient-brand opacity-30">
+                  {/* Inner radial accent tint */}
+                  <div
+                    className={`pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full bg-gradient-radial ${accent} blur-3xl opacity-70`}
+                  />
+                  {/* Outlined giant step number watermark */}
+                  <span
+                    className="absolute -top-2 right-4 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none"
+                    style={{
+                      WebkitTextStroke: "1.5px rgba(255,255,255,0.12)",
+                      color: "transparent",
+                    }}
+                  >
                     {step}
                   </span>
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand mb-5">
-                    <Icon className="h-6 w-6" />
+                  {/* Step pill */}
+                  <div className="relative inline-flex items-center gap-2 mb-6">
+                    <span className="h-px w-8 bg-gradient-to-r from-transparent to-white/40" />
+                    <span className="text-[10px] font-mono tracking-[0.32em] uppercase text-white/60">
+                      Passo {step}
+                    </span>
                   </div>
-                  <h3 className="font-display text-xl font-bold mb-2">{title}</h3>
+                  {/* Icon with dashed halo + glow */}
+                  <div className="relative mb-6 h-16 w-16">
+                    <div className={`absolute inset-0 rounded-full ${glowColor} blur-2xl opacity-80`} />
+                    <div
+                      className={`absolute -inset-2 rounded-full border border-dashed ${ringColor} opacity-60 [animation:spin_20s_linear_infinite]`}
+                    />
+                    <div
+                      className={`relative h-16 w-16 rounded-2xl rotate-[8deg] ring-1 ring-inset ring-white/20 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] flex items-center justify-center`}
+                      style={{ backgroundImage: iconBg }}
+                    >
+                      <Icon className="h-7 w-7 text-white -rotate-[8deg]" strokeWidth={2.25} />
+                    </div>
+                  </div>
+                  <h3 className="font-display text-xl font-bold mb-2 text-white">{title}</h3>
                   <p className="text-sm text-white/70 leading-relaxed">{desc}</p>
                 </motion.div>
               ))}
