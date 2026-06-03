@@ -142,7 +142,7 @@ function DriverLanding() {
                 className="bg-gradient-brand-flow shadow-brand border-gradient-brand-flow"
                 asChild
               >
-                <Link to="/auth">
+                <Link to="/login">
                   Quero ganhar dinheiro com meu carro <ArrowRight />
                 </Link>
               </Button>
@@ -640,7 +640,7 @@ function DriverLanding() {
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="relative">
               <Button size="xl" variant="hero" asChild>
-                <Link to="/auth">
+                <Link to="/login">
                   Quero ser parceiro Driver Ads <ArrowRight />
                 </Link>
               </Button>

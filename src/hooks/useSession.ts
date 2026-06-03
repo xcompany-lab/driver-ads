@@ -68,6 +68,6 @@ export function roleHome(role: AppRole | null): string {
     case "driver":
       return "/motorista";
     default:
-      return "/auth";
+      return "/login";
   }
 }

@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/anunciante")({
   beforeLoad: ({ context }) => {
     const roles = ((context as { roles?: string[] }).roles ?? []) as AppRole[];
     if (!roles.includes("advertiser")) {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/login" });
     }
   },
   component: AdvertiserLayout,
@@ -25,7 +25,7 @@ function AdvertiserLayout() {
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Portal do Anunciante</span>
             <NotificationBell />
-            <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/auth"))}>
+            <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/login"))}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
           </div>

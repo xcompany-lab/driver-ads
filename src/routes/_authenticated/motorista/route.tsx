@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/motorista")({
   beforeLoad: ({ context }) => {
     const roles = ((context as { roles?: string[] }).roles ?? []) as AppRole[];
     if (!roles.includes("driver")) {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/login" });
     }
   },
   component: DriverLayout,
@@ -35,7 +35,7 @@ function DriverLayout() {
           <div className="flex items-center gap-2">
             <span className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:inline">Portal do Motorista</span>
             <NotificationBell />
-            <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/auth"))}>
+            <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/login"))}>
               <LogOut className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Sair</span>
             </Button>
           </div>

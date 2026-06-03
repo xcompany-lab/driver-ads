@@ -11,9 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthMotoristaRouteImport } from './routes/auth/motorista'
 import { Route as AuthAnuncianteRouteImport } from './routes/auth/anunciante'
@@ -52,6 +52,11 @@ const PrivacidadeRoute = PrivacidadeRouteImport.update({
   path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -59,11 +64,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthIndexRoute = AuthIndexRouteImport.update({
-  id: '/auth/',
-  path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
@@ -225,6 +225,7 @@ const AuthenticatedAdminCampanhasIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -235,7 +236,6 @@ export interface FileRoutesByFullPath {
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/auth/': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
@@ -258,6 +258,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
   '/termos': typeof TermosRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
@@ -265,7 +266,6 @@ export interface FileRoutesByTo {
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/auth': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
@@ -290,6 +290,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
   '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -300,7 +301,6 @@ export interface FileRoutesById {
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
@@ -325,6 +325,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/privacidade'
     | '/termos'
     | '/admin'
@@ -335,7 +336,6 @@ export interface FileRouteTypes {
     | '/auth/anunciante'
     | '/auth/motorista'
     | '/auth/reset-password'
-    | '/auth/'
     | '/admin/anunciantes'
     | '/admin/auditoria'
     | '/admin/campanhas'
@@ -358,6 +358,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/privacidade'
     | '/termos'
     | '/notificacoes'
@@ -365,7 +366,6 @@ export interface FileRouteTypes {
     | '/auth/anunciante'
     | '/auth/motorista'
     | '/auth/reset-password'
-    | '/auth'
     | '/admin/anunciantes'
     | '/admin/auditoria'
     | '/admin/campanhas'
@@ -389,6 +389,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/login'
     | '/privacidade'
     | '/termos'
     | '/_authenticated/admin'
@@ -399,7 +400,6 @@ export interface FileRouteTypes {
     | '/auth/anunciante'
     | '/auth/motorista'
     | '/auth/reset-password'
-    | '/auth/'
     | '/_authenticated/admin/anunciantes'
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/campanhas'
@@ -424,13 +424,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  LoginRoute: typeof LoginRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   TermosRoute: typeof TermosRoute
   AuthAdminRoute: typeof AuthAdminRoute
   AuthAnuncianteRoute: typeof AuthAnuncianteRoute
   AuthMotoristaRoute: typeof AuthMotoristaRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
-  AuthIndexRoute: typeof AuthIndexRoute
   ApiPublicProcessEmailOutboxRoute: typeof ApiPublicProcessEmailOutboxRoute
 }
 
@@ -450,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -462,13 +469,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/': {
-      id: '/auth/'
-      path: '/auth'
-      fullPath: '/auth/'
-      preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/reset-password': {
@@ -771,15 +771,25 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   TermosRoute: TermosRoute,
   AuthAdminRoute: AuthAdminRoute,
   AuthAnuncianteRoute: AuthAnuncianteRoute,
   AuthMotoristaRoute: AuthMotoristaRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
-  AuthIndexRoute: AuthIndexRoute,
   ApiPublicProcessEmailOutboxRoute: ApiPublicProcessEmailOutboxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

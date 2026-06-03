@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: ({ context }) => {
     const roles = ((context as { roles?: string[] }).roles ?? []) as AppRole[];
     if (!roles.includes("admin") && !roles.includes("operator")) {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/login" });
     }
   },
   component: AdminLayout,
@@ -38,7 +38,7 @@ function AdminLayout() {
           <div className="flex items-center gap-2">
             <RoleChip />
             <NotificationBell />
-            <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/auth"))}>
+            <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/login"))}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
           </div>

@@ -58,7 +58,7 @@ function ResetPasswordPage() {
       if (err) throw err;
       setDone(true);
       await supabase.auth.signOut();
-      setTimeout(() => navigate({ to: "/auth" }), 1800);
+      setTimeout(() => navigate({ to: "/login" }), 1800);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível redefinir.");
     } finally {
@@ -88,7 +88,7 @@ function ResetPasswordPage() {
             O link de redefinição expirou ou é inválido. Volte para o login e solicite um novo link em
             <strong> Esqueci minha senha</strong>.
           </p>
-          <Button onClick={() => navigate({ to: "/auth" })} className="w-full">
+          <Button onClick={() => navigate({ to: "/login" })} className="w-full">
             Voltar para o login
           </Button>
         </div>

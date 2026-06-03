@@ -37,7 +37,7 @@ async function baseSignUp(email: string, password: string, full_name: string, ph
     typeof window !== "undefined" && !/localhost|127\.0\.0\.1|lovable\.app/i.test(window.location.origin)
       ? window.location.origin
       : PUBLIC_SITE_URL;
-  const redirectTo = `${origin}/auth`;
+  const redirectTo = `${origin}/login`;
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
