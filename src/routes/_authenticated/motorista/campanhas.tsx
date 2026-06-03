@@ -127,7 +127,7 @@ function AssignmentRow({ assignment }: { assignment: AssignmentWithRelations }) 
 
         {["accepted", "awaiting_installation", "active", "paused"].includes(assignment.status) && (
           <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
-            <Link to="/motorista/comprovacoes">Enviar / ver comprovações</Link>
+            <Link to="/motorista/auditoria">Enviar / ver comprovações</Link>
           </Button>
         )}
       </CardContent>

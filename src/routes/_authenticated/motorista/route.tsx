@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/motorista")({
 
 const NAV = [
   { to: "/motorista", label: "Início", icon: Home, match: (p: string) => p === "/motorista" || p === "/motorista/" },
-  { to: "/motorista/campanhas", label: "Campanhas", icon: Megaphone, match: (p: string) => p.startsWith("/motorista/campanhas") || p.startsWith("/motorista/comprovacoes") || p.startsWith("/motorista/veiculos") },
+  { to: "/motorista/campanhas", label: "Campanhas", icon: Megaphone, match: (p: string) => p.startsWith("/motorista/campanhas") || p.startsWith("/motorista/auditoria") || p.startsWith("/motorista/veiculos") },
   { to: "/motorista/ganhos", label: "Ganhos", icon: Wallet, match: (p: string) => p.startsWith("/motorista/ganhos") },
   { to: "/motorista/perfil", label: "Perfil", icon: User, match: (p: string) => p.startsWith("/motorista/perfil") },
 ] as const;

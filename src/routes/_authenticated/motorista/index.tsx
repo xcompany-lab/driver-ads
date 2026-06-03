@@ -145,40 +145,62 @@ function DriverHome() {
         const missingDriverDocs = DRIVER_DOC_ORDER.filter((k) => !d[k]);
         const missingCrlv = (vehicles ?? []).filter((v) => !(v as unknown as { crlv_url?: string | null }).crlv_url);
         const hasMissing = missingDriverDocs.length > 0 || ((vehicles?.length ?? 0) > 0 && missingCrlv.length > 0);
-        if (!hasMissing) return null;
-        return (
-          <Card className="border-amber-500/40 bg-amber-500/5">
-            <CardHeader className="flex-row items-start gap-3 space-y-0">
-              <FileText className="h-5 w-5 mt-0.5 text-amber-700" />
-              <div className="flex-1">
-                <CardTitle className="text-base">Documentos pendentes de auditoria</CardTitle>
-                <CardDescription>
-                  Envie os documentos abaixo para que nosso time aprove seu cadastro como motorista apto.
-                </CardDescription>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {missingDriverDocs.map((k) => (
-                    <li key={k} className="text-foreground">• {DRIVER_DOC_LABELS[k]}</li>
-                  ))}
-                  {missingCrlv.map((v) => (
-                    <li key={v.id} className="text-foreground">• CRLV do veículo {v.plate}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex flex-col gap-2">
-                {missingDriverDocs.length > 0 && (
+        const allSent =
+          !hasMissing &&
+          DRIVER_DOC_ORDER.every((k) => d[k]) &&
+          (vehicles?.length ?? 0) > 0 &&
+          driver.status !== "approved" &&
+          driver.status !== "rejected";
+
+        if (hasMissing) {
+          return (
+            <Card className="border-amber-500/40 bg-amber-500/5">
+              <CardHeader className="flex-row items-start gap-3 space-y-0">
+                <FileText className="h-5 w-5 mt-0.5 text-amber-700" />
+                <div className="flex-1">
+                  <CardTitle className="text-base">Documentos pendentes de auditoria</CardTitle>
+                  <CardDescription>
+                    Envie os documentos abaixo para que nosso time aprove seu cadastro como motorista apto.
+                  </CardDescription>
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {missingDriverDocs.map((k) => (
+                      <li key={k} className="text-foreground">• {DRIVER_DOC_LABELS[k]}</li>
+                    ))}
+                    {missingCrlv.map((v) => (
+                      <li key={v.id} className="text-foreground">• CRLV do veículo {v.plate}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex flex-col gap-2">
                   <Button asChild size="sm" variant="hero">
-                    <Link to="/motorista/perfil">Enviar documentos</Link>
+                    <Link to="/motorista/auditoria">Ir para auditoria</Link>
                   </Button>
-                )}
-                {missingCrlv.length > 0 && (
-                  <Button asChild size="sm" variant="outline">
-                    <Link to="/motorista/veiculos">Enviar CRLV</Link>
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-          </Card>
-        );
+                </div>
+              </CardHeader>
+            </Card>
+          );
+        }
+
+        if (allSent) {
+          return (
+            <Card className="border-amber-500/40 bg-amber-500/5">
+              <CardHeader className="flex-row items-start gap-3 space-y-0">
+                <FileText className="h-5 w-5 mt-0.5 text-amber-700" />
+                <div className="flex-1">
+                  <CardTitle className="text-base">Documentos em análise</CardTitle>
+                  <CardDescription>
+                    Recebemos todos os seus documentos. Nosso time está validando — você será avisado assim que o cadastro for aprovado.
+                  </CardDescription>
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/motorista/auditoria">Ver auditoria</Link>
+                </Button>
+              </CardHeader>
+            </Card>
+          );
+        }
+
+        return null;
       })()}
 
       {driver.status === "approved" && !hasVehicle && (
@@ -209,7 +231,7 @@ function DriverHome() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashCard to="/motorista/campanhas" icon={Megaphone} title="Campanhas" desc={`${active} ativa(s) · ${invites} convite(s)`} disabled={!canAct} />
-        <DashCard to="/motorista/comprovacoes" icon={Camera} title="Comprovações" desc="Envie a foto da instalação" disabled={!canAct} />
+        <DashCard to="/motorista/auditoria" icon={Camera} title="Auditoria" desc="Documentos e fotos de instalação" disabled={!canAct} />
         <DashCard to="/motorista/ganhos" icon={Wallet} title="Ganhos" desc="Repasses previstos" disabled={!canAct} />
         <DashCard to="/motorista/veiculos" icon={Car} title="Veículos" desc={`${vehicles?.length ?? 0} cadastrado(s)`} />
         <DashCard to="/motorista/perfil" icon={UserCircle} title="Meu perfil" desc="Dados pessoais e PIX." />
