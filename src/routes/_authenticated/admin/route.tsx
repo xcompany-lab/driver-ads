@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
-import { LogOut, LayoutDashboard, Building2, Users, Car, Megaphone } from "lucide-react";
+import { LogOut, LayoutDashboard, Building2, Users, Car, Megaphone, ClipboardCheck } from "lucide-react";
 import type { AppRole } from "@/hooks/useSession";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
-const navItems: { to: "/admin" | "/admin/anunciantes" | "/admin/motoristas" | "/admin/veiculos" | "/admin/campanhas"; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
+const navItems: { to: "/admin" | "/admin/anunciantes" | "/admin/motoristas" | "/admin/veiculos" | "/admin/campanhas" | "/admin/comprovacoes"; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/campanhas", label: "Campanhas", icon: Megaphone },
+  { to: "/admin/comprovacoes", label: "Comprovações", icon: ClipboardCheck },
   { to: "/admin/anunciantes", label: "Anunciantes", icon: Building2 },
   { to: "/admin/motoristas", label: "Motoristas", icon: Users },
   { to: "/admin/veiculos", label: "Veículos", icon: Car },

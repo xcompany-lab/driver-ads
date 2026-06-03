@@ -70,19 +70,23 @@ function AdminDashboard() {
           </section>
 
           <section className="grid gap-4 md:grid-cols-2">
-            <Card className="border-warning/40 bg-warning/5">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <ClipboardCheck className="h-5 w-5 text-warning-foreground" />
-                  <CardTitle className="text-base">Comprovações pendentes</CardTitle>
-                </div>
-                <CardDescription>Fotos de instalação aguardando revisão.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{kpis.proofsPending}</div>
-                <p className="text-xs text-muted-foreground mt-2">Fila de aprovação será habilitada na Fase 12.</p>
-              </CardContent>
-            </Card>
+            <Link to="/admin/comprovacoes" className="block">
+              <Card className="border-warning/40 bg-warning/5 transition hover:border-warning hover:shadow-brand">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5 text-warning-foreground" />
+                    <CardTitle className="text-base">Comprovações pendentes</CardTitle>
+                  </div>
+                  <CardDescription>Fotos de instalação aguardando revisão.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{kpis.proofsPending}</div>
+                  <p className="mt-2 inline-flex items-center text-xs font-medium text-primary">
+                    Abrir fila <ArrowRight className="ml-1 h-3 w-3" />
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
             <Card>
               <CardHeader>

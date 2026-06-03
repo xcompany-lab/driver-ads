@@ -29,6 +29,7 @@ import { Route as AuthenticatedMotoristaCampanhasRouteImport } from './routes/_a
 import { Route as AuthenticatedAnunciantePerfilRouteImport } from './routes/_authenticated/anunciante/perfil'
 import { Route as AuthenticatedAdminVeiculosRouteImport } from './routes/_authenticated/admin/veiculos'
 import { Route as AuthenticatedAdminMotoristasRouteImport } from './routes/_authenticated/admin/motoristas'
+import { Route as AuthenticatedAdminComprovacoesRouteImport } from './routes/_authenticated/admin/comprovacoes'
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin/campanhas'
 import { Route as AuthenticatedAdminAnunciantesRouteImport } from './routes/_authenticated/admin/anunciantes'
 import { Route as AuthenticatedAdminCampanhasIdRouteImport } from './routes/_authenticated/admin/campanhas.$id'
@@ -144,6 +145,12 @@ const AuthenticatedAdminMotoristasRoute =
     path: '/motoristas',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminComprovacoesRoute =
+  AuthenticatedAdminComprovacoesRouteImport.update({
+    id: '/comprovacoes',
+    path: '/comprovacoes',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminCampanhasRoute =
   AuthenticatedAdminCampanhasRouteImport.update({
     id: '/campanhas',
@@ -174,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/auth/': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
+  '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
   '/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
@@ -195,6 +203,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
+  '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
   '/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
@@ -221,6 +230,7 @@ export interface FileRoutesById {
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
+  '/_authenticated/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
   '/_authenticated/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/_authenticated/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/_authenticated/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/admin/anunciantes'
     | '/admin/campanhas'
+    | '/admin/comprovacoes'
     | '/admin/motoristas'
     | '/admin/veiculos'
     | '/anunciante/perfil'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/admin/anunciantes'
     | '/admin/campanhas'
+    | '/admin/comprovacoes'
     | '/admin/motoristas'
     | '/admin/veiculos'
     | '/anunciante/perfil'
@@ -293,6 +305,7 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/_authenticated/admin/anunciantes'
     | '/_authenticated/admin/campanhas'
+    | '/_authenticated/admin/comprovacoes'
     | '/_authenticated/admin/motoristas'
     | '/_authenticated/admin/veiculos'
     | '/_authenticated/anunciante/perfil'
@@ -458,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMotoristasRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/comprovacoes': {
+      id: '/_authenticated/admin/comprovacoes'
+      path: '/comprovacoes'
+      fullPath: '/admin/comprovacoes'
+      preLoaderRoute: typeof AuthenticatedAdminComprovacoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/campanhas': {
       id: '/_authenticated/admin/campanhas'
       path: '/campanhas'
@@ -499,6 +519,7 @@ const AuthenticatedAdminCampanhasRouteWithChildren =
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAnunciantesRoute: typeof AuthenticatedAdminAnunciantesRoute
   AuthenticatedAdminCampanhasRoute: typeof AuthenticatedAdminCampanhasRouteWithChildren
+  AuthenticatedAdminComprovacoesRoute: typeof AuthenticatedAdminComprovacoesRoute
   AuthenticatedAdminMotoristasRoute: typeof AuthenticatedAdminMotoristasRoute
   AuthenticatedAdminVeiculosRoute: typeof AuthenticatedAdminVeiculosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -509,6 +530,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminAnunciantesRoute: AuthenticatedAdminAnunciantesRoute,
     AuthenticatedAdminCampanhasRoute:
       AuthenticatedAdminCampanhasRouteWithChildren,
+    AuthenticatedAdminComprovacoesRoute: AuthenticatedAdminComprovacoesRoute,
     AuthenticatedAdminMotoristasRoute: AuthenticatedAdminMotoristasRoute,
     AuthenticatedAdminVeiculosRoute: AuthenticatedAdminVeiculosRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
