@@ -17,6 +17,7 @@ import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
 import kitComAnuncio from "@/assets/kit-traseiro-com-anuncio.png.asset.json";
 import kitSuaMarca from "@/assets/kit-traseiro-sua-marca.png.asset.json";
 import phoneCadastroMockup from "@/assets/phone-cadastro-mockup.png.asset.json";
+import phoneCampanhaMockup from "@/assets/phone-campanha-mockup.png.asset.json";
 import bgInteriorMotorista from "@/assets/bg-interior-motorista.png.asset.json";
 
 export const Route = createFileRoute("/motoristas")({
@@ -350,10 +351,10 @@ function DriverLanding() {
                         "radial-gradient(circle, oklch(0.60 0.22 258) 0%, transparent 65%)",
                     }}
                   />
-                  {/* Phone mockup decoration (step 01 only) */}
-                  {step === "01" && (
+                  {/* Phone mockup decoration (steps 01 and 02) */}
+                  {(step === "01" || step === "02") && (
                     <img
-                      src={phoneCadastroMockup.url}
+                      src={step === "01" ? phoneCadastroMockup.url : phoneCampanhaMockup.url}
                       alt=""
                       aria-hidden="true"
                       loading="lazy"
@@ -363,7 +364,7 @@ function DriverLanding() {
                   )}
                   {/* Outlined giant step number watermark */}
                   <span
-                    className={`absolute -top-2 right-4 z-0 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none ${step === "01" ? "opacity-15" : ""}`}
+                    className={`absolute -top-2 right-4 z-0 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none ${step === "01" || step === "02" ? "opacity-15" : ""}`}
                     style={{
                       WebkitTextStroke: "1.5px rgba(255,255,255,0.12)",
                       color: "transparent",
