@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera, X } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver, listMyVehicles } from "@/lib/driver";
 import { listMyAssignments } from "@/lib/proofs";
