@@ -23,7 +23,9 @@ import { Route as AuthenticatedAnuncianteIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedMotoristaVeiculosRouteImport } from './routes/_authenticated/motorista/veiculos'
 import { Route as AuthenticatedMotoristaPerfilRouteImport } from './routes/_authenticated/motorista/perfil'
+import { Route as AuthenticatedMotoristaGanhosRouteImport } from './routes/_authenticated/motorista/ganhos'
 import { Route as AuthenticatedMotoristaComprovacoesRouteImport } from './routes/_authenticated/motorista/comprovacoes'
+import { Route as AuthenticatedMotoristaCampanhasRouteImport } from './routes/_authenticated/motorista/campanhas'
 import { Route as AuthenticatedAnunciantePerfilRouteImport } from './routes/_authenticated/anunciante/perfil'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -101,10 +103,22 @@ const AuthenticatedMotoristaPerfilRoute =
     path: '/perfil',
     getParentRoute: () => AuthenticatedMotoristaRouteRoute,
   } as any)
+const AuthenticatedMotoristaGanhosRoute =
+  AuthenticatedMotoristaGanhosRouteImport.update({
+    id: '/ganhos',
+    path: '/ganhos',
+    getParentRoute: () => AuthenticatedMotoristaRouteRoute,
+  } as any)
 const AuthenticatedMotoristaComprovacoesRoute =
   AuthenticatedMotoristaComprovacoesRouteImport.update({
     id: '/comprovacoes',
     path: '/comprovacoes',
+    getParentRoute: () => AuthenticatedMotoristaRouteRoute,
+  } as any)
+const AuthenticatedMotoristaCampanhasRoute =
+  AuthenticatedMotoristaCampanhasRouteImport.update({
+    id: '/campanhas',
+    path: '/campanhas',
     getParentRoute: () => AuthenticatedMotoristaRouteRoute,
   } as any)
 const AuthenticatedAnunciantePerfilRoute =
@@ -124,7 +138,9 @@ export interface FileRoutesByFullPath {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/motorista/comprovacoes': typeof AuthenticatedMotoristaComprovacoesRoute
+  '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -138,7 +154,9 @@ export interface FileRoutesByTo {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth': typeof AuthIndexRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/motorista/comprovacoes': typeof AuthenticatedMotoristaComprovacoesRoute
+  '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -157,7 +175,9 @@ export interface FileRoutesById {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/_authenticated/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/_authenticated/motorista/comprovacoes': typeof AuthenticatedMotoristaComprovacoesRoute
+  '/_authenticated/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/_authenticated/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/_authenticated/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -176,7 +196,9 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/anunciante/perfil'
+    | '/motorista/campanhas'
     | '/motorista/comprovacoes'
+    | '/motorista/ganhos'
     | '/motorista/perfil'
     | '/motorista/veiculos'
     | '/admin/'
@@ -190,7 +212,9 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth'
     | '/anunciante/perfil'
+    | '/motorista/campanhas'
     | '/motorista/comprovacoes'
+    | '/motorista/ganhos'
     | '/motorista/perfil'
     | '/motorista/veiculos'
     | '/admin'
@@ -208,7 +232,9 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/_authenticated/anunciante/perfil'
+    | '/_authenticated/motorista/campanhas'
     | '/_authenticated/motorista/comprovacoes'
+    | '/_authenticated/motorista/ganhos'
     | '/_authenticated/motorista/perfil'
     | '/_authenticated/motorista/veiculos'
     | '/_authenticated/admin/'
@@ -325,11 +351,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMotoristaPerfilRouteImport
       parentRoute: typeof AuthenticatedMotoristaRouteRoute
     }
+    '/_authenticated/motorista/ganhos': {
+      id: '/_authenticated/motorista/ganhos'
+      path: '/ganhos'
+      fullPath: '/motorista/ganhos'
+      preLoaderRoute: typeof AuthenticatedMotoristaGanhosRouteImport
+      parentRoute: typeof AuthenticatedMotoristaRouteRoute
+    }
     '/_authenticated/motorista/comprovacoes': {
       id: '/_authenticated/motorista/comprovacoes'
       path: '/comprovacoes'
       fullPath: '/motorista/comprovacoes'
       preLoaderRoute: typeof AuthenticatedMotoristaComprovacoesRouteImport
+      parentRoute: typeof AuthenticatedMotoristaRouteRoute
+    }
+    '/_authenticated/motorista/campanhas': {
+      id: '/_authenticated/motorista/campanhas'
+      path: '/campanhas'
+      fullPath: '/motorista/campanhas'
+      preLoaderRoute: typeof AuthenticatedMotoristaCampanhasRouteImport
       parentRoute: typeof AuthenticatedMotoristaRouteRoute
     }
     '/_authenticated/anunciante/perfil': {
@@ -373,7 +413,9 @@ const AuthenticatedAnuncianteRouteRouteWithChildren =
   )
 
 interface AuthenticatedMotoristaRouteRouteChildren {
+  AuthenticatedMotoristaCampanhasRoute: typeof AuthenticatedMotoristaCampanhasRoute
   AuthenticatedMotoristaComprovacoesRoute: typeof AuthenticatedMotoristaComprovacoesRoute
+  AuthenticatedMotoristaGanhosRoute: typeof AuthenticatedMotoristaGanhosRoute
   AuthenticatedMotoristaPerfilRoute: typeof AuthenticatedMotoristaPerfilRoute
   AuthenticatedMotoristaVeiculosRoute: typeof AuthenticatedMotoristaVeiculosRoute
   AuthenticatedMotoristaIndexRoute: typeof AuthenticatedMotoristaIndexRoute
@@ -381,8 +423,10 @@ interface AuthenticatedMotoristaRouteRouteChildren {
 
 const AuthenticatedMotoristaRouteRouteChildren: AuthenticatedMotoristaRouteRouteChildren =
   {
+    AuthenticatedMotoristaCampanhasRoute: AuthenticatedMotoristaCampanhasRoute,
     AuthenticatedMotoristaComprovacoesRoute:
       AuthenticatedMotoristaComprovacoesRoute,
+    AuthenticatedMotoristaGanhosRoute: AuthenticatedMotoristaGanhosRoute,
     AuthenticatedMotoristaPerfilRoute: AuthenticatedMotoristaPerfilRoute,
     AuthenticatedMotoristaVeiculosRoute: AuthenticatedMotoristaVeiculosRoute,
     AuthenticatedMotoristaIndexRoute: AuthenticatedMotoristaIndexRoute,
@@ -421,3 +465,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
