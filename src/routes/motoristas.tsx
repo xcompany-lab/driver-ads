@@ -62,12 +62,8 @@ function DriverLanding() {
       <nav className="fixed top-0 inset-x-0 z-50 glass-panel border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6">
           <Logo variant="light" size={36} />
-          <div className="hidden md:flex items-center gap-8 text-sm text-white/70">
-            <a href="#como-funciona" className="hover:text-white transition-colors">Como funciona</a>
-            <a href="#beneficios" className="hover:text-white transition-colors">Benefícios</a>
-            <a href="#ganhos" className="hover:text-white transition-colors">Quanto ganho</a>
-            <a href="#requisitos" className="hover:text-white transition-colors">Requisitos</a>
-          </div>
+          <div className="hidden md:flex" />
+
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" asChild>
               <Link to="/auth">Entrar</Link>
