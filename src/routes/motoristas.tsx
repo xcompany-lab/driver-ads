@@ -295,20 +295,6 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.3 }}
             variants={stagger}
           >
-            <motion.h2
-              variants={fadeUp}
-              className="font-display text-3xl sm:text-4xl font-bold text-center mb-4"
-            >
-              Comece em <span className="text-gradient-brand">3 passos simples</span>
-            </motion.h2>
-            <motion.p
-              variants={fadeUp}
-              custom={1}
-              className="text-white/70 text-center mb-16"
-            >
-              Do cadastro ao primeiro repasse, tudo direto pelo seu celular.
-            </motion.p>
-
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
