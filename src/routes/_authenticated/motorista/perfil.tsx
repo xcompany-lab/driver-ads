@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/brand/StatusBadge";
+import { DocumentUploadField } from "@/components/brand/DocumentUploadField";
+import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, uploadDriverDoc, updateDriverDoc, type DriverDocKey } from "@/lib/driver-documents";
 
 export const Route = createFileRoute("/_authenticated/motorista/perfil")({
   component: DriverProfilePage,
