@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/NotificationBell";
 import { signOut } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { useIsAdmin } from "@/hooks/useRoleGuards";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: ({ context }) => {
@@ -50,8 +51,7 @@ function AdminLayout() {
 }
 
 function RoleChip() {
-  const roles = ((Route.useRouteContext() as { roles?: AppRole[] }).roles ?? []) as AppRole[];
-  const isAdmin = roles.includes("admin");
+  const isAdmin = useIsAdmin();
   return (
     <span className={cn(
       "rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
@@ -63,8 +63,7 @@ function RoleChip() {
 }
 
 function NavBar() {
-  const roles = ((Route.useRouteContext() as { roles?: AppRole[] }).roles ?? []) as AppRole[];
-  const isAdmin = roles.includes("admin");
+  const isAdmin = useIsAdmin();
   const items = navItems.filter((i) => isAdmin || i.to !== "/admin/auditoria");
   return (
     <nav className="mx-auto max-w-7xl px-6 pb-2 flex gap-1 overflow-x-auto">
