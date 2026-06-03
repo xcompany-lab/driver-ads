@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
+import { LogOut, LayoutDashboard, Building2, Users, Car } from "lucide-react";
 import type { AppRole } from "@/hooks/useSession";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: ({ context }) => {
@@ -14,6 +15,13 @@ export const Route = createFileRoute("/_authenticated/admin")({
   },
   component: AdminLayout,
 });
+
+const navItems = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/anunciantes", label: "Anunciantes", icon: Building2 },
+  { to: "/admin/motoristas", label: "Motoristas", icon: Users },
+  { to: "/admin/veiculos", label: "Veículos", icon: Car },
+] as const;
 
 function AdminLayout() {
   return (
@@ -28,6 +36,25 @@ function AdminLayout() {
             </Button>
           </div>
         </div>
+        <nav className="mx-auto max-w-7xl px-6 pb-2 flex gap-1 overflow-x-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                activeOptions={{ exact: item.exact ?? false }}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition",
+                )}
+                activeProps={{ className: "!text-foreground !bg-muted" }}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
       </header>
       <main className="mx-auto max-w-7xl px-6 py-8"><Outlet /></main>
     </div>
