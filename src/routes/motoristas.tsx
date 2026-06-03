@@ -442,7 +442,7 @@ function DriverLanding() {
               <motion.div variants={fadeUp} className="flex items-center gap-2 mb-6">
                 <Sparkles className="h-3.5 w-3.5 text-brand-cyan" />
                 <span className="text-xs uppercase tracking-[0.28em] text-brand-cyan font-semibold">
-                  Quanto você pode ganhar
+                  Modelo de exposição
                 </span>
               </motion.div>
               <motion.h2
@@ -450,18 +450,21 @@ function DriverLanding() {
                 custom={1}
                 className="font-display text-3xl sm:text-4xl font-bold mb-6"
               >
-                Ganhos previsíveis, <span className="text-gradient-brand">mês após mês</span>.
+                Um único formato,{" "}
+                <span className="text-gradient-brand-flow">simples e padronizado</span>.
               </motion.h2>
               <motion.p variants={fadeUp} custom={2} className="text-white/70 mb-6">
-                O valor varia de acordo com o tipo de campanha, o tamanho do adesivo e a região onde você roda.
-                Você sempre sabe exatamente quanto vai receber antes de aceitar.
+                A Driver Ads trabalha com o <strong className="text-white">Kit Traseiro</strong>:
+                adesivos aplicados no encosto dos bancos do motorista e do carona.
+                A campanha é vista por cada passageiro que entra no veículo — alto impacto,
+                instalação rápida e sem interferir no exterior do carro.
               </motion.p>
               <motion.ul variants={fadeUp} custom={3} className="space-y-3">
                 {[
-                  "Valores claros antes de aceitar a campanha",
-                  "Repasse mensal direto no seu PIX",
-                  "Acumule mais de uma campanha quando possível",
-                  "Histórico completo dentro do app",
+                  "Padrão único: sem confusão sobre tamanho ou posição",
+                  "Instalação rápida, fácil remoção, sem dano ao tecido",
+                  "Você combina o valor da campanha direto pelo app antes de aceitar",
+                  "Pagamento mensal via PIX assim que a comprovação é aprovada",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-white/80">
                     <CheckCircle2 className="h-4 w-4 text-brand-cyan mt-0.5 flex-shrink-0" />
@@ -472,26 +475,68 @@ function DriverLanding() {
             </div>
 
             <motion.div variants={fadeUp} custom={2} className="relative">
-              <div className="glass-panel-strong metallic-beam rounded-2xl p-6 space-y-4">
-                {[
-                  { label: "Adesivo lateral pequeno", value: "R$ 150", color: "text-brand-cyan" },
-                  { label: "Adesivo lateral grande", value: "R$ 300", color: "text-white" },
-                  { label: "Envelopamento traseiro", value: "R$ 450", color: "text-warning" },
-                  { label: "Carro envelopado (full)", value: "R$ 800", color: "text-brand-cyan" },
-                ].map(({ label, value, color }) => (
-                  <div
-                    key={label}
-                    className="flex items-center justify-between p-4 rounded-xl bg-[#020617]/60 border border-white/5"
-                  >
-                    <span className="text-sm text-white/70">{label}</span>
-                    <span className={`font-display text-2xl font-bold ${color}`}>{value}</span>
-                  </div>
-                ))}
-                <p className="text-[11px] text-white/50 px-1 pt-1">
-                  Valores ilustrativos. Ofertas reais dependem da campanha, do veículo e da região.
+              <div className="glass-panel-strong metallic-beam rounded-3xl p-7 sm:p-9 overflow-hidden">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-[10px] font-mono tracking-[0.32em] uppercase text-brand-cyan/90">
+                    KIT.TRASEIRO / V1
+                  </span>
+                  <span className="text-[10px] font-mono tracking-[0.28em] uppercase text-white/40">
+                    DRIVER ADS
+                  </span>
+                </div>
+
+                {/* Diagram of two seat backs */}
+                <div className="relative grid grid-cols-2 gap-4 mb-6">
+                  {[
+                    { label: "Banco do motorista" },
+                    { label: "Banco do carona" },
+                  ].map(({ label }) => (
+                    <div
+                      key={label}
+                      className="relative aspect-[3/4] rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.06] to-white/[0.02] overflow-hidden"
+                    >
+                      {/* Seat back silhouette */}
+                      <div className="absolute inset-3 rounded-xl rounded-b-3xl bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/10" />
+                      {/* Ad sticker preview */}
+                      <div
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[78%] aspect-[4/3] rounded-md shadow-[0_10px_30px_-10px_rgba(22,120,255,0.6)] flex items-center justify-center text-[10px] font-bold tracking-[0.22em] text-white/90"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, oklch(0.60 0.22 258), oklch(0.82 0.13 210))",
+                        }}
+                      >
+                        ANÚNCIO
+                      </div>
+                      <span className="absolute bottom-2 left-0 right-0 text-center text-[10px] uppercase tracking-[0.18em] text-white/55">
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { l: "Visualizações", v: "Alta" },
+                    { l: "Instalação", v: "~10 min" },
+                    { l: "Repasse", v: "Mensal" },
+                  ].map((s) => (
+                    <div
+                      key={s.l}
+                      className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-center"
+                    >
+                      <div className="font-display text-base font-bold text-white">{s.v}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-white/55 mt-0.5">
+                        {s.l}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[11px] text-white/50 px-1 pt-5">
+                  Valor da campanha combinado diretamente no app antes de você aceitar.
                 </p>
               </div>
-              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-brand-electric/20 to-brand-cyan/20 blur-xl -z-10" />
+              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-brand-electric/20 to-brand-cyan/20 blur-xl -z-10" />
             </motion.div>
           </motion.div>
         </div>
