@@ -15,7 +15,7 @@ export const DRIVER_DOC_ORDER: DriverDocKey[] = [
 ];
 
 
-const BUCKET = "driver-documents";
+const BUCKET = "installation-proofs";
 
 function ext(file: File) {
   const m = file.name.match(/\.([^.]+)$/);
@@ -30,7 +30,8 @@ export async function uploadDriverDoc(opts: {
   vehicleId?: string;
 }): Promise<string> {
   const safeKey = opts.key === "crlv" ? `vehicle-${opts.vehicleId}-crlv` : opts.key;
-  const path = `${opts.userId}/${safeKey}-${Date.now()}.${ext(opts.file)}`;
+  const unique = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`;
+  const path = `${opts.userId}/${safeKey}-${unique}.${ext(opts.file)}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, opts.file, {
     upsert: true,
     contentType: opts.file.type || undefined,

@@ -357,8 +357,10 @@ export type Database = {
       }
       drivers: {
         Row: {
+          address_proof_url: string | null
           birth_date: string | null
           city: string
+          cnh_front_url: string | null
           cpf: string
           created_at: string
           email: string
@@ -369,14 +371,17 @@ export type Database = {
           pix_key: string | null
           pix_key_type: string | null
           regions: string[]
+          selfie_doc_url: string | null
           status: Database["public"]["Enums"]["driver_status"]
           terms_accepted_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          address_proof_url?: string | null
           birth_date?: string | null
           city: string
+          cnh_front_url?: string | null
           cpf: string
           created_at?: string
           email: string
@@ -387,14 +392,17 @@ export type Database = {
           pix_key?: string | null
           pix_key_type?: string | null
           regions?: string[]
+          selfie_doc_url?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           terms_accepted_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          address_proof_url?: string | null
           birth_date?: string | null
           city?: string
+          cnh_front_url?: string | null
           cpf?: string
           created_at?: string
           email?: string
@@ -405,6 +413,7 @@ export type Database = {
           pix_key?: string | null
           pix_key_type?: string | null
           regions?: string[]
+          selfie_doc_url?: string | null
           status?: Database["public"]["Enums"]["driver_status"]
           terms_accepted_at?: string | null
           updated_at?: string
@@ -554,6 +563,7 @@ export type Database = {
           brand: string | null
           color: string | null
           created_at: string
+          crlv_url: string | null
           driver_id: string
           id: string
           model: string
@@ -568,6 +578,7 @@ export type Database = {
           brand?: string | null
           color?: string | null
           created_at?: string
+          crlv_url?: string | null
           driver_id: string
           id?: string
           model: string
@@ -582,6 +593,7 @@ export type Database = {
           brand?: string | null
           color?: string | null
           created_at?: string
+          crlv_url?: string | null
           driver_id?: string
           id?: string
           model?: string
