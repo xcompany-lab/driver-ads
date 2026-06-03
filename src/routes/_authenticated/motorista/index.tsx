@@ -144,7 +144,7 @@ function DriverHome() {
         const d = driver as unknown as Record<DriverDocKey, string | null>;
         const missingDriverDocs = DRIVER_DOC_ORDER.filter((k) => !d[k]);
         const missingCrlv = (vehicles ?? []).filter((v) => !(v as unknown as { crlv_url?: string | null }).crlv_url);
-        const hasMissing = missingDriverDocs.length > 0 || (hasVehicleFlag(vehicles) && missingCrlv.length > 0);
+        const hasMissing = missingDriverDocs.length > 0 || ((vehicles?.length ?? 0) > 0 && missingCrlv.length > 0);
         if (!hasMissing) return null;
         return (
           <Card className="border-amber-500/40 bg-amber-500/5">
