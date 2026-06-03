@@ -172,6 +172,24 @@
   .bg-gradient-night { background-image: var(--gradient-night); }
   .shadow-brand { box-shadow: var(--shadow-brand); }
   .shadow-elevated { box-shadow: var(--shadow-elevated); }
+
+  .bg-gradient-brand-flow {
+    background-image: linear-gradient(
+      90deg,
+      oklch(0.60 0.22 258) 0%,
+      oklch(0.82 0.13 210) 25%,
+      oklch(0.60 0.22 258) 50%,
+      oklch(0.82 0.13 210) 75%,
+      oklch(0.60 0.22 258) 100%
+    );
+    background-size: 200% 100%;
+    animation: brand-flow 3s linear infinite;
+  }
+  .bg-gradient-brand-flow:hover { animation-duration: 1.5s; }
+  @keyframes brand-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: -200% 50%; }
+  }
   .text-gradient-brand {
     background-image: var(--gradient-brand);
     -webkit-background-clip: text;
