@@ -3,6 +3,7 @@ import { LogOut, LayoutDashboard, Building2, Users, Car, Megaphone, ClipboardChe
 import type { AppRole } from "@/hooks/useSession";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/NotificationBell";
 import { signOut } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
