@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminMotoristasRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminFinanceiroRouteImport } from './routes/_authenticated/admin/financeiro'
 import { Route as AuthenticatedAdminComprovacoesRouteImport } from './routes/_authenticated/admin/comprovacoes'
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin/campanhas'
+import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin/auditoria'
 import { Route as AuthenticatedAdminAnunciantesRouteImport } from './routes/_authenticated/admin/anunciantes'
 import { Route as AuthenticatedAdminCampanhasIdRouteImport } from './routes/_authenticated/admin/campanhas.$id'
 
@@ -190,6 +191,12 @@ const AuthenticatedAdminCampanhasRoute =
     path: '/campanhas',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminAuditoriaRoute =
+  AuthenticatedAdminAuditoriaRouteImport.update({
+    id: '/auditoria',
+    path: '/auditoria',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminAnunciantesRoute =
   AuthenticatedAdminAnunciantesRouteImport.update({
     id: '/anunciantes',
@@ -216,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
   '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
   '/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
@@ -243,6 +251,7 @@ export interface FileRoutesByTo {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
   '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
   '/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
@@ -275,6 +284,7 @@ export interface FileRoutesById {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
+  '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
   '/_authenticated/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
   '/_authenticated/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/admin/anunciantes'
+    | '/admin/auditoria'
     | '/admin/campanhas'
     | '/admin/comprovacoes'
     | '/admin/financeiro'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth'
     | '/admin/anunciantes'
+    | '/admin/auditoria'
     | '/admin/campanhas'
     | '/admin/comprovacoes'
     | '/admin/financeiro'
@@ -365,6 +377,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/_authenticated/admin/anunciantes'
+    | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/campanhas'
     | '/_authenticated/admin/comprovacoes'
     | '/_authenticated/admin/financeiro'
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCampanhasRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/auditoria': {
+      id: '/_authenticated/admin/auditoria'
+      path: '/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AuthenticatedAdminAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/anunciantes': {
       id: '/_authenticated/admin/anunciantes'
       path: '/anunciantes'
@@ -618,6 +638,7 @@ const AuthenticatedAdminCampanhasRouteWithChildren =
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAnunciantesRoute: typeof AuthenticatedAdminAnunciantesRoute
+  AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminCampanhasRoute: typeof AuthenticatedAdminCampanhasRouteWithChildren
   AuthenticatedAdminComprovacoesRoute: typeof AuthenticatedAdminComprovacoesRoute
   AuthenticatedAdminFinanceiroRoute: typeof AuthenticatedAdminFinanceiroRoute
@@ -629,6 +650,7 @@ interface AuthenticatedAdminRouteRouteChildren {
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminAnunciantesRoute: AuthenticatedAdminAnunciantesRoute,
+    AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
     AuthenticatedAdminCampanhasRoute:
       AuthenticatedAdminCampanhasRouteWithChildren,
     AuthenticatedAdminComprovacoesRoute: AuthenticatedAdminComprovacoesRoute,
