@@ -37,6 +37,9 @@ export const Route = createFileRoute("/motoristas")({
           "Ganhe uma renda extra rodando com o seu carro. Sem mensalidades, sem fidelidade — você dirige, a gente paga.",
       },
     ],
+    links: [
+      { rel: "preload", as: "image", href: logoFull.url, fetchpriority: "high" },
+    ],
   }),
   component: DriverLanding,
 });
@@ -62,12 +65,8 @@ function DriverLanding() {
       <nav className="fixed top-0 inset-x-0 z-50 glass-panel border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6">
           <Logo variant="light" size={36} />
-          <div className="hidden md:flex items-center gap-8 text-sm text-white/70">
-            <a href="#como-funciona" className="hover:text-white transition-colors">Como funciona</a>
-            <a href="#beneficios" className="hover:text-white transition-colors">Benefícios</a>
-            <a href="#ganhos" className="hover:text-white transition-colors">Quanto ganho</a>
-            <a href="#requisitos" className="hover:text-white transition-colors">Requisitos</a>
-          </div>
+          <div className="hidden md:flex" />
+
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" asChild>
               <Link to="/auth">Entrar</Link>
@@ -107,6 +106,10 @@ function DriverLanding() {
               <img
                 src={logoFull.url}
                 alt="Driver Ads"
+                width={560}
+                height={224}
+                fetchPriority="high"
+                decoding="async"
                 className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-[0_8px_30px_rgba(22,120,255,0.35)]"
               />
               <span className="mt-3 text-[0.7rem] sm:text-xs font-semibold tracking-[0.32em] uppercase text-white/70">
@@ -155,9 +158,14 @@ function DriverLanding() {
               custom={4}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Button size="xl" variant="hero" asChild>
+              <Button
+                size="xl"
+                variant="hero"
+                className="bg-gradient-brand-flow shadow-brand border-gradient-brand-flow"
+                asChild
+              >
                 <Link to="/auth/motorista">
-                  Quero ganhar com meu carro <ArrowRight />
+                  Quero ganhar dinheiro com meu carro <ArrowRight />
                 </Link>
               </Button>
               <Button
