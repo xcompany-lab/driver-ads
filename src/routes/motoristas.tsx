@@ -2,19 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Car,
-  Wallet,
   MapPin,
   ShieldCheck,
-  Clock,
-  TrendingUp,
   CheckCircle2,
   ArrowRight,
   Sparkles,
-  Camera,
   FileCheck,
   HandCoins,
-  Route as RouteIcon,
-  Users,
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
