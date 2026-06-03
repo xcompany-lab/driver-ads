@@ -1,74 +1,83 @@
-## Diagnóstico
+## Objetivo
 
-### 1) Por que o background da seção "Você roda o dia todo" não aparece
+Resolver o link de confirmação caindo em `localhost` e centralizar todo o envio de e-mail do Driver Ads no Resend, com remetente `suporte@driverads.com.br`.
 
-Bug real encontrado em `src/routes/motoristas.tsx`:
+## Por que o link cai em localhost
 
-```text
-<div className="dark min-h-screen bg-[#020617] ...">   ← wrapper raiz com fundo sólido
-  ...
-  <section className="relative overflow-hidden">
-    <img className="absolute inset-0 -z-20 ..." />     ← cai ATRÁS do bg do wrapper
-    <div className="absolute inset-0 -z-10 ..." />     ← idem (overlay invisível)
-    <div className="relative ...">…texto…</div>
-  </section>
-</div>
+Hoje o cadastro chama `supabase.auth.signUp(..., { emailRedirectTo: ${window.location.origin}/auth })`. Quando você testa em ambiente de preview/local, `window.location.origin` vira `localhost` (ou o preview da Lovable) e a Supabase usa a **Site URL** do projeto como fallback — que ainda está apontando para localhost. O e-mail é o template padrão da Supabase, não passa pelo Resend.
+
+## Pré-requisitos que você precisa fazer (1 vez só)
+
+1. **Adicionar domínio no Resend** (https://resend.com/domains) → `driverads.com.br`. O Resend vai gerar 3 registros DNS (SPF, DKIM, DMARC) para colar no seu provedor de DNS.
+2. **Atualizar Site URL no Supabase** → Dashboard → Authentication → URL Configuration:
+   - Site URL: `https://driverads.com.br`
+   - Redirect URLs (adicionar todas): `https://driverads.com.br/**`, `https://www.driverads.com.br/**`, `https://driver-ads.lovable.app/**`, `https://id-preview--f1dbd651-3cbb-43b9-9ae4-53e107d58496.lovable.app/**`
+
+Eu mostro os links exatos no chat na hora.
+
+## O que vou construir
+
+### 1. Conexão com Resend
+- Conectar o connector "Resend" do Lovable (gateway gerenciado, sem precisar colar API key manualmente).
+- O secret `RESEND_API_KEY` fica disponível automaticamente nas server functions.
+
+### 2. Endpoint de auth email hook
+- Rota pública `src/routes/api/public/auth-email-hook.ts` que recebe o **Send Email Hook** da Supabase, valida a assinatura (HMAC com `SEND_EMAIL_HOOK_SECRET`), renderiza o template correspondente (`signup`, `recovery`, `email_change`, `magiclink`, `invite`) e envia via Resend.
+- Você configura esse endpoint no Supabase Dashboard → Authentication → Hooks → Send Email Hook, apontando para `https://driverads.com.br/api/public/auth-email-hook`. A partir daí, **todos os e-mails de auth da Supabase passam pelo Resend** com a sua marca.
+
+### 3. Templates HTML com identidade Driver Ads
+- 5 templates de auth (confirmação de conta, recuperação de senha, magic link, troca de e-mail, convite).
+- 4 templates transacionais:
+  - **Cadastro aprovado/recusado** — disparado quando admin muda `advertisers.status`/`drivers.status` para `approved`/`rejected`.
+  - **Convite de campanha** — disparado quando `campaign_driver_assignments` ganha linha com `status='invited'`.
+  - **Comprovação revisada** — disparado quando `installation_proofs.status` vira `approved`/`rejected`/`resubmission_requested`.
+  - **Repasse pago / fatura** — disparado quando `driver_payouts.status` vira `paid` (motorista) e quando `advertiser_payments` é criado/marcado pago (anunciante).
+- Todos usam o gradiente azul Driver Ads, logo, e linkam de volta para o portal do destinatário.
+
+### 4. Disparo dos transacionais
+- Helper `src/lib/email/send.ts` → POSTa para `/api/public/transactional-email` (rota interna com verificação de origem) que renderiza + chama Resend.
+- Triggers Postgres em cada uma das tabelas acima inserem em uma fila `email_outbox` (tabela nova) com `template`, `to`, `data`.
+- Server function `processEmailOutbox` é chamada por pg_cron a cada 1 min para enviar os pendentes (evita perda em caso de falha do Resend e dá retry).
+
+### 5. Correção do link localhost
+- Ajustar `signUpAdvertiser`/`signUpDriver` para usar a URL pública configurada (`VITE_PUBLIC_SITE_URL=https://driverads.com.br`) como `emailRedirectTo`, com fallback para `window.location.origin` em dev.
+- Combinado com a atualização da Site URL no Supabase, os links de confirmação passam a abrir no domínio de produção.
+
+## Arquivos novos / alterados
+
+```
+src/routes/api/public/auth-email-hook.ts        (novo — webhook Supabase → Resend)
+src/routes/api/public/transactional-email.ts    (novo — endpoint interno)
+src/lib/email/
+  ├── send.ts                                   (novo — helper)
+  ├── resend.server.ts                          (novo — wrapper do gateway)
+  ├── render.server.ts                          (novo — renderiza templates)
+  └── templates/
+      ├── auth-signup.ts
+      ├── auth-recovery.ts
+      ├── auth-magiclink.ts
+      ├── auth-email-change.ts
+      ├── auth-invite.ts
+      ├── account-approved.ts
+      ├── account-rejected.ts
+      ├── campaign-invite.ts
+      ├── proof-reviewed.ts
+      └── payout-paid.ts
+src/lib/auth.ts                                 (ajustar emailRedirectTo)
+
+Migration:
+  - tabela email_outbox (id, template, to_email, payload, status, attempts, last_error, sent_at, created_at)
+  - triggers em advertisers/drivers/campaign_driver_assignments/installation_proofs/driver_payouts/advertiser_payments
+  - pg_cron job chamando o endpoint processador a cada 1 min
 ```
 
-A section não cria stacking context próprio (sem `isolate` ou `z-index` positivo), então `-z-10`/`-z-20` "atravessam" a section e ficam **atrás do `bg-[#020617]` do wrapper raiz**. Resultado: a imagem é carregada (já confere na rede), mas é pintada embaixo da cor sólida e nunca aparece. Hard refresh não muda isso — é o pintor do navegador, não cache.
+## Secrets que vou pedir
 
-### 2) De onde vem a lentidão
+- `SEND_EMAIL_HOOK_SECRET` — gerado por você no Supabase Dashboard ao criar o hook (cole o valor exibido lá).
+- `RESEND_API_KEY` — vem automaticamente ao conectar o connector Resend, não precisa colar manualmente.
 
-A página tem muitos efeitos legítimos que vamos **manter** (texto com gradiente animado, metallic beam, glass panels, glow radiais). O custo extra vem de:
+## Riscos / pontos de atenção
 
-- **Animações pintando fora da tela**: `metallic-beam` (conic-gradient + `@property --beam-angle`), `text-gradient-brand-flow` e `border-gradient-brand-flow` rodam em loop infinito em cards e títulos mesmo quando estão fora do viewport, forçando repaint constante.
-- **Imagens não otimizadas**: o novo PNG do interior (304KB) é carregado em `eager` mesmo abaixo da dobra; o mockup do celular também está `loading="eager"`.
-- **Restos do template remixado**: vários componentes/dep `shadcn` instalados que nunca são usados na rota `/motoristas` (sidebar, carousel, calendar, chart/recharts, drawer/vaul, day-picker, input-otp, resizable, etc.). Em produção Vite faz tree-shake, mas em **dev** o pre-bundle infla a página com centenas de módulos.
-- **`NotificationBell.tsx`** solto em `src/components/` — herdado do remix, precisa confirmar se ainda é referenciado.
-- **Plugin CSS `tw-animate-css`** importado em `styles.css` mas o site não usa as classes que ele entrega.
-
-## Plano
-
-### Parte A — Consertar o background (visual)
-
-Em `src/routes/motoristas.tsx`, na seção PROBLEM:
-
-1. Adicionar `isolate` à `<section>` para criar stacking context próprio.
-2. Trocar `-z-20` (img) por `z-0` e `-z-10` (overlay) por `z-[1]`.
-3. Adicionar `relative z-10` ao container de texto para garantir que ele fica acima do overlay.
-4. Trocar `loading=` da imagem para `lazy` + `decoding="async"` + `width/height` explícitos para evitar CLS.
-
-### Parte B — Limpar o "lixo do remix"
-
-1. Verificar se `src/components/NotificationBell.tsx` é importado em algum lugar. Se não for, remover o arquivo.
-2. Remover `@import "tw-animate-css"` do `src/styles.css` (não usamos suas classes) e remover a dep do `package.json`.
-3. Remover dependências do `package.json` que **não são importadas por nenhum arquivo da `src/`**: candidatos a checar e cortar — `recharts`, `embla-carousel-react`, `vaul`, `react-day-picker`, `input-otp`, `react-resizable-panels`, `cmdk`, `date-fns`, `@radix-ui/react-context-menu`, `@radix-ui/react-menubar`, `@radix-ui/react-navigation-menu`, `@radix-ui/react-hover-card`, `@radix-ui/react-aspect-ratio`. Só removo o que comprovar não estar em uso. Apago também os arquivos `src/components/ui/*.tsx` correspondentes (calendar, chart, carousel, drawer, etc.).
-4. Resultado: menos módulos no pre-bundle do Vite → preview e build mais leves e responsivos.
-
-### Parte C — Otimizações de runtime (sem cortar efeitos)
-
-1. **Pausar animações fora do viewport**: adicionar regra CSS usando `@media (prefers-reduced-motion)` + utilitário `[data-anim-paused="true"] .metallic-beam::before { animation-play-state: paused }` e, nos cards/seções que usam `metallic-beam` e `text-gradient-brand-flow`, marcar `data-anim-paused` quando `IntersectionObserver` reportar `isIntersecting=false`. Sem isso elas continuam repintando o tempo todo.
-2. **`content-visibility: auto`** nas seções abaixo da dobra (`PROBLEM`, `como-funciona`, `ganhos`, `verificacao`, `social-proof`, `cta`) — o navegador pula layout/paint até estarem perto da viewport. Adicionar `contain-intrinsic-size` para evitar saltos de scroll.
-3. **Imagens**: trocar o asset `bg-interior-motorista.png` por uma versão `.webp` ou `.jpg` otimizada (manter qualidade visual; PNG não é necessário aqui — não tem transparência). Mesmo tratamento para a logo se aplicável. Para o mockup do celular: `loading="lazy"`, `decoding="async"`.
-4. **Re-validação do preload da logo**: confirmar que ela é mesmo o LCP. Se não for, remover o `rel=preload fetchpriority=high` para não competir com o CSS.
-5. **Divider gradient**: trocar `h-px` (que colapsa os filhos `absolute`) por `h-[1px]` com `position: relative` real, garantindo que as linhas apareçam consistentes.
-
-### Parte D — Verificação
-
-1. Rebuildar, navegar para `/motoristas` no browser interno, scroll por todas as seções.
-2. Conferir no DOM que o `<img>` do bg agora tem bounding box visível e aparece atrás do texto.
-3. Rodar `browser--performance_profile` antes/depois para mostrar ganho em scripting/painting/long-tasks.
-4. Conferir Console: zero novos warnings/errors.
-
-## Detalhes técnicos
-
-- Stacking context: `position: relative` sozinho **não** cria contexto novo a menos que `z-index !== auto` ou `isolation: isolate`. `overflow:hidden` também não cria. Daí o bug.
-- `content-visibility: auto` precisa de `contain-intrinsic-size: <h> <w>` em cada seção para o scrollbar não pular durante leitura.
-- Animações CSS continuam consumindo GPU/CPU mesmo fora do viewport — é por isso que `animation-play-state: paused` é a alavanca certa, não reduzir efeitos.
-- Em dev, cada dep do `package.json` que aparece em algum `import` (mesmo indireto) entra no `optimizeDeps` do Vite. Cortar componentes shadcn não usados realmente acelera o dev/preview.
-- Não tocaremos em `styles.css` além de remover o `@import` órfão; todos os utilitários `.text-gradient-brand-flow`, `.metallic-beam`, `.glass-panel`, `.border-gradient-brand-flow` continuam intactos.
-
-## Fora de escopo
-
-- Não vou reduzir intensidade/quantidade de gradientes, glows, beams ou drop-shadows — eles ficam como estão. A otimização é em **quando** eles pintam, não em **o que** eles pintam.
-- Não vou mexer em conteúdo, copy, posicionamento de seções nem em outras rotas além da `/motoristas`.
+- **DNS do Resend leva até 72h** (geralmente <1h). Enquanto não verificar, os e-mails vão falhar com "domain not verified". Posso deixar tudo codado e você só ativa o hook na Supabase depois que o domínio aparecer como "Verified".
+- O Send Email Hook **substitui** os e-mails padrão da Supabase; se o endpoint ficar fora do ar, ninguém recebe e-mail de auth. A fila `email_outbox` mitiga isso para os transacionais, mas para auth a Supabase chama síncrono — vou logar erros para você ver em `/admin/auditoria`.
+- Os e-mails transacionais dependem de triggers; se uma migration falhar, posso reverter sem afetar os dados existentes.
