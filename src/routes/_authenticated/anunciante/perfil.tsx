@@ -58,8 +58,8 @@ function AdvertiserProfilePage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!advertiser) throw new Error("Cadastro não encontrado");
-      return updateMyAdvertiser(advertiser.id, {
+      if (!user) throw new Error("Sessão expirada");
+      const payload = {
         company_name: form.company_name,
         cnpj: form.cnpj,
         responsible: form.responsible,
@@ -67,10 +67,14 @@ function AdvertiserProfilePage() {
         phone: form.phone,
         city: form.city,
         segment: form.segment || null,
-      });
+      };
+      if (advertiser) {
+        return updateMyAdvertiser(advertiser.id, payload);
+      }
+      return createMyAdvertiser({ ...payload, user_id: user.id });
     },
     onSuccess: () => {
-      toast.success("Dados atualizados com sucesso");
+      toast.success(advertiser ? "Dados atualizados com sucesso" : "Cadastro enviado para análise");
       qc.invalidateQueries({ queryKey: ["my-advertiser"] });
       navigate({ to: "/anunciante" });
     },
