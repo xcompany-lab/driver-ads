@@ -106,13 +106,13 @@ function DriverLanding() {
               <img
                 src={logoFull.url}
                 alt="Driver Ads"
-                width={560}
-                height={224}
+                width={720}
+                height={288}
                 fetchPriority="high"
                 decoding="async"
-                className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-[0_8px_30px_rgba(22,120,255,0.35)]"
+                className="h-32 sm:h-40 md:h-48 lg:h-56 w-auto object-contain drop-shadow-[0_14px_50px_rgba(22,120,255,0.45)]"
               />
-              <span className="mt-3 text-[0.7rem] sm:text-xs font-semibold tracking-[0.32em] uppercase text-white/70">
+              <span className="mt-4 text-[0.72rem] sm:text-sm font-semibold tracking-[0.36em] uppercase text-white/75">
                 Sua mídia em movimento
               </span>
             </motion.div>
