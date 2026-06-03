@@ -85,6 +85,13 @@ function DriverHome() {
   const invites = (assignments ?? []).filter((a) => a.status === "invited").length;
   const active = (assignments ?? []).filter((a) => ["accepted", "awaiting_installation", "active"].includes(a.status)).length;
 
+  const approvedDismissKey = driver ? `driver-approved-dismissed:${driver.id}` : "";
+  const [approvedDismissed, setApprovedDismissed] = useState(true);
+  useEffect(() => {
+    if (!driver || driver.status !== "approved") return;
+    setApprovedDismissed(sessionStorage.getItem(approvedDismissKey) === "1");
+  }, [driver, approvedDismissKey]);
+
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
 
   if (!driver) {
@@ -110,12 +117,6 @@ function DriverHome() {
   const canAct = driver.status === "approved";
   const hasVehicle = (vehicles?.length ?? 0) > 0;
 
-  const approvedDismissKey = `driver-approved-dismissed:${driver.id}`;
-  const [approvedDismissed, setApprovedDismissed] = useState(true);
-  useEffect(() => {
-    if (driver.status !== "approved") return;
-    setApprovedDismissed(sessionStorage.getItem(approvedDismissKey) === "1");
-  }, [driver.status, approvedDismissKey]);
   const dismissApproved = () => {
     sessionStorage.setItem(approvedDismissKey, "1");
     setApprovedDismissed(true);
