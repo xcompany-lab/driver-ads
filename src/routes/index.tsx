@@ -32,10 +32,10 @@ function Landing() {
           <Logo variant="light" />
           <div className="flex items-center gap-2">
             <Button variant="ghost" className="text-white hover:bg-white/10" asChild>
-              <Link to="/">Entrar</Link>
+              <Link to="/auth">Entrar</Link>
             </Button>
             <Button variant="hero" asChild>
-              <Link to="/">
+              <Link to="/auth">
                 Acessar plataforma <ArrowRight />
               </Link>
             </Button>
@@ -61,7 +61,7 @@ function Landing() {
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <Button variant="hero" size="xl" asChild>
-                <Link to="/">
+                <Link to="/auth/anunciante">
                   Sou anunciante <ArrowRight />
                 </Link>
               </Button>
@@ -71,7 +71,7 @@ function Landing() {
                 className="border-white/30 bg-white/5 text-white hover:bg-white hover:text-brand-night"
                 asChild
               >
-                <Link to="/">Sou motorista</Link>
+                <Link to="/auth/motorista">Sou motorista</Link>
               </Button>
             </div>
           </div>
