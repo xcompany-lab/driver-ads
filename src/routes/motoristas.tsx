@@ -109,7 +109,7 @@ function DriverLanding() {
                 height={288}
                 fetchPriority="high"
                 decoding="async"
-                className="h-32 sm:h-40 md:h-48 lg:h-56 w-auto object-contain drop-shadow-[0_14px_50px_rgba(22,120,255,0.45)]"
+                className="h-64 sm:h-80 md:h-96 lg:h-[28rem] w-auto object-contain drop-shadow-[0_14px_50px_rgba(22,120,255,0.45)]"
               />
               <span className="mt-4 text-[0.72rem] sm:text-sm font-semibold tracking-[0.36em] uppercase text-white/75">
                 Sua mídia em movimento
