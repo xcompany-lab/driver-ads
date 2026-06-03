@@ -32,7 +32,12 @@ export interface SignUpDriverInput {
 }
 
 async function baseSignUp(email: string, password: string, full_name: string, phone: string) {
-  const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth` : undefined;
+  const PUBLIC_SITE_URL = "https://driverads.com.br";
+  const origin =
+    typeof window !== "undefined" && !/localhost|127\.0\.0\.1|lovable\.app/i.test(window.location.origin)
+      ? window.location.origin
+      : PUBLIC_SITE_URL;
+  const redirectTo = `${origin}/auth`;
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
