@@ -60,24 +60,6 @@ const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 function DriverLanding() {
   return (
     <div className="dark min-h-screen bg-[#020617] text-white overflow-x-hidden">
-      {/* NAV */}
-      <nav className="fixed top-0 inset-x-0 z-50 glass-panel border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6">
-          <Logo variant="light" size={36} />
-          <div className="hidden md:flex" />
-
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" asChild>
-              <Link to="/auth">Entrar</Link>
-            </Button>
-            <Button size="sm" variant="hero" asChild>
-              <Link to="/auth/motorista">
-                Quero ser parceiro <ArrowRight />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
 
       {/* HERO */}
       <section className="relative pt-20 pb-10 lg:pt-20 lg:pb-14 px-4 sm:px-6 overflow-hidden">
@@ -160,7 +142,7 @@ function DriverLanding() {
                 className="bg-gradient-brand-flow shadow-brand border-gradient-brand-flow"
                 asChild
               >
-                <Link to="/auth/motorista">
+                <Link to="/auth">
                   Quero ganhar dinheiro com meu carro <ArrowRight />
                 </Link>
               </Button>
@@ -658,7 +640,7 @@ function DriverLanding() {
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="relative">
               <Button size="xl" variant="hero" asChild>
-                <Link to="/auth/motorista">
+                <Link to="/auth">
                   Quero ser parceiro Driver Ads <ArrowRight />
                 </Link>
               </Button>
