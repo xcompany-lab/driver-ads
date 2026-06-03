@@ -89,6 +89,7 @@ const INV_STATUSES: { value: AdvertiserPaymentStatus | "all"; label: string }[] 
 
 function InvoicesTab() {
   const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
   const [status, setStatus] = useState<AdvertiserPaymentStatus | "all">("all");
   const [openNew, setOpenNew] = useState(false);
 
@@ -116,7 +117,7 @@ function InvoicesTab() {
             {INV_STATUSES.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button onClick={() => setOpenNew(true)}><Plus className="mr-2 h-4 w-4" />Nova fatura</Button>
+        {isAdmin && <Button onClick={() => setOpenNew(true)}><Plus className="mr-2 h-4 w-4" />Nova fatura</Button>}
       </div>
 
       {isLoading ? (
@@ -318,6 +319,7 @@ function currentMonthIso() {
 
 function PayoutsTab() {
   const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
   const [status, setStatus] = useState<DriverPayoutStatus | "all">("all");
   const [refMonth, setRefMonth] = useState<string>(currentMonthIso());
 
