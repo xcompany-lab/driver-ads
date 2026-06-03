@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/Logo";
+import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
 
 export const Route = createFileRoute("/motoristas")({
   head: () => ({
