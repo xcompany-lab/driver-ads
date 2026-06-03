@@ -1,25 +1,34 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { AuthShell, Field } from "@/components/auth/AuthShell";
+import { AuthCard } from "@/components/auth/AuthCard";
+import { Field } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signUpDriver } from "@/lib/auth";
 import { roleHome } from "@/hooks/useSession";
 
 export const Route = createFileRoute("/auth/motorista")({
-  head: () => ({ meta: [{ title: "Motorista — Driver Ads" }] }),
+  head: () => ({ meta: [{ title: "Criar conta de motorista — Driver Ads" }] }),
   component: DriverAuth,
 });
 
 function DriverAuth() {
   return (
-    <AuthShell
-      title="Portal do Motorista"
+    <AuthCard
+      title="Criar conta de motorista"
       subtitle="Monetize seu veículo com campanhas Driver Ads."
-      expectedRole="driver"
-      signupNode={<DriverSignup />}
-    />
+      footer={
+        <>
+          Já tem uma conta?{" "}
+          <Link to="/login" className="text-primary hover:underline font-medium">
+            Entrar
+          </Link>
+        </>
+      }
+    >
+      <DriverSignup />
+    </AuthCard>
   );
 }
 
@@ -47,8 +56,8 @@ function DriverSignup() {
   if (pendingEmail) {
     return (
       <div className="space-y-3">
-        <p className="text-sm">Enviamos um link de confirmação para <strong>{form.email}</strong>. Confirme o e-mail para finalizar o cadastro.</p>
-        <Link to="/auth/motorista" className="text-sm text-primary underline">Voltar</Link>
+        <p className="text-sm text-white">Enviamos um link de confirmação para <strong>{form.email}</strong>. Confirme o e-mail para finalizar o cadastro.</p>
+        <Link to="/login" className="text-sm text-primary underline">Voltar para login</Link>
       </div>
     );
   }

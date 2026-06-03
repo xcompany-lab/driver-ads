@@ -1,25 +1,34 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { AuthShell, Field } from "@/components/auth/AuthShell";
+import { AuthCard } from "@/components/auth/AuthCard";
+import { Field } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signUpAdvertiser } from "@/lib/auth";
 import { roleHome } from "@/hooks/useSession";
 
 export const Route = createFileRoute("/auth/anunciante")({
-  head: () => ({ meta: [{ title: "Anunciante — Driver Ads" }] }),
+  head: () => ({ meta: [{ title: "Criar conta de anunciante — Driver Ads" }] }),
   component: AdvertiserAuth,
 });
 
 function AdvertiserAuth() {
   return (
-    <AuthShell
-      title="Portal do Anunciante"
+    <AuthCard
+      title="Criar conta de anunciante"
       subtitle="Gerencie suas campanhas de mídia em movimento."
-      expectedRole="advertiser"
-      signupNode={<AdvertiserSignup />}
-    />
+      footer={
+        <>
+          Já tem uma conta?{" "}
+          <Link to="/login" className="text-primary hover:underline font-medium">
+            Entrar
+          </Link>
+        </>
+      }
+    >
+      <AdvertiserSignup />
+    </AuthCard>
   );
 }
 
@@ -50,8 +59,8 @@ function AdvertiserSignup() {
   if (pendingEmail) {
     return (
       <div className="space-y-3">
-        <p className="text-sm">Enviamos um link de confirmação para <strong>{form.email}</strong>. Confirme o e-mail para finalizar o cadastro.</p>
-        <Link to="/auth/anunciante" className="text-sm text-primary underline">Voltar</Link>
+        <p className="text-sm text-white">Enviamos um link de confirmação para <strong>{form.email}</strong>. Confirme o e-mail para finalizar o cadastro.</p>
+        <Link to="/login" className="text-sm text-primary underline">Voltar para login</Link>
       </div>
     );
   }
