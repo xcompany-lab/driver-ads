@@ -35,6 +35,7 @@ function AdminLayout() {
           <Link to="/admin"><Logo size={32} /></Link>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Painel Operacional</span>
+            <NotificationBell />
             <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/auth"))}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
