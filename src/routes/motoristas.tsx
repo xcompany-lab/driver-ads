@@ -17,6 +17,7 @@ import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
 import kitComAnuncio from "@/assets/kit-traseiro-com-anuncio.png.asset.json";
 import kitSuaMarca from "@/assets/kit-traseiro-sua-marca.png.asset.json";
 import phoneCadastroMockup from "@/assets/phone-cadastro-mockup.png.asset.json";
+import bgInteriorMotorista from "@/assets/bg-interior-motorista.png.asset.json";
 
 export const Route = createFileRoute("/motoristas")({
   head: () => ({
@@ -203,9 +204,44 @@ function DriverLanding() {
         </div>
       </section>
 
+      {/* Brand gradient divider */}
+      <div aria-hidden="true" className="relative h-px w-full">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, oklch(0.60 0.22 258 / 0.6) 25%, oklch(0.82 0.13 210 / 0.9) 50%, oklch(0.60 0.22 258 / 0.6) 75%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 -top-2 h-4 blur-md opacity-70"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, oklch(0.60 0.22 258 / 0.5) 50%, transparent 100%)",
+          }}
+        />
+      </div>
+
       {/* PROBLEM */}
-      <section className="py-20 lg:py-28 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative py-20 lg:py-28 px-4 sm:px-6 overflow-hidden">
+        {/* Background photo */}
+        <img
+          src={bgInteriorMotorista.url}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+        />
+        {/* Dark gradient overlay for legibility */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              "linear-gradient(180deg, #020617 0%, rgba(2,6,23,0.55) 25%, rgba(2,6,23,0.55) 75%, #020617 100%), linear-gradient(90deg, rgba(2,6,23,0.85) 0%, rgba(2,6,23,0.35) 50%, rgba(2,6,23,0.85) 100%)",
+          }}
+        />
+
+        <div className="relative max-w-4xl mx-auto text-center">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -214,14 +250,14 @@ function DriverLanding() {
           >
             <motion.h2
               variants={fadeUp}
-              className="font-display text-3xl sm:text-4xl font-bold mb-8"
+              className="font-display text-3xl sm:text-4xl font-bold mb-8 drop-shadow-[0_4px_30px_rgba(0,0,0,0.6)]"
             >
               Você roda o dia todo e o <span className="text-destructive">combustível só sobe</span>.
             </motion.h2>
             <motion.div
               variants={fadeUp}
               custom={1}
-              className="space-y-4 text-lg text-white/70 max-w-2xl mx-auto"
+              className="space-y-4 text-lg text-white/85 max-w-2xl mx-auto drop-shadow-[0_2px_18px_rgba(0,0,0,0.6)]"
             >
               <p>
                 Cada quilômetro rodado é um custo: gasolina, manutenção, desgaste.
@@ -238,6 +274,17 @@ function DriverLanding() {
           </motion.div>
         </div>
       </section>
+
+      {/* Brand gradient divider */}
+      <div aria-hidden="true" className="relative h-px w-full">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, oklch(0.60 0.22 258 / 0.6) 25%, oklch(0.82 0.13 210 / 0.9) 50%, oklch(0.60 0.22 258 / 0.6) 75%, transparent 100%)",
+          }}
+        />
+      </div>
 
       {/* SOLUTION + HOW IT WORKS */}
       <section
