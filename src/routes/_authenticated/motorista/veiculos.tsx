@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/brand/StatusBadge";
+import { DocumentUploadField } from "@/components/brand/DocumentUploadField";
+import { uploadDriverDoc, updateVehicleCrlv } from "@/lib/driver-documents";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/motorista/veiculos")({
