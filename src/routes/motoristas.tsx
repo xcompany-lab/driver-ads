@@ -545,7 +545,7 @@ function DriverLanding() {
               ].map((t) => (
                 <div
                   key={t.name}
-                  className="p-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm text-left"
+                  className="glass-panel metallic-beam metallic-beam-slow p-6 rounded-2xl text-left"
                 >
                   <div className="flex gap-0.5 mb-3 text-brand-cyan">
                     {Array.from({ length: 5 }).map((_, i) => (
