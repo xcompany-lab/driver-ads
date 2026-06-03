@@ -196,4 +196,34 @@
     background-clip: text;
     color: transparent;
   }
+
+  /* Animated gradient border (uses mask compositing to show gradient only on border) */
+  .border-gradient-brand-flow {
+    position: relative;
+    isolation: isolate;
+  }
+  .border-gradient-brand-flow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(
+      90deg,
+      oklch(0.60 0.22 258) 0%,
+      oklch(0.82 0.13 210) 25%,
+      oklch(0.60 0.22 258) 50%,
+      oklch(0.82 0.13 210) 75%,
+      oklch(0.60 0.22 258) 100%
+    );
+    background-size: 200% 100%;
+    animation: brand-flow 3s linear infinite;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+  }
 }
