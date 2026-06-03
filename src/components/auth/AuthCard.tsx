@@ -45,8 +45,14 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
         </aside>
 
         {/* Form side */}
-        <main className="flex-1 flex flex-col items-center justify-center px-5 py-10 lg:py-12 lg:px-12">
-          <div className="w-full max-w-md">
+        <main className="flex-1 flex flex-col items-center justify-center px-5 py-8 lg:py-12 lg:px-12">
+          <div className="w-full max-w-md flex flex-col items-center">
+            {/* Mobile logo above modal */}
+            <img
+              src={logoFull.url}
+              alt="Driver Ads"
+              className="lg:hidden w-[200px] mb-6 drop-shadow-[0_0_24px_rgba(22,120,255,0.4)]"
+            />
             <div className="rounded-2xl border border-white/10 bg-[#0a1428]/70 backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] p-7 sm:p-9">
               <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-white text-center">
                 {title.includes("volta") ? (
