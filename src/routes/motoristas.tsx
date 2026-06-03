@@ -343,45 +343,8 @@ function DriverLanding() {
       </section>
 
 
-      {/* BENEFITS */}
-      <section
-        id="beneficios"
-        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
-      >
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={stagger}
-          >
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { icon: Wallet, title: "Renda extra mensal", desc: "Receba todo mês via PIX, sem complicação. Quanto mais campanhas, mais você ganha." },
-                { icon: Car, title: "Sem mudar sua rotina", desc: "Continue dirigindo como sempre — para trabalhar, estudar ou levar a família." },
-                { icon: ShieldCheck, title: "Adesivos seguros", desc: "Material de alta qualidade, fácil remoção e sem danos à pintura do veículo." },
-                { icon: Clock, title: "Sem fidelidade", desc: "Sem multa, sem mensalidade. Encerre sua participação quando quiser." },
-                { icon: TrendingUp, title: "Acompanhe seus ganhos", desc: "Painel completo no app: campanhas ativas, comprovações enviadas e histórico de repasses." },
-                { icon: Users, title: "Suporte humano", desc: "Equipe pronta para te ajudar do cadastro à instalação dos adesivos." },
-              ].map(({ icon: Icon, title, desc }, i) => (
-                <motion.div
-                  key={title}
-                  variants={fadeUp}
-                  custom={i}
-                  className="glass-panel metallic-beam p-6 rounded-2xl hover:bg-white/[0.08] transition-all"
-                >
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand mb-4">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-display text-lg font-bold mb-2">{title}</h3>
-                  <p className="text-sm text-white/70">{desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
+
 
       {/* EARNINGS */}
       <section id="ganhos" className="py-20 lg:py-28 px-4 sm:px-6">
