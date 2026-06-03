@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, redirect, Link } from "@tanstack/react-router";
-import { LogOut, LayoutDashboard, Building2, Users, Car, Megaphone, ClipboardCheck, Wallet } from "lucide-react";
+import { LogOut, LayoutDashboard, Building2, Users, Car, Megaphone, ClipboardCheck, Wallet, History } from "lucide-react";
 import type { AppRole } from "@/hooks/useSession";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/NotificationBell";
 import { signOut } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
-const navItems: { to: "/admin" | "/admin/anunciantes" | "/admin/motoristas" | "/admin/veiculos" | "/admin/campanhas" | "/admin/comprovacoes" | "/admin/financeiro"; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
+const navItems: { to: "/admin" | "/admin/anunciantes" | "/admin/motoristas" | "/admin/veiculos" | "/admin/campanhas" | "/admin/comprovacoes" | "/admin/financeiro" | "/admin/auditoria"; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/campanhas", label: "Campanhas", icon: Megaphone },
   { to: "/admin/comprovacoes", label: "Comprovações", icon: ClipboardCheck },
@@ -24,6 +25,7 @@ const navItems: { to: "/admin" | "/admin/anunciantes" | "/admin/motoristas" | "/
   { to: "/admin/anunciantes", label: "Anunciantes", icon: Building2 },
   { to: "/admin/motoristas", label: "Motoristas", icon: Users },
   { to: "/admin/veiculos", label: "Veículos", icon: Car },
+  { to: "/admin/auditoria", label: "Auditoria", icon: History },
 ];
 
 function AdminLayout() {
@@ -34,6 +36,7 @@ function AdminLayout() {
           <Link to="/admin"><Logo size={32} /></Link>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Painel Operacional</span>
+            <NotificationBell />
             <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/auth"))}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
