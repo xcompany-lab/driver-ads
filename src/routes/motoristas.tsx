@@ -402,31 +402,23 @@ function DriverLanding() {
                   </span>
                 </div>
 
-                {/* Diagram of two seat backs */}
-                <div className="relative grid grid-cols-2 gap-4 mb-6">
+                {/* Two real kit-traseiro photos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   {[
-                    { label: "Banco do motorista" },
-                    { label: "Banco do carona" },
-                  ].map(({ label }) => (
+                    { src: kitSuaMarca.url, alt: "Kit traseiro sem anunciante" },
+                    { src: kitComAnuncio.url, alt: "Kit traseiro com anunciante" },
+                  ].map(({ src, alt }) => (
                     <div
-                      key={label}
-                      className="relative aspect-[3/4] rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.06] to-white/[0.02] overflow-hidden"
+                      key={alt}
+                      className="relative aspect-square rounded-2xl overflow-hidden border border-white/15 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.7)]"
                     >
-                      {/* Seat back silhouette */}
-                      <div className="absolute inset-3 rounded-xl rounded-b-3xl bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/10" />
-                      {/* Ad sticker preview */}
-                      <div
-                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[78%] aspect-[4/3] rounded-md shadow-[0_10px_30px_-10px_rgba(22,120,255,0.6)] flex items-center justify-center text-[10px] font-bold tracking-[0.22em] text-white/90"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, oklch(0.60 0.22 258), oklch(0.82 0.13 210))",
-                        }}
-                      >
-                        ANÚNCIO
-                      </div>
-                      <span className="absolute bottom-2 left-0 right-0 text-center text-[10px] uppercase tracking-[0.18em] text-white/55">
-                        {label}
-                      </span>
+                      <img
+                        src={src}
+                        alt={alt}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>
@@ -448,10 +440,6 @@ function DriverLanding() {
                     </div>
                   ))}
                 </div>
-
-                <p className="text-[11px] text-white/50 px-1 pt-5">
-                  Valor da campanha combinado diretamente no app antes de você aceitar.
-                </p>
               </div>
               <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-brand-electric/20 to-brand-cyan/20 blur-xl -z-10" />
             </motion.div>
