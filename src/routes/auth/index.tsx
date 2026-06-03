@@ -107,11 +107,17 @@ function SignInForm({ onSignupClick }: { onSignupClick: () => void }) {
           </button>
         </div>
         <div className="flex justify-end pt-1">
-          <Link to="/auth" className="text-sm text-primary hover:underline">
+          <button
+            type="button"
+            onClick={() => setForgotOpen(true)}
+            className="text-sm text-primary hover:underline"
+          >
             Esqueceu sua senha?
-          </Link>
+          </button>
         </div>
       </div>
+
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={email} />
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
