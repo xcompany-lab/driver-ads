@@ -31,6 +31,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsAdmin } from "@/hooks/useRoleGuards";
+import { ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/financeiro")({
   component: FinancePage,
@@ -44,6 +46,7 @@ const fmtMonth = (s: string) => {
 };
 
 function FinancePage() {
+  const isAdmin = useIsAdmin();
   return (
     <div className="space-y-6">
       <div>
@@ -52,6 +55,15 @@ function FinancePage() {
           Faturas dos anunciantes e repasses para motoristas.
         </p>
       </div>
+
+      {!isAdmin && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            Você está como <strong>Operador</strong>. As ações financeiras sensíveis (marcar como pago, reverter, excluir) ficam restritas ao perfil Admin. Você pode visualizar e anexar comprovantes.
+          </p>
+        </div>
+      )}
 
       <Tabs defaultValue="invoices">
         <TabsList>
