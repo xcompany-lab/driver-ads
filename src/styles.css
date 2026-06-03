@@ -197,6 +197,30 @@
     color: transparent;
   }
 
+  /* Animated, glowing gradient text — for impact headlines */
+  .text-gradient-brand-flow {
+    background-image: linear-gradient(
+      90deg,
+      oklch(0.82 0.13 210) 0%,
+      oklch(0.95 0.10 200) 20%,
+      oklch(0.60 0.22 258) 45%,
+      oklch(0.82 0.13 210) 70%,
+      oklch(0.95 0.10 200) 90%,
+      oklch(0.60 0.22 258) 100%
+    );
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: brand-text-flow 4.5s linear infinite;
+    filter: drop-shadow(0 2px 18px color-mix(in oklab, oklch(0.60 0.22 258) 55%, transparent));
+  }
+  @keyframes brand-text-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: -250% 50%; }
+  }
+
+
   /* Animated gradient border (uses mask compositing to show gradient only on border) */
   .border-gradient-brand-flow {
     position: relative;
