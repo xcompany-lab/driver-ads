@@ -49,13 +49,20 @@ function AdvertiserHome() {
 
       <StatusPanel status={advertiser.status} />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <DashCard
           icon={<Megaphone className="h-5 w-5" />}
           title="Campanhas"
           description="Solicite e acompanhe suas campanhas publicitárias."
           actionLabel="Em breve"
           disabled
+        />
+        <DashCard
+          icon={<Wallet className="h-5 w-5" />}
+          title="Financeiro"
+          description="Veja suas faturas e comprovantes de pagamento."
+          actionLabel="Abrir financeiro"
+          to="/anunciante/financeiro"
         />
         <DashCard
           icon={<Settings className="h-5 w-5" />}
