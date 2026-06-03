@@ -106,6 +106,10 @@ function DriverLanding() {
               <img
                 src={logoFull.url}
                 alt="Driver Ads"
+                width={560}
+                height={224}
+                fetchPriority="high"
+                decoding="async"
                 className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-[0_8px_30px_rgba(22,120,255,0.35)]"
               />
               <span className="mt-3 text-[0.7rem] sm:text-xs font-semibold tracking-[0.32em] uppercase text-white/70">
