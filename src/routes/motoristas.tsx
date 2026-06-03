@@ -458,26 +458,6 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.3 }}
             variants={stagger}
           >
-            <motion.div variants={fadeUp} className="flex items-center justify-center gap-2 mb-6">
-              <ShieldCheck className="h-5 w-5 text-brand-cyan" />
-              <span className="text-xs uppercase tracking-[0.28em] text-brand-cyan font-semibold">
-                Requisitos
-              </span>
-            </motion.div>
-            <motion.h2
-              variants={fadeUp}
-              custom={1}
-              className="font-display text-3xl sm:text-4xl font-bold text-center mb-4"
-            >
-              O que você precisa para <span className="text-gradient-brand">começar</span>
-            </motion.h2>
-            <motion.p
-              variants={fadeUp}
-              custom={2}
-              className="text-white/70 text-center max-w-3xl mx-auto mb-12"
-            >
-              Cadastro simples e 100% digital — feito direto pelo celular em poucos minutos.
-            </motion.p>
 
             <motion.div
               variants={fadeUp}
