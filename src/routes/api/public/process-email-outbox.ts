@@ -30,13 +30,13 @@ async function sendViaResend(to: string, toName: string | null, subject: string,
 export const Route = createFileRoute("/api/public/process-email-outbox")({
   server: {
     handlers: {
-      POST: async () => process(),
-      GET: async () => process(),
+      POST: async () => processOutbox(),
+      GET: async () => processOutbox(),
     },
   },
 });
 
-async function process() {
+async function processOutbox() {
   const { data: rows, error } = await supabaseAdmin
     .from("email_outbox")
     .select("*")
