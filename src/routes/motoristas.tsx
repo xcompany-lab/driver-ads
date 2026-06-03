@@ -16,6 +16,7 @@ import { Logo } from "@/components/brand/Logo";
 import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
 import kitComAnuncio from "@/assets/kit-traseiro-com-anuncio.png.asset.json";
 import kitSuaMarca from "@/assets/kit-traseiro-sua-marca.png.asset.json";
+import phoneCadastroMockup from "@/assets/phone-cadastro-mockup.png.asset.json";
 
 export const Route = createFileRoute("/motoristas")({
   head: () => ({
@@ -272,6 +273,7 @@ function DriverLanding() {
                   title: "Cadastre-se",
                   desc: "Crie sua conta de motorista e envie os documentos do CNH e do veículo pelo app.",
                   icon: FileCheck,
+                  image: phoneCadastroMockup.url,
                 },
                 {
                   step: "02",
@@ -285,7 +287,7 @@ function DriverLanding() {
                   desc: "Aplique o kit, mande as fotos de comprovação e receba mensalmente via PIX.",
                   icon: HandCoins,
                 },
-              ].map(({ step, title, desc, icon: Icon }, i) => (
+              ].map(({ step, title, desc, icon: Icon, image }, i) => (
                 <motion.div
                   key={step}
                   variants={fadeUp}
@@ -300,9 +302,19 @@ function DriverLanding() {
                         "radial-gradient(circle, oklch(0.60 0.22 258) 0%, transparent 65%)",
                     }}
                   />
+                  {/* Phone mockup decoration (step 01 only) */}
+                  {image && (
+                    <img
+                      src={image}
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                      className="pointer-events-none select-none absolute -top-4 -right-4 w-[50%] max-w-[180px] opacity-25 mix-blend-screen drop-shadow-[0_10px_30px_rgba(56,189,248,0.35)] [mask-image:linear-gradient(to_bottom_left,black_55%,transparent_100%)]"
+                    />
+                  )}
                   {/* Outlined giant step number watermark */}
                   <span
-                    className="absolute -top-2 right-4 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none"
+                    className={`absolute -top-2 right-4 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none ${image ? "opacity-30" : ""}`}
                     style={{
                       WebkitTextStroke: "1.5px rgba(255,255,255,0.12)",
                       color: "transparent",
