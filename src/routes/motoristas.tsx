@@ -291,7 +291,7 @@ function DriverLanding() {
       {/* SOLUTION + HOW IT WORKS */}
       <section
         id="como-funciona"
-        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
+        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent cv-auto"
       >
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -402,7 +402,7 @@ function DriverLanding() {
 
 
       {/* EARNINGS */}
-      <section id="ganhos" className="py-20 lg:py-28 px-4 sm:px-6">
+      <section id="ganhos" className="py-20 lg:py-28 px-4 sm:px-6 cv-auto">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial="hidden"
@@ -505,7 +505,7 @@ function DriverLanding() {
       {/* REQUIREMENTS */}
       <section
         id="requisitos"
-        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
+        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent cv-auto"
       >
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -576,7 +576,7 @@ function DriverLanding() {
       </section>
 
       {/* SOCIAL PROOF */}
-      <section className="py-20 lg:py-28 px-4 sm:px-6">
+      <section className="py-20 lg:py-28 px-4 sm:px-6 cv-auto">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial="hidden"
@@ -635,7 +635,7 @@ function DriverLanding() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="py-20 lg:py-28 px-4 sm:px-6">
+      <section className="py-20 lg:py-28 px-4 sm:px-6 cv-auto">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial="hidden"
