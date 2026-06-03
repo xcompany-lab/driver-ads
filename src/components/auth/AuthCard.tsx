@@ -14,7 +14,7 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex flex-col">
       <header className="px-6 py-5">
         <Link to="/" className="inline-flex">
-          <Logo variant="dark" />
+          <Logo />
         </Link>
       </header>
       <main className="flex-1 flex items-center justify-center px-4 pb-12">

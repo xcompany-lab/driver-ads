@@ -42,7 +42,7 @@ async function baseSignUp(email: string, password: string, full_name: string, ph
     },
   });
   if (error) throw error;
-  return data;
+  return { user: data.user, session: data.session };
 }
 
 async function assignRole(role: AppRole) {
@@ -51,13 +51,13 @@ async function assignRole(role: AppRole) {
 }
 
 export async function signUpAdvertiser(input: SignUpAdvertiserInput) {
-  const { data } = await baseSignUp(input.email, input.password, input.full_name, input.phone);
-  if (!data.session) {
+  const res = await baseSignUp(input.email, input.password, input.full_name, input.phone);
+  if (!res.session) {
     return { needsEmailConfirmation: true as const };
   }
   await assignRole("advertiser");
   const { error } = await supabase.from("advertisers").insert({
-    user_id: data.user!.id,
+    user_id: res.user!.id,
     company_name: input.company_name,
     cnpj: input.cnpj,
     responsible: input.full_name,
@@ -71,8 +71,8 @@ export async function signUpAdvertiser(input: SignUpAdvertiserInput) {
 }
 
 export async function signUpDriver(input: SignUpDriverInput) {
-  const { data } = await baseSignUp(input.email, input.password, input.full_name, input.phone);
-  if (!data.session) {
+  const res = await baseSignUp(input.email, input.password, input.full_name, input.phone);
+  if (!res.session) {
     return { needsEmailConfirmation: true as const };
   }
   await assignRole("driver");
