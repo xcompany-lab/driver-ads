@@ -59,6 +59,176 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_assets: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          file_url: string
+          id: string
+          type: Database["public"]["Enums"]["campaign_asset_type"]
+          uploaded_by: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          file_url: string
+          id?: string
+          type?: Database["public"]["Enums"]["campaign_asset_type"]
+          uploaded_by?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          file_url?: string
+          id?: string
+          type?: Database["public"]["Enums"]["campaign_asset_type"]
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_assets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_driver_assignments: {
+        Row: {
+          assigned_by: string | null
+          campaign_id: string
+          created_at: string
+          driver_id: string
+          id: string
+          monthly_payout: number
+          notes: string | null
+          responded_at: string | null
+          status: Database["public"]["Enums"]["assignment_status"]
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          campaign_id: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          monthly_payout?: number
+          notes?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          campaign_id?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          monthly_payout?: number
+          notes?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_driver_assignments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_driver_assignments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_driver_assignments_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          advertiser_id: string
+          approved_at: string | null
+          approved_by: string | null
+          art_url: string | null
+          city: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          observations: string | null
+          period_end: string
+          period_start: string
+          plan_value: number
+          regions: string[]
+          status: Database["public"]["Enums"]["campaign_status"]
+          updated_at: string
+          vehicles_qty: number
+        }
+        Insert: {
+          advertiser_id: string
+          approved_at?: string | null
+          approved_by?: string | null
+          art_url?: string | null
+          city: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          observations?: string | null
+          period_end: string
+          period_start: string
+          plan_value?: number
+          regions?: string[]
+          status?: Database["public"]["Enums"]["campaign_status"]
+          updated_at?: string
+          vehicles_qty?: number
+        }
+        Update: {
+          advertiser_id?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          art_url?: string | null
+          city?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          observations?: string | null
+          period_end?: string
+          period_start?: string
+          plan_value?: number
+          regions?: string[]
+          status?: Database["public"]["Enums"]["campaign_status"]
+          updated_at?: string
+          vehicles_qty?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           birth_date: string | null
@@ -115,6 +285,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      installation_proofs: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          geo_lat: number | null
+          geo_lng: number | null
+          id: string
+          observation: string | null
+          photo_url: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["proof_status"]
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          observation?: string | null
+          photo_url: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["proof_status"]
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          geo_lat?: number | null
+          geo_lng?: number | null
+          id?: string
+          observation?: string | null
+          photo_url?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["proof_status"]
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installation_proofs_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_driver_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -246,12 +472,36 @@ export type Database = {
         | "rejected"
         | "suspended"
       app_role: "admin" | "operator" | "advertiser" | "driver"
+      assignment_status:
+        | "invited"
+        | "accepted"
+        | "declined"
+        | "awaiting_installation"
+        | "active"
+        | "paused"
+        | "completed"
+        | "cancelled"
+      campaign_asset_type: "art" | "briefing" | "contract" | "other"
+      campaign_status:
+        | "draft"
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "active"
+        | "paused"
+        | "completed"
+        | "cancelled"
       driver_status:
         | "pending_review"
         | "approved"
         | "rejected"
         | "suspended"
         | "inactive"
+      proof_status:
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "resubmission_requested"
       vehicle_status: "pending_review" | "approved" | "rejected" | "suspended"
     }
     CompositeTypes: {
@@ -387,12 +637,39 @@ export const Constants = {
         "suspended",
       ],
       app_role: ["admin", "operator", "advertiser", "driver"],
+      assignment_status: [
+        "invited",
+        "accepted",
+        "declined",
+        "awaiting_installation",
+        "active",
+        "paused",
+        "completed",
+        "cancelled",
+      ],
+      campaign_asset_type: ["art", "briefing", "contract", "other"],
+      campaign_status: [
+        "draft",
+        "pending_review",
+        "approved",
+        "rejected",
+        "active",
+        "paused",
+        "completed",
+        "cancelled",
+      ],
       driver_status: [
         "pending_review",
         "approved",
         "rejected",
         "suspended",
         "inactive",
+      ],
+      proof_status: [
+        "pending_review",
+        "approved",
+        "rejected",
+        "resubmission_requested",
       ],
       vehicle_status: ["pending_review", "approved", "rejected", "suspended"],
     },
