@@ -142,7 +142,7 @@ function DriverLanding() {
                 className="bg-gradient-brand-flow shadow-brand border-gradient-brand-flow"
                 asChild
               >
-                <Link to="/auth/motorista">
+                <Link to="/auth">
                   Quero ganhar dinheiro com meu carro <ArrowRight />
                 </Link>
               </Button>
