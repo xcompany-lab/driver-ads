@@ -113,7 +113,7 @@ function SignInForm({ onSignupClick }: { onSignupClick: () => void }) {
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+      <Button type="submit" variant="hero" size="lg" className="w-full bg-gradient-brand-flow shadow-brand" disabled={loading}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Entrar
       </Button>
 
