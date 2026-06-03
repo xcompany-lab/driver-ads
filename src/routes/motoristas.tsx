@@ -123,7 +123,7 @@ function DriverLanding() {
             >
               Ganhe dinheiro exibindo <br className="hidden sm:block" />
               <span className="text-gradient-brand-flow">anúncios</span> durante <br />
-              suas <span class="text-gradient-brand-flow">corridas</span>.
+              suas <span className="text-gradient-brand-flow">corridas</span>.
             </motion.h1>
 
             <motion.p
