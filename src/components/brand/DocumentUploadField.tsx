@@ -15,10 +15,13 @@ interface Props {
 export function DocumentUploadField({ label, currentPath, onUpload, accept = "image/*,application/pdf" }: Props) {
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const hasUploaded = Boolean(currentPath) || sent;
 
   useEffect(() => {
     let active = true;
     if (currentPath) {
+      setSent(false);
       getSignedDocUrl(currentPath).then((u) => active && setPreview(u));
     } else {
       setPreview(null);
@@ -36,6 +39,7 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
     setBusy(true);
     try {
       await onUpload(file);
+      setSent(true);
       toast.success(`${label} enviado`);
     } catch (err) {
       toast.error((err as Error).message || "Erro ao enviar");
@@ -51,7 +55,7 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
     <div className="rounded-lg border border-border bg-card/50 p-3 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          {currentPath ? (
+          {hasUploaded ? (
             <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
           ) : (
             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -66,14 +70,14 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
       </div>
       <div className="flex items-center gap-2">
         <input id={inputId} type="file" accept={accept} className="hidden" onChange={handleFile} disabled={busy} />
-        <Button asChild type="button" size="sm" variant={currentPath ? "outline" : "default"} disabled={busy}>
+        <Button asChild type="button" size="sm" variant={hasUploaded ? "outline" : "default"} disabled={busy}>
           <label htmlFor={inputId} className="cursor-pointer">
             {busy ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Upload className="mr-2 h-3 w-3" />}
-            {currentPath ? "Reenviar" : "Enviar arquivo"}
+            {hasUploaded ? "Reenviar" : "Enviar arquivo"}
           </label>
         </Button>
-        <span className={`text-xs font-medium ${currentPath ? "text-amber-600" : "text-muted-foreground"}`}>
-          {currentPath ? "Em análise" : "Pendente"}
+        <span className={`text-xs font-medium ${hasUploaded ? "text-amber-600" : "text-muted-foreground"}`}>
+          {hasUploaded ? "Em análise" : "Pendente"}
         </span>
       </div>
     </div>
