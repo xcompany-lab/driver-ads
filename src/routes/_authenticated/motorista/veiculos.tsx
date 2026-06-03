@@ -178,7 +178,7 @@ function DriverVehiclesPage() {
                   onUpload={async (file) => {
                     const path = await uploadDriverDoc({ userId: user!.id, driverId: driver.id, key: "crlv", file, vehicleId: v.id });
                     await updateVehicleCrlv(v.id, path);
-                    qc.invalidateQueries({ queryKey: ["my-vehicles"] });
+                    await qc.invalidateQueries({ queryKey: ["my-vehicles"] });
                   }}
                 />
               </CardContent>
