@@ -236,7 +236,7 @@ function DriverLanding() {
                 Marcas pagam caro para aparecer nesses lugares — e quem deveria estar ganhando com isso é você.
               </p>
               <p className="text-white font-medium">
-                A Driver Ads transforma essa visibilidade em <span className="text-gradient-brand">dinheiro no seu PIX</span>.
+                A Driver Ads transforma essa visibilidade em <span className="text-gradient-brand-flow">dinheiro no seu PIX</span>.
               </p>
             </motion.div>
           </motion.div>
@@ -256,7 +256,7 @@ function DriverLanding() {
               variants={fadeUp}
               className="font-display text-3xl sm:text-4xl font-bold text-center mb-6"
             >
-              Sua mídia em <span className="text-gradient-brand">movimento</span>.
+              Sua mídia em <span className="text-gradient-brand-flow">movimento</span>.
             </motion.h2>
             <motion.p
               variants={fadeUp}
@@ -524,7 +524,7 @@ function DriverLanding() {
               variants={fadeUp}
               className="font-display text-3xl sm:text-4xl font-bold mb-10"
             >
-              Motoristas já estão <span className="text-gradient-brand">faturando</span> com o próprio carro
+              Motoristas já estão <span className="text-gradient-brand-flow">faturando</span> com o próprio carro
             </motion.h2>
             <motion.div
               variants={fadeUp}
@@ -585,7 +585,7 @@ function DriverLanding() {
               variants={fadeUp}
               className="relative font-display text-3xl sm:text-4xl font-bold mb-6"
             >
-              Pronto para transformar seu carro em <span className="text-gradient-brand">renda extra</span>?
+              Pronto para transformar seu carro em <span className="text-gradient-brand-flow">renda extra</span>?
             </motion.h2>
             <motion.p
               variants={fadeUp}
