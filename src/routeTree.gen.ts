@@ -9,12 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AuthMotoristaRouteImport } from './routes/auth/motorista'
 import { Route as AuthAnuncianteRouteImport } from './routes/auth/anunciante'
 import { Route as AuthAdminRouteImport } from './routes/auth/admin'
+import { Route as AuthenticatedMotoristaRouteRouteImport } from './routes/_authenticated/motorista/route'
+import { Route as AuthenticatedAnuncianteRouteRouteImport } from './routes/_authenticated/anunciante/route'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedMotoristaIndexRouteImport } from './routes/_authenticated/motorista/index'
+import { Route as AuthenticatedAnuncianteIndexRouteImport } from './routes/_authenticated/anunciante/index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -40,13 +51,53 @@ const AuthAdminRoute = AuthAdminRouteImport.update({
   path: '/auth/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedMotoristaRouteRoute =
+  AuthenticatedMotoristaRouteRouteImport.update({
+    id: '/motorista',
+    path: '/motorista',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAnuncianteRouteRoute =
+  AuthenticatedAnuncianteRouteRouteImport.update({
+    id: '/anunciante',
+    path: '/anunciante',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMotoristaIndexRoute =
+  AuthenticatedMotoristaIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMotoristaRouteRoute,
+  } as any)
+const AuthenticatedAnuncianteIndexRoute =
+  AuthenticatedAnuncianteIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAnuncianteRouteRoute,
+  } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/anunciante': typeof AuthenticatedAnuncianteRouteRouteWithChildren
+  '/motorista': typeof AuthenticatedMotoristaRouteRouteWithChildren
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
+  '/motorista/': typeof AuthenticatedMotoristaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,36 +105,68 @@ export interface FileRoutesByTo {
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth': typeof AuthIndexRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
+  '/motorista': typeof AuthenticatedMotoristaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/anunciante': typeof AuthenticatedAnuncianteRouteRouteWithChildren
+  '/_authenticated/motorista': typeof AuthenticatedMotoristaRouteRouteWithChildren
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
+  '/_authenticated/motorista/': typeof AuthenticatedMotoristaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/anunciante'
+    | '/motorista'
     | '/auth/admin'
     | '/auth/anunciante'
     | '/auth/motorista'
     | '/auth/'
+    | '/admin/'
+    | '/anunciante/'
+    | '/motorista/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth/admin' | '/auth/anunciante' | '/auth/motorista' | '/auth'
-  id:
-    | '__root__'
+  to:
     | '/'
     | '/auth/admin'
     | '/auth/anunciante'
     | '/auth/motorista'
+    | '/auth'
+    | '/admin'
+    | '/anunciante'
+    | '/motorista'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/admin'
+    | '/_authenticated/anunciante'
+    | '/_authenticated/motorista'
+    | '/auth/admin'
+    | '/auth/anunciante'
+    | '/auth/motorista'
     | '/auth/'
+    | '/_authenticated/admin/'
+    | '/_authenticated/anunciante/'
+    | '/_authenticated/motorista/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthAdminRoute: typeof AuthAdminRoute
   AuthAnuncianteRoute: typeof AuthAnuncianteRoute
   AuthMotoristaRoute: typeof AuthMotoristaRoute
@@ -92,6 +175,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -127,11 +217,113 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/motorista': {
+      id: '/_authenticated/motorista'
+      path: '/motorista'
+      fullPath: '/motorista'
+      preLoaderRoute: typeof AuthenticatedMotoristaRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/anunciante': {
+      id: '/_authenticated/anunciante'
+      path: '/anunciante'
+      fullPath: '/anunciante'
+      preLoaderRoute: typeof AuthenticatedAnuncianteRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/motorista/': {
+      id: '/_authenticated/motorista/'
+      path: '/'
+      fullPath: '/motorista/'
+      preLoaderRoute: typeof AuthenticatedMotoristaIndexRouteImport
+      parentRoute: typeof AuthenticatedMotoristaRouteRoute
+    }
+    '/_authenticated/anunciante/': {
+      id: '/_authenticated/anunciante/'
+      path: '/'
+      fullPath: '/anunciante/'
+      preLoaderRoute: typeof AuthenticatedAnuncianteIndexRouteImport
+      parentRoute: typeof AuthenticatedAnuncianteRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedAnuncianteRouteRouteChildren {
+  AuthenticatedAnuncianteIndexRoute: typeof AuthenticatedAnuncianteIndexRoute
+}
+
+const AuthenticatedAnuncianteRouteRouteChildren: AuthenticatedAnuncianteRouteRouteChildren =
+  {
+    AuthenticatedAnuncianteIndexRoute: AuthenticatedAnuncianteIndexRoute,
+  }
+
+const AuthenticatedAnuncianteRouteRouteWithChildren =
+  AuthenticatedAnuncianteRouteRoute._addFileChildren(
+    AuthenticatedAnuncianteRouteRouteChildren,
+  )
+
+interface AuthenticatedMotoristaRouteRouteChildren {
+  AuthenticatedMotoristaIndexRoute: typeof AuthenticatedMotoristaIndexRoute
+}
+
+const AuthenticatedMotoristaRouteRouteChildren: AuthenticatedMotoristaRouteRouteChildren =
+  {
+    AuthenticatedMotoristaIndexRoute: AuthenticatedMotoristaIndexRoute,
+  }
+
+const AuthenticatedMotoristaRouteRouteWithChildren =
+  AuthenticatedMotoristaRouteRoute._addFileChildren(
+    AuthenticatedMotoristaRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedAnuncianteRouteRoute: typeof AuthenticatedAnuncianteRouteRouteWithChildren
+  AuthenticatedMotoristaRouteRoute: typeof AuthenticatedMotoristaRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedAnuncianteRouteRoute:
+    AuthenticatedAnuncianteRouteRouteWithChildren,
+  AuthenticatedMotoristaRouteRoute:
+    AuthenticatedMotoristaRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthAdminRoute: AuthAdminRoute,
   AuthAnuncianteRoute: AuthAnuncianteRoute,
   AuthMotoristaRoute: AuthMotoristaRoute,
@@ -140,3 +332,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
