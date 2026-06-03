@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera, X } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver, listMyVehicles } from "@/lib/driver";
 import { listMyAssignments } from "@/lib/proofs";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/motorista/")({
 
 type DriverStatus = Database["public"]["Enums"]["driver_status"];
 
-function StatusPanel({ status }: { status: DriverStatus }) {
+function StatusPanel({ status, dismissible, onDismiss }: { status: DriverStatus; dismissible?: boolean; onDismiss?: () => void }) {
   const map: Record<DriverStatus, { title: string; desc: string; tone: "warning" | "success" | "destructive" | "muted" }> = {
     pending_review: { title: "Cadastro em análise", desc: "Nosso time está revisando seus dados. Avisaremos por e-mail quando estiver aprovado.", tone: "warning" },
     approved: { title: "Cadastro aprovado", desc: "Você já pode receber convites de campanhas compatíveis com seu perfil.", tone: "success" },
@@ -40,6 +41,11 @@ function StatusPanel({ status }: { status: DriverStatus }) {
           <CardDescription>{s.desc}</CardDescription>
         </div>
         <StatusBadge status={status} />
+        {dismissible && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-1" onClick={onDismiss} aria-label="Fechar aviso">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
     </Card>
   );
@@ -104,6 +110,19 @@ function DriverHome() {
   const canAct = driver.status === "approved";
   const hasVehicle = (vehicles?.length ?? 0) > 0;
 
+  const approvedDismissKey = `driver-approved-dismissed:${driver.id}`;
+  const [approvedDismissed, setApprovedDismissed] = useState(true);
+  useEffect(() => {
+    if (driver.status !== "approved") return;
+    setApprovedDismissed(sessionStorage.getItem(approvedDismissKey) === "1");
+  }, [driver.status, approvedDismissKey]);
+  const dismissApproved = () => {
+    sessionStorage.setItem(approvedDismissKey, "1");
+    setApprovedDismissed(true);
+  };
+
+  const showStatusPanel = driver.status !== "approved" || !approvedDismissed;
+
   return (
     <div className="space-y-6">
       <div>
@@ -111,7 +130,13 @@ function DriverHome() {
         <p className="mt-1 text-muted-foreground">Gerencie seus dados, veículos e campanhas.</p>
       </div>
 
-      <StatusPanel status={driver.status} />
+      {showStatusPanel && (
+        <StatusPanel
+          status={driver.status}
+          dismissible={driver.status === "approved"}
+          onDismiss={dismissApproved}
+        />
+      )}
 
       {driver.status === "approved" && !hasVehicle && (
         <Card className="border-amber-500/40 bg-amber-500/5">
