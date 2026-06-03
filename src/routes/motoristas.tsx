@@ -453,6 +453,21 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.3 }}
             variants={stagger}
           >
+            <motion.div variants={fadeUp} className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <Sparkles className="h-3.5 w-3.5 text-brand-cyan" />
+                <span className="text-xs uppercase tracking-[0.28em] text-brand-cyan font-semibold">
+                  Cadastro descomplicado
+                </span>
+              </div>
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+                Verificação <span className="text-gradient-brand-flow">rápida</span> de cadastro
+              </h2>
+              <p className="text-white/70 max-w-2xl mx-auto">
+                Em até <strong className="text-white">30 minutos</strong> nossa equipe analisa seu cadastro
+                e libera você para receber a primeira campanha.
+              </p>
+            </motion.div>
 
             <motion.div
               variants={fadeUp}
@@ -461,8 +476,9 @@ function DriverLanding() {
             >
               {[
                 { icon: FileCheck, title: "CNH ativa", desc: "Habilitação válida e regular. Aceitamos CNH digital em PDF." },
-                { icon: Car, title: "Veículo em bom estado", desc: "Carro próprio, lavável, em boas condições de pintura e funilaria." },
-                { icon: MapPin, title: "Cidade com campanhas", desc: "Você roda em uma região onde temos campanhas ativas." },
+                { icon: Car, title: "Veículo com licenciamento em dia", desc: "CRLV atualizado e em nome do proprietário do cadastro." },
+                { icon: ShieldCheck, title: "Comprovação de motorista", desc: "Print do app de mobilidade ou documento que confirme sua atividade como motorista." },
+                { icon: HandCoins, title: "Horas dirigidas a trabalho", desc: "Comprovação das horas que você roda como motorista profissional." },
               ].map(({ icon: Icon, title, desc }, i) => (
                 <motion.div
                   key={title}
