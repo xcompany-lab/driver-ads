@@ -35,34 +35,56 @@ function AdminLayout() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link to="/admin"><Logo size={32} /></Link>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Painel Operacional</span>
+            <RoleChip />
             <NotificationBell />
             <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/auth"))}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
           </div>
         </div>
-        <nav className="mx-auto max-w-7xl px-6 pb-2 flex gap-1 overflow-x-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                activeOptions={{ exact: item.exact ?? false }}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition",
-                )}
-                activeProps={{ className: "!text-foreground !bg-muted" }}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <NavBar />
       </header>
       <main className="mx-auto max-w-7xl px-6 py-8"><Outlet /></main>
     </div>
+  );
+}
+
+function RoleChip() {
+  const roles = ((Route.useRouteContext() as { roles?: AppRole[] }).roles ?? []) as AppRole[];
+  const isAdmin = roles.includes("admin");
+  return (
+    <span className={cn(
+      "rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
+      isAdmin ? "bg-primary/15 text-primary" : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+    )}>
+      {isAdmin ? "Admin" : "Operador"}
+    </span>
+  );
+}
+
+function NavBar() {
+  const roles = ((Route.useRouteContext() as { roles?: AppRole[] }).roles ?? []) as AppRole[];
+  const isAdmin = roles.includes("admin");
+  const items = navItems.filter((i) => isAdmin || i.to !== "/admin/auditoria");
+  return (
+    <nav className="mx-auto max-w-7xl px-6 pb-2 flex gap-1 overflow-x-auto">
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            activeOptions={{ exact: item.exact ?? false }}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition",
+            )}
+            activeProps={{ className: "!text-foreground !bg-muted" }}
+          >
+            <Icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
