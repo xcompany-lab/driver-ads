@@ -244,8 +244,11 @@ function DriverLanding() {
         </div>
       </section>
 
-      {/* SOLUTION */}
-      <section className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent">
+      {/* SOLUTION + HOW IT WORKS */}
+      <section
+        id="como-funciona"
+        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
+      >
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial="hidden"
@@ -262,48 +265,12 @@ function DriverLanding() {
             <motion.p
               variants={fadeUp}
               custom={1}
-              className="text-lg text-white/70 text-center max-w-3xl mx-auto mb-12"
+              className="text-lg text-white/70 text-center max-w-3xl mx-auto mb-14"
             >
               A Driver Ads conecta marcas a motoristas como você. A gente cuida de tudo:
               campanhas, materiais, instalação e repasse mensal.
             </motion.p>
-            <motion.div
-              variants={fadeUp}
-              custom={2}
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto"
-            >
-              {[
-                { icon: Car, label: "Cadastra seu veículo na plataforma" },
-                { icon: FileCheck, label: "Vinculamos você a uma campanha ativa" },
-                { icon: Camera, label: "Você instala e envia as fotos pelo app" },
-                { icon: RouteIcon, label: "Dirige normalmente pela sua cidade" },
-                { icon: HandCoins, label: "Recebe via PIX no fim de cada ciclo" },
-                { icon: ShieldCheck, label: "Plataforma segura e em conformidade com a LGPD" },
-              ].map(({ icon: Icon, label }) => (
-                <div
-                  key={label}
-                  className="glass-panel metallic-beam metallic-beam-slow flex items-center gap-3 p-4 rounded-2xl"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand shrink-0">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-sm font-medium text-white">{label}</span>
-                </div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* HOW IT WORKS */}
-      <section id="como-funciona" className="py-20 lg:py-28 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={stagger}
-          >
             <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
               {[
                 {
@@ -311,40 +278,32 @@ function DriverLanding() {
                   title: "Cadastre-se",
                   desc: "Crie sua conta de motorista e envie os documentos do CNH e do veículo pelo app.",
                   icon: FileCheck,
-                  accentColor: "oklch(0.82 0.13 210)",
-                  ringColor: "border-brand-cyan/50",
-                  iconBg: "linear-gradient(135deg, oklch(0.82 0.13 210), oklch(0.60 0.22 258))",
                 },
                 {
                   step: "02",
                   title: "Receba sua campanha",
                   desc: "Nossa equipe vincula você a uma campanha ativa compatível com a sua cidade.",
                   icon: MapPin,
-                  accentColor: "oklch(0.60 0.22 258)",
-                  ringColor: "border-brand-electric/60",
-                  iconBg: "linear-gradient(135deg, oklch(0.60 0.22 258), oklch(0.45 0.20 270))",
                 },
                 {
                   step: "03",
                   title: "Instale, rode e ganhe",
                   desc: "Aplique o kit, mande as fotos de comprovação e receba mensalmente via PIX.",
                   icon: HandCoins,
-                  accentColor: "oklch(0.78 0.15 75)",
-                  ringColor: "border-warning/60",
-                  iconBg: "linear-gradient(135deg, oklch(0.78 0.15 75), oklch(0.82 0.13 210))",
                 },
-              ].map(({ step, title, desc, icon: Icon, accentColor, ringColor, iconBg }, i) => (
+              ].map(({ step, title, desc, icon: Icon }, i) => (
                 <motion.div
                   key={step}
                   variants={fadeUp}
                   custom={i}
                   className="glass-panel metallic-beam relative rounded-3xl p-7 pt-12 overflow-hidden group"
                 >
-                  {/* Inner radial accent tint */}
+                  {/* Inner radial accent tint — brand blue */}
                   <div
                     className="pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full blur-3xl opacity-60"
                     style={{
-                      background: `radial-gradient(circle, ${accentColor} 0%, transparent 65%)`,
+                      background:
+                        "radial-gradient(circle, oklch(0.60 0.22 258) 0%, transparent 65%)",
                     }}
                   />
                   {/* Outlined giant step number watermark */}
@@ -364,18 +323,12 @@ function DriverLanding() {
                       Passo {step}
                     </span>
                   </div>
-                  {/* Icon with dashed halo + glow */}
+                  {/* Icon with dashed halo + glow — brand identity */}
                   <div className="relative mb-6 h-16 w-16">
+                    <div className="absolute inset-0 rounded-full blur-2xl opacity-70 bg-brand-electric" />
+                    <div className="absolute -inset-2 rounded-full border border-dashed border-brand-cyan/50 opacity-70 [animation:spin_20s_linear_infinite]" />
                     <div
-                      className="absolute inset-0 rounded-full blur-2xl opacity-70"
-                      style={{ background: accentColor }}
-                    />
-                    <div
-                      className={`absolute -inset-2 rounded-full border border-dashed ${ringColor} opacity-70 [animation:spin_20s_linear_infinite]`}
-                    />
-                    <div
-                      className="relative h-16 w-16 rounded-2xl rotate-[8deg] ring-1 ring-inset ring-white/20 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] flex items-center justify-center"
-                      style={{ backgroundImage: iconBg }}
+                      className="relative h-16 w-16 rounded-2xl rotate-[8deg] ring-1 ring-inset ring-white/20 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] flex items-center justify-center bg-gradient-brand"
                     >
                       <Icon className="h-7 w-7 text-white -rotate-[8deg]" strokeWidth={2.25} />
                     </div>
@@ -388,6 +341,7 @@ function DriverLanding() {
           </motion.div>
         </div>
       </section>
+
 
       {/* BENEFITS */}
       <section
