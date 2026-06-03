@@ -381,7 +381,6 @@ function DriverLanding() {
                 {[
                   "Padrão único: sem confusão sobre tamanho ou posição",
                   "Instalação rápida, fácil remoção, sem dano ao tecido",
-                  "Você combina o valor da campanha direto pelo app antes de aceitar",
                   "Pagamento mensal via PIX assim que a comprovação é aprovada",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-white/80">
