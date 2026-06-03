@@ -20,7 +20,7 @@ import phoneCadastroMockup from "@/assets/phone-cadastro-mockup.png.asset.json";
 import phoneCampanhaMockup from "@/assets/phone-campanha-mockup.png.asset.json";
 import bgInteriorMotorista from "@/assets/bg-interior-motorista.png.asset.json";
 
-export const Route = createFileRoute("/motoristas")({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Seja motorista parceiro — Driver Ads" },
