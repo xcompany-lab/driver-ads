@@ -15,6 +15,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AuthMotoristaRouteImport } from './routes/auth/motorista'
 import { Route as AuthAnuncianteRouteImport } from './routes/auth/anunciante'
 import { Route as AuthAdminRouteImport } from './routes/auth/admin'
+import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedMotoristaRouteRouteImport } from './routes/_authenticated/motorista/route'
 import { Route as AuthenticatedAnuncianteRouteRouteImport } from './routes/_authenticated/anunciante/route'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
@@ -65,6 +66,12 @@ const AuthAdminRoute = AuthAdminRouteImport.update({
   path: '/auth/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNotificacoesRoute =
+  AuthenticatedNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMotoristaRouteRoute =
   AuthenticatedMotoristaRouteRouteImport.update({
     id: '/motorista',
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/anunciante': typeof AuthenticatedAnuncianteRouteRouteWithChildren
   '/motorista': typeof AuthenticatedMotoristaRouteRouteWithChildren
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
@@ -242,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/anunciante': typeof AuthenticatedAnuncianteRouteRouteWithChildren
   '/_authenticated/motorista': typeof AuthenticatedMotoristaRouteRouteWithChildren
+  '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/anunciante'
     | '/motorista'
+    | '/notificacoes'
     | '/auth/admin'
     | '/auth/anunciante'
     | '/auth/motorista'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/notificacoes'
     | '/auth/admin'
     | '/auth/anunciante'
     | '/auth/motorista'
@@ -323,6 +335,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/anunciante'
     | '/_authenticated/motorista'
+    | '/_authenticated/notificacoes'
     | '/auth/admin'
     | '/auth/anunciante'
     | '/auth/motorista'
@@ -398,6 +411,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/admin'
       preLoaderRoute: typeof AuthAdminRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/notificacoes': {
+      id: '/_authenticated/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/motorista': {
       id: '/_authenticated/motorista'
@@ -631,6 +651,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedAnuncianteRouteRoute: typeof AuthenticatedAnuncianteRouteRouteWithChildren
   AuthenticatedMotoristaRouteRoute: typeof AuthenticatedMotoristaRouteRouteWithChildren
+  AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -639,6 +660,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAnuncianteRouteRouteWithChildren,
   AuthenticatedMotoristaRouteRoute:
     AuthenticatedMotoristaRouteRouteWithChildren,
+  AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -655,3 +677,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
