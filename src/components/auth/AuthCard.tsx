@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import bgDesktop from "@/assets/auth-bg-desktop.png.asset.json";
 import bgMobile from "@/assets/auth-bg-mobile.png.asset.json";
-import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
 
 interface AuthCardProps {
   title: string;
@@ -19,7 +18,7 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
         style={{ backgroundImage: `url(${bgMobile.url})` }}
         aria-hidden
       />
-      <div className="absolute inset-0 lg:hidden bg-gradient-to-b from-[#020617]/40 via-[#020617]/55 to-[#020617]/85" aria-hidden />
+      <div className="absolute inset-0 lg:hidden bg-gradient-to-b from-[#020617]/30 via-[#020617]/55 to-[#020617]/90" aria-hidden />
 
       {/* Desktop background */}
       <div
@@ -27,12 +26,11 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
         style={{ backgroundImage: `url(${bgDesktop.url})` }}
         aria-hidden
       />
-      <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-[#020617]/30 via-transparent to-[#020617]/80" aria-hidden />
+      <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-transparent via-[#020617]/40 to-[#020617]/85" aria-hidden />
 
       <div className="relative min-h-screen flex flex-col lg:flex-row">
-        {/* Brand side (desktop) */}
-        <aside className="hidden lg:flex flex-1 flex-col justify-between p-12 xl:p-16">
-          <img src={logoFull.url} alt="Driver Ads" className="w-[280px] xl:w-[340px] drop-shadow-[0_0_30px_rgba(22,120,255,0.35)]" />
+        {/* Brand side (desktop) — bg already has logo, only tagline */}
+        <aside className="hidden lg:flex flex-1 flex-col justify-end p-12 xl:p-16">
           <div className="max-w-md border-l-2 border-primary/80 pl-5">
             <h2 className="font-display text-3xl xl:text-4xl font-bold leading-tight text-white">
               Conectamos marcas <br />
@@ -47,16 +45,9 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
 
         {/* Form side */}
         <main className="flex-1 flex flex-col items-center justify-center px-5 py-10 lg:py-12 lg:px-12">
-          {/* Mobile logo */}
-          <img
-            src={logoFull.url}
-            alt="Driver Ads"
-            className="lg:hidden w-[220px] mb-8 drop-shadow-[0_0_24px_rgba(22,120,255,0.4)]"
-          />
-
           <div className="w-full max-w-md">
             <div className="rounded-2xl border border-white/10 bg-[#0a1428]/70 backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] p-7 sm:p-9">
-              <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-white text-center lg:text-center">
+              <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-white text-center">
                 {title.includes("volta") ? (
                   <>Bem-vindo <span className="text-primary">de volta!</span></>
                 ) : (
