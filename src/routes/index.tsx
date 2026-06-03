@@ -640,7 +640,7 @@ function DriverLanding() {
             </motion.p>
             <motion.div variants={fadeUp} custom={2} className="relative">
               <Button size="xl" variant="hero" asChild>
-                <Link to="/auth/motorista">
+                <Link to="/auth">
                   Quero ser parceiro Driver Ads <ArrowRight />
                 </Link>
               </Button>
