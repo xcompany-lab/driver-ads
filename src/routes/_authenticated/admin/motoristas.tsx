@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Check, Ban, RotateCcw, X } from "lucide-react";
+import { Search, Check, Ban, RotateCcw, X, FileText, Eye, CheckCircle2, AlertTriangle } from "lucide-react";
 import { listDrivers, updateDriverStatus, type DriverStatus } from "@/lib/admin";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, getSignedDocUrl, type DriverDocKey } from "@/lib/driver-documents";
 
 export const Route = createFileRoute("/_authenticated/admin/motoristas")({
   component: DriversAdmin,
