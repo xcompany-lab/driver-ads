@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Check, Ban, RotateCcw, X, FileText, Eye, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Search, Check, Ban, RotateCcw, X, FileText, Eye, CheckCircle2, AlertTriangle, XCircle, Clock } from "lucide-react";
 import { listDrivers, updateDriverStatus, type DriverStatus } from "@/lib/admin";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,7 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, type DriverDocKey } from "@/lib/driver-documents";
+import {
+  DRIVER_DOC_LABELS,
+  DRIVER_DOC_ORDER,
+  DRIVER_DOC_STATUS_KEY,
+  setDriverDocStatus,
+  setVehicleCrlvStatus,
+  type DriverDocKey,
+  type DocReviewStatus,
+} from "@/lib/driver-documents";
 import { DocumentPreview, isPdfPath } from "@/components/brand/DocumentPreview";
 
 export const Route = createFileRoute("/_authenticated/admin/motoristas")({
