@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      advertiser_payments: {
+        Row: {
+          advertiser_id: string
+          amount: number
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          due_date: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          receipt_url: string | null
+          status: Database["public"]["Enums"]["advertiser_payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          amount?: number
+          campaign_id: string
+          created_at?: string
+          created_by?: string | null
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["advertiser_payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          amount?: number
+          campaign_id?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          receipt_url?: string | null
+          status?: Database["public"]["Enums"]["advertiser_payment_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       advertisers: {
         Row: {
           city: string
@@ -228,6 +273,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_payouts: {
+        Row: {
+          amount: number
+          assignment_id: string
+          created_at: string
+          created_by: string | null
+          driver_id: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          receipt_url: string | null
+          reference_month: string
+          status: Database["public"]["Enums"]["driver_payout_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          assignment_id: string
+          created_at?: string
+          created_by?: string | null
+          driver_id: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          receipt_url?: string | null
+          reference_month: string
+          status?: Database["public"]["Enums"]["driver_payout_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          assignment_id?: string
+          created_at?: string
+          created_by?: string | null
+          driver_id?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          receipt_url?: string | null
+          reference_month?: string
+          status?: Database["public"]["Enums"]["driver_payout_status"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       drivers: {
         Row: {
@@ -466,6 +562,7 @@ export type Database = {
       is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      advertiser_payment_status: "pending" | "paid" | "overdue" | "cancelled"
       advertiser_status:
         | "pending_review"
         | "approved"
@@ -491,6 +588,7 @@ export type Database = {
         | "paused"
         | "completed"
         | "cancelled"
+      driver_payout_status: "pending" | "processing" | "paid" | "cancelled"
       driver_status:
         | "pending_review"
         | "approved"
@@ -630,6 +728,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      advertiser_payment_status: ["pending", "paid", "overdue", "cancelled"],
       advertiser_status: [
         "pending_review",
         "approved",
@@ -658,6 +757,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      driver_payout_status: ["pending", "processing", "paid", "cancelled"],
       driver_status: [
         "pending_review",
         "approved",
