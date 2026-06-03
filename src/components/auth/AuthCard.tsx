@@ -53,7 +53,7 @@ export function AuthCard({ title, subtitle, children, footer }: AuthCardProps) {
               alt="Driver Ads"
               className="lg:hidden w-[200px] mb-6 drop-shadow-[0_0_24px_rgba(22,120,255,0.4)]"
             />
-            <div className="w-full rounded-2xl border border-white/10 bg-[#0a1428]/70 backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] p-7 sm:p-9">
+            <div className="w-full relative rounded-2xl border border-white/10 bg-[#0a1428]/70 backdrop-blur-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] p-7 sm:p-9 border-gradient-brand-flow">
               <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-white text-center">
                 {title.includes("volta") ? (
                   <>Bem-vindo <span className="text-primary">de volta!</span></>
