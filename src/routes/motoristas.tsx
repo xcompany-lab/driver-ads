@@ -123,8 +123,8 @@ function DriverLanding() {
               className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[0.98] tracking-tight mb-7"
             >
               Seu carro pode pagar <br className="hidden sm:block" />
-              o próprio <span className="text-gradient-brand">combustível</span> <br />
-              <span className="text-gradient-brand">— e muito mais.</span>
+              o próprio <span className="text-gradient-brand-flow">combustível</span> <br />
+              <span className="text-gradient-brand-flow">— e muito mais.</span>
             </motion.h1>
 
             <motion.p
