@@ -21,6 +21,8 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMotoristaIndexRouteImport } from './routes/_authenticated/motorista/index'
 import { Route as AuthenticatedAnuncianteIndexRouteImport } from './routes/_authenticated/anunciante/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedMotoristaVeiculosRouteImport } from './routes/_authenticated/motorista/veiculos'
+import { Route as AuthenticatedMotoristaPerfilRouteImport } from './routes/_authenticated/motorista/perfil'
 import { Route as AuthenticatedAnunciantePerfilRouteImport } from './routes/_authenticated/anunciante/perfil'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -86,6 +88,18 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedMotoristaVeiculosRoute =
+  AuthenticatedMotoristaVeiculosRouteImport.update({
+    id: '/veiculos',
+    path: '/veiculos',
+    getParentRoute: () => AuthenticatedMotoristaRouteRoute,
+  } as any)
+const AuthenticatedMotoristaPerfilRoute =
+  AuthenticatedMotoristaPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedMotoristaRouteRoute,
+  } as any)
 const AuthenticatedAnunciantePerfilRoute =
   AuthenticatedAnunciantePerfilRouteImport.update({
     id: '/perfil',
@@ -103,6 +117,8 @@ export interface FileRoutesByFullPath {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
+  '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -114,6 +130,8 @@ export interface FileRoutesByTo {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth': typeof AuthIndexRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
+  '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista': typeof AuthenticatedMotoristaIndexRoute
@@ -130,6 +148,8 @@ export interface FileRoutesById {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/_authenticated/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
+  '/_authenticated/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/_authenticated/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -146,6 +166,8 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/anunciante/perfil'
+    | '/motorista/perfil'
+    | '/motorista/veiculos'
     | '/admin/'
     | '/anunciante/'
     | '/motorista/'
@@ -157,6 +179,8 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth'
     | '/anunciante/perfil'
+    | '/motorista/perfil'
+    | '/motorista/veiculos'
     | '/admin'
     | '/anunciante'
     | '/motorista'
@@ -172,6 +196,8 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/_authenticated/anunciante/perfil'
+    | '/_authenticated/motorista/perfil'
+    | '/_authenticated/motorista/veiculos'
     | '/_authenticated/admin/'
     | '/_authenticated/anunciante/'
     | '/_authenticated/motorista/'
@@ -272,6 +298,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/motorista/veiculos': {
+      id: '/_authenticated/motorista/veiculos'
+      path: '/veiculos'
+      fullPath: '/motorista/veiculos'
+      preLoaderRoute: typeof AuthenticatedMotoristaVeiculosRouteImport
+      parentRoute: typeof AuthenticatedMotoristaRouteRoute
+    }
+    '/_authenticated/motorista/perfil': {
+      id: '/_authenticated/motorista/perfil'
+      path: '/perfil'
+      fullPath: '/motorista/perfil'
+      preLoaderRoute: typeof AuthenticatedMotoristaPerfilRouteImport
+      parentRoute: typeof AuthenticatedMotoristaRouteRoute
+    }
     '/_authenticated/anunciante/perfil': {
       id: '/_authenticated/anunciante/perfil'
       path: '/perfil'
@@ -313,11 +353,15 @@ const AuthenticatedAnuncianteRouteRouteWithChildren =
   )
 
 interface AuthenticatedMotoristaRouteRouteChildren {
+  AuthenticatedMotoristaPerfilRoute: typeof AuthenticatedMotoristaPerfilRoute
+  AuthenticatedMotoristaVeiculosRoute: typeof AuthenticatedMotoristaVeiculosRoute
   AuthenticatedMotoristaIndexRoute: typeof AuthenticatedMotoristaIndexRoute
 }
 
 const AuthenticatedMotoristaRouteRouteChildren: AuthenticatedMotoristaRouteRouteChildren =
   {
+    AuthenticatedMotoristaPerfilRoute: AuthenticatedMotoristaPerfilRoute,
+    AuthenticatedMotoristaVeiculosRoute: AuthenticatedMotoristaVeiculosRoute,
     AuthenticatedMotoristaIndexRoute: AuthenticatedMotoristaIndexRoute,
   }
 
@@ -354,3 +398,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
