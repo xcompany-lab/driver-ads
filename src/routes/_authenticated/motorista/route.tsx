@@ -34,6 +34,7 @@ function DriverLayout() {
           <Link to="/motorista"><Logo size={32} /></Link>
           <div className="flex items-center gap-2">
             <span className="hidden text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:inline">Portal do Motorista</span>
+            <NotificationBell />
             <Button variant="ghost" size="sm" onClick={() => signOut().then(() => (window.location.href = "/auth"))}>
               <LogOut className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Sair</span>
             </Button>
