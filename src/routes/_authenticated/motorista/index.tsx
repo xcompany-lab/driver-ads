@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/motorista/")({
 
 type DriverStatus = Database["public"]["Enums"]["driver_status"];
 
-function StatusPanel({ status }: { status: DriverStatus }) {
+function StatusPanel({ status, dismissible, onDismiss }: { status: DriverStatus; dismissible?: boolean; onDismiss?: () => void }) {
   const map: Record<DriverStatus, { title: string; desc: string; tone: "warning" | "success" | "destructive" | "muted" }> = {
     pending_review: { title: "Cadastro em análise", desc: "Nosso time está revisando seus dados. Avisaremos por e-mail quando estiver aprovado.", tone: "warning" },
     approved: { title: "Cadastro aprovado", desc: "Você já pode receber convites de campanhas compatíveis com seu perfil.", tone: "success" },
@@ -41,6 +41,11 @@ function StatusPanel({ status }: { status: DriverStatus }) {
           <CardDescription>{s.desc}</CardDescription>
         </div>
         <StatusBadge status={status} />
+        {dismissible && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-1" onClick={onDismiss} aria-label="Fechar aviso">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </CardHeader>
     </Card>
   );
