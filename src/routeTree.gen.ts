@@ -24,6 +24,7 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMotoristaIndexRouteImport } from './routes/_authenticated/motorista/index'
 import { Route as AuthenticatedAnuncianteIndexRouteImport } from './routes/_authenticated/anunciante/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as ApiPublicSeedAccountsRouteImport } from './routes/api/public/seed-accounts'
 import { Route as AuthenticatedMotoristaVeiculosRouteImport } from './routes/_authenticated/motorista/veiculos'
 import { Route as AuthenticatedMotoristaPerfilRouteImport } from './routes/_authenticated/motorista/perfil'
 import { Route as AuthenticatedMotoristaGanhosRouteImport } from './routes/_authenticated/motorista/ganhos'
@@ -118,6 +119,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const ApiPublicSeedAccountsRoute = ApiPublicSeedAccountsRouteImport.update({
+  id: '/api/public/seed-accounts',
+  path: '/api/public/seed-accounts',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMotoristaVeiculosRoute =
   AuthenticatedMotoristaVeiculosRouteImport.update({
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
+  '/api/public/seed-accounts': typeof ApiPublicSeedAccountsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
+  '/api/public/seed-accounts': typeof ApiPublicSeedAccountsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista': typeof AuthenticatedMotoristaIndexRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/_authenticated/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/_authenticated/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/_authenticated/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
+  '/api/public/seed-accounts': typeof ApiPublicSeedAccountsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/_authenticated/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/motorista/ganhos'
     | '/motorista/perfil'
     | '/motorista/veiculos'
+    | '/api/public/seed-accounts'
     | '/admin/'
     | '/anunciante/'
     | '/motorista/'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/motorista/ganhos'
     | '/motorista/perfil'
     | '/motorista/veiculos'
+    | '/api/public/seed-accounts'
     | '/admin'
     | '/anunciante'
     | '/motorista'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/motorista/ganhos'
     | '/_authenticated/motorista/perfil'
     | '/_authenticated/motorista/veiculos'
+    | '/api/public/seed-accounts'
     | '/_authenticated/admin/'
     | '/_authenticated/anunciante/'
     | '/_authenticated/motorista/'
@@ -405,6 +417,7 @@ export interface RootRouteChildren {
   AuthAnuncianteRoute: typeof AuthAnuncianteRoute
   AuthMotoristaRoute: typeof AuthMotoristaRoute
   AuthIndexRoute: typeof AuthIndexRoute
+  ApiPublicSeedAccountsRoute: typeof ApiPublicSeedAccountsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -513,6 +526,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/api/public/seed-accounts': {
+      id: '/api/public/seed-accounts'
+      path: '/api/public/seed-accounts'
+      fullPath: '/api/public/seed-accounts'
+      preLoaderRoute: typeof ApiPublicSeedAccountsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/motorista/veiculos': {
       id: '/_authenticated/motorista/veiculos'
@@ -737,6 +757,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthAnuncianteRoute: AuthAnuncianteRoute,
   AuthMotoristaRoute: AuthMotoristaRoute,
   AuthIndexRoute: AuthIndexRoute,
+  ApiPublicSeedAccountsRoute: ApiPublicSeedAccountsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
