@@ -29,7 +29,9 @@ import { Route as AuthenticatedMotoristaCampanhasRouteImport } from './routes/_a
 import { Route as AuthenticatedAnunciantePerfilRouteImport } from './routes/_authenticated/anunciante/perfil'
 import { Route as AuthenticatedAdminVeiculosRouteImport } from './routes/_authenticated/admin/veiculos'
 import { Route as AuthenticatedAdminMotoristasRouteImport } from './routes/_authenticated/admin/motoristas'
+import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin/campanhas'
 import { Route as AuthenticatedAdminAnunciantesRouteImport } from './routes/_authenticated/admin/anunciantes'
+import { Route as AuthenticatedAdminCampanhasIdRouteImport } from './routes/_authenticated/admin/campanhas.$id'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -142,11 +144,23 @@ const AuthenticatedAdminMotoristasRoute =
     path: '/motoristas',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminCampanhasRoute =
+  AuthenticatedAdminCampanhasRouteImport.update({
+    id: '/campanhas',
+    path: '/campanhas',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminAnunciantesRoute =
   AuthenticatedAdminAnunciantesRouteImport.update({
     id: '/anunciantes',
     path: '/anunciantes',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminCampanhasIdRoute =
+  AuthenticatedAdminCampanhasIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminCampanhasRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -159,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
+  '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
   '/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
@@ -170,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista/': typeof AuthenticatedMotoristaIndexRoute
+  '/admin/campanhas/$id': typeof AuthenticatedAdminCampanhasIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -178,6 +194,7 @@ export interface FileRoutesByTo {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth': typeof AuthIndexRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
+  '/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
   '/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
@@ -189,6 +206,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista': typeof AuthenticatedMotoristaIndexRoute
+  '/admin/campanhas/$id': typeof AuthenticatedAdminCampanhasIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -202,6 +220,7 @@ export interface FileRoutesById {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
+  '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRouteWithChildren
   '/_authenticated/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/_authenticated/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/_authenticated/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
@@ -213,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/_authenticated/motorista/': typeof AuthenticatedMotoristaIndexRoute
+  '/_authenticated/admin/campanhas/$id': typeof AuthenticatedAdminCampanhasIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -226,6 +246,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/admin/anunciantes'
+    | '/admin/campanhas'
     | '/admin/motoristas'
     | '/admin/veiculos'
     | '/anunciante/perfil'
@@ -237,6 +258,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/anunciante/'
     | '/motorista/'
+    | '/admin/campanhas/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -245,6 +267,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth'
     | '/admin/anunciantes'
+    | '/admin/campanhas'
     | '/admin/motoristas'
     | '/admin/veiculos'
     | '/anunciante/perfil'
@@ -256,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/anunciante'
     | '/motorista'
+    | '/admin/campanhas/$id'
   id:
     | '__root__'
     | '/'
@@ -268,6 +292,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/'
     | '/_authenticated/admin/anunciantes'
+    | '/_authenticated/admin/campanhas'
     | '/_authenticated/admin/motoristas'
     | '/_authenticated/admin/veiculos'
     | '/_authenticated/anunciante/perfil'
@@ -279,6 +304,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/anunciante/'
     | '/_authenticated/motorista/'
+    | '/_authenticated/admin/campanhas/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -432,6 +458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMotoristasRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/campanhas': {
+      id: '/_authenticated/admin/campanhas'
+      path: '/campanhas'
+      fullPath: '/admin/campanhas'
+      preLoaderRoute: typeof AuthenticatedAdminCampanhasRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/anunciantes': {
       id: '/_authenticated/admin/anunciantes'
       path: '/anunciantes'
@@ -439,11 +472,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAnunciantesRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/campanhas/$id': {
+      id: '/_authenticated/admin/campanhas/$id'
+      path: '/$id'
+      fullPath: '/admin/campanhas/$id'
+      preLoaderRoute: typeof AuthenticatedAdminCampanhasIdRouteImport
+      parentRoute: typeof AuthenticatedAdminCampanhasRoute
+    }
   }
 }
 
+interface AuthenticatedAdminCampanhasRouteChildren {
+  AuthenticatedAdminCampanhasIdRoute: typeof AuthenticatedAdminCampanhasIdRoute
+}
+
+const AuthenticatedAdminCampanhasRouteChildren: AuthenticatedAdminCampanhasRouteChildren =
+  {
+    AuthenticatedAdminCampanhasIdRoute: AuthenticatedAdminCampanhasIdRoute,
+  }
+
+const AuthenticatedAdminCampanhasRouteWithChildren =
+  AuthenticatedAdminCampanhasRoute._addFileChildren(
+    AuthenticatedAdminCampanhasRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAnunciantesRoute: typeof AuthenticatedAdminAnunciantesRoute
+  AuthenticatedAdminCampanhasRoute: typeof AuthenticatedAdminCampanhasRouteWithChildren
   AuthenticatedAdminMotoristasRoute: typeof AuthenticatedAdminMotoristasRoute
   AuthenticatedAdminVeiculosRoute: typeof AuthenticatedAdminVeiculosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -452,6 +507,8 @@ interface AuthenticatedAdminRouteRouteChildren {
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminAnunciantesRoute: AuthenticatedAdminAnunciantesRoute,
+    AuthenticatedAdminCampanhasRoute:
+      AuthenticatedAdminCampanhasRouteWithChildren,
     AuthenticatedAdminMotoristasRoute: AuthenticatedAdminMotoristasRoute,
     AuthenticatedAdminVeiculosRoute: AuthenticatedAdminVeiculosRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
