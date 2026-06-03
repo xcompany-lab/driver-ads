@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/Logo";
+import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
 
 export const Route = createFileRoute("/motoristas")({
   head: () => ({
@@ -58,7 +59,7 @@ function DriverLanding() {
   return (
     <div className="dark min-h-screen bg-[#020617] text-white overflow-x-hidden">
       {/* NAV */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-[#020617]/70 backdrop-blur-xl">
+      <nav className="fixed top-0 inset-x-0 z-50 glass-panel border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6">
           <Logo variant="light" size={36} />
           <div className="hidden md:flex items-center gap-8 text-sm text-white/70">
@@ -102,10 +103,14 @@ function DriverLanding() {
 
         <div className="relative max-w-5xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.div variants={fadeUp} className="flex justify-center mb-6">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[0.72rem] sm:text-[0.78rem] tracking-[0.28em] uppercase text-white/80 backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5 text-brand-cyan" />
-                Renda extra rodando como sempre
+            <motion.div variants={fadeUp} className="flex flex-col items-center mb-8">
+              <img
+                src={logoFull.url}
+                alt="Driver Ads"
+                className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-[0_8px_30px_rgba(22,120,255,0.35)]"
+              />
+              <span className="mt-3 text-[0.7rem] sm:text-xs font-semibold tracking-[0.32em] uppercase text-white/70">
+                Sua mídia em movimento
               </span>
             </motion.div>
 
@@ -179,7 +184,7 @@ function DriverLanding() {
               ].map((s) => (
                 <div
                   key={s.l}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm"
+                  className="glass-panel metallic-beam metallic-beam-slow rounded-2xl p-4"
                 >
                   <div className="font-display text-2xl sm:text-3xl font-bold text-gradient-brand">
                     {s.v}
@@ -268,7 +273,7 @@ function DriverLanding() {
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-3 p-4 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm"
+                  className="glass-panel metallic-beam metallic-beam-slow flex items-center gap-3 p-4 rounded-2xl"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand shrink-0">
                     <Icon className="h-5 w-5" />
@@ -290,20 +295,6 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.3 }}
             variants={stagger}
           >
-            <motion.h2
-              variants={fadeUp}
-              className="font-display text-3xl sm:text-4xl font-bold text-center mb-4"
-            >
-              Comece em <span className="text-gradient-brand">3 passos simples</span>
-            </motion.h2>
-            <motion.p
-              variants={fadeUp}
-              custom={1}
-              className="text-white/70 text-center mb-16"
-            >
-              Do cadastro ao primeiro repasse, tudo direto pelo seu celular.
-            </motion.p>
-
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
@@ -329,7 +320,7 @@ function DriverLanding() {
                   key={step}
                   variants={fadeUp}
                   custom={i}
-                  className="relative rounded-2xl border border-white/10 bg-white/[0.04] p-7 backdrop-blur-sm overflow-hidden group"
+                  className="glass-panel metallic-beam relative rounded-2xl p-7 overflow-hidden group"
                 >
                   <span className="absolute right-5 top-4 font-display text-5xl font-extrabold text-gradient-brand opacity-30">
                     {step}
@@ -358,12 +349,6 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.2 }}
             variants={stagger}
           >
-            <motion.h2
-              variants={fadeUp}
-              className="font-display text-3xl sm:text-4xl font-bold text-center mb-16"
-            >
-              Por que ser um <span className="text-gradient-brand">motorista parceiro</span>
-            </motion.h2>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
@@ -378,7 +363,7 @@ function DriverLanding() {
                   key={title}
                   variants={fadeUp}
                   custom={i}
-                  className="p-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm hover:border-brand-cyan/40 hover:bg-white/[0.06] transition-all"
+                  className="glass-panel metallic-beam p-6 rounded-2xl hover:bg-white/[0.08] transition-all"
                 >
                   <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand mb-4">
                     <Icon className="h-5 w-5" />
@@ -436,7 +421,7 @@ function DriverLanding() {
             </div>
 
             <motion.div variants={fadeUp} custom={2} className="relative">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm p-6 space-y-4">
+              <div className="glass-panel-strong metallic-beam rounded-2xl p-6 space-y-4">
                 {[
                   { label: "Adesivo lateral pequeno", value: "R$ 150", color: "text-brand-cyan" },
                   { label: "Adesivo lateral grande", value: "R$ 300", color: "text-white" },
@@ -473,26 +458,6 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.3 }}
             variants={stagger}
           >
-            <motion.div variants={fadeUp} className="flex items-center justify-center gap-2 mb-6">
-              <ShieldCheck className="h-5 w-5 text-brand-cyan" />
-              <span className="text-xs uppercase tracking-[0.28em] text-brand-cyan font-semibold">
-                Requisitos
-              </span>
-            </motion.div>
-            <motion.h2
-              variants={fadeUp}
-              custom={1}
-              className="font-display text-3xl sm:text-4xl font-bold text-center mb-4"
-            >
-              O que você precisa para <span className="text-gradient-brand">começar</span>
-            </motion.h2>
-            <motion.p
-              variants={fadeUp}
-              custom={2}
-              className="text-white/70 text-center max-w-3xl mx-auto mb-12"
-            >
-              Cadastro simples e 100% digital — feito direto pelo celular em poucos minutos.
-            </motion.p>
 
             <motion.div
               variants={fadeUp}
@@ -508,7 +473,7 @@ function DriverLanding() {
                   key={title}
                   variants={fadeUp}
                   custom={i}
-                  className="p-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm"
+                  className="glass-panel metallic-beam p-6 rounded-2xl"
                 >
                   <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand mb-4">
                     <Icon className="h-5 w-5" />
@@ -580,7 +545,7 @@ function DriverLanding() {
               ].map((t) => (
                 <div
                   key={t.name}
-                  className="p-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm text-left"
+                  className="glass-panel metallic-beam metallic-beam-slow p-6 rounded-2xl text-left"
                 >
                   <div className="flex gap-0.5 mb-3 text-brand-cyan">
                     {Array.from({ length: 5 }).map((_, i) => (

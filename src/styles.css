@@ -284,6 +284,73 @@
     pointer-events: none;
   }
 
+  /* Glassmorphism panel — translucent surface with brand tint */
+  .glass-panel {
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in oklab, white 9%, transparent) 0%,
+      color-mix(in oklab, white 2%, transparent) 100%
+    );
+    backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid color-mix(in oklab, white 14%, transparent);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in oklab, white 18%, transparent),
+      inset 0 -1px 0 0 color-mix(in oklab, black 30%, transparent),
+      0 16px 50px -24px rgba(0, 0, 0, 0.7);
+  }
+  .glass-panel-strong {
+    background-image: linear-gradient(
+      135deg,
+      color-mix(in oklab, white 14%, transparent) 0%,
+      color-mix(in oklab, white 4%, transparent) 100%
+    );
+    backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid color-mix(in oklab, white 18%, transparent);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in oklab, white 22%, transparent),
+      0 24px 60px -28px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Metallic light beam — rotating conic gradient around the border */
+  .metallic-beam {
+    position: relative;
+    isolation: isolate;
+  }
+  .metallic-beam::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--beam-angle, 0deg),
+      transparent 0deg,
+      color-mix(in oklab, oklch(0.82 0.13 210) 90%, transparent) 40deg,
+      color-mix(in oklab, oklch(0.60 0.22 258) 90%, transparent) 90deg,
+      transparent 160deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: beam-rotate 5s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .metallic-beam-fast::before { animation-duration: 3s; }
+  .metallic-beam-slow::before { animation-duration: 8s; }
+
+  @property --beam-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+  @keyframes beam-rotate {
+    to { --beam-angle: 360deg; }
+  }
+
   /* Nav pill — branded active state */
   .nav-pill-active {
     background-image: linear-gradient(
