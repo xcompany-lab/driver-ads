@@ -155,25 +155,32 @@ function DriverDocsReview({ driverId, driver }: { driverId: string; driver: Reco
 }
 
 function DocLink({ label, path }: { label: string; path: string | null }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let active = true;
-    if (path) getSignedDocUrl(path).then((u) => active && setUrl(u));
-    return () => { active = false; };
-  }, [path]);
+  const [open, setOpen] = useState(false);
+  const isPdf = isPdfPath(path);
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-card/50 p-2 text-sm">
-      <span className="flex items-center gap-2 min-w-0">
-        {path ? <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" /> : <FileText className="h-3 w-3 text-muted-foreground shrink-0" />}
-        <span className="truncate">{label}</span>
-      </span>
-      {path && url ? (
-        <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1 hover:underline shrink-0">
-          <Eye className="h-3 w-3" /> Abrir
-        </a>
-      ) : (
-        <span className="text-xs text-muted-foreground">Pendente</span>
-      )}
-    </div>
+    <>
+      <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-card/50 p-2 text-sm">
+        <span className="flex items-center gap-2 min-w-0">
+          {path ? <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" /> : <FileText className="h-3 w-3 text-muted-foreground shrink-0" />}
+          <span className="truncate">
+            {label}
+            {path && isPdf && <span className="ml-1 text-xs text-muted-foreground">(PDF)</span>}
+          </span>
+        </span>
+        {path ? (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="text-xs text-primary inline-flex items-center gap-1 hover:underline shrink-0"
+          >
+            <Eye className="h-3 w-3" /> Abrir
+          </button>
+        ) : (
+          <span className="text-xs text-muted-foreground">Pendente</span>
+        )}
+      </div>
+      <DocumentPreview open={open} onOpenChange={setOpen} path={path} label={label} />
+    </>
   );
 }
+
