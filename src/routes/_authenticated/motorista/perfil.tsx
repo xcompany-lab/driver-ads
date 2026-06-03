@@ -175,7 +175,7 @@ function DriverProfilePage() {
                 onUpload={async (file) => {
                   const path = await uploadDriverDoc({ userId: user!.id, driverId: driver.id, key, file });
                   await updateDriverDoc(driver.id, key, path);
-                  qc.invalidateQueries({ queryKey: ["my-driver"] });
+                  await qc.invalidateQueries({ queryKey: ["my-driver"] });
                 }}
               />
             ))}
