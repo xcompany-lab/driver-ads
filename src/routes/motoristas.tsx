@@ -310,9 +310,8 @@ function DriverLanding() {
                   title: "Cadastre-se",
                   desc: "Crie sua conta de motorista e envie os documentos do CNH e do veículo pelo app.",
                   icon: FileCheck,
-                  accent: "from-brand-cyan/40 via-brand-cyan/10 to-transparent",
-                  ringColor: "ring-brand-cyan/40",
-                  glowColor: "bg-brand-cyan/30",
+                  accentColor: "oklch(0.82 0.13 210)",
+                  ringColor: "border-brand-cyan/50",
                   iconBg: "linear-gradient(135deg, oklch(0.82 0.13 210), oklch(0.60 0.22 258))",
                 },
                 {
@@ -320,9 +319,8 @@ function DriverLanding() {
                   title: "Receba sua campanha",
                   desc: "Nossa equipe vincula você a uma campanha ativa compatível com a sua cidade.",
                   icon: MapPin,
-                  accent: "from-brand-electric/40 via-brand-electric/10 to-transparent",
-                  ringColor: "ring-brand-electric/50",
-                  glowColor: "bg-brand-electric/30",
+                  accentColor: "oklch(0.60 0.22 258)",
+                  ringColor: "border-brand-electric/60",
                   iconBg: "linear-gradient(135deg, oklch(0.60 0.22 258), oklch(0.45 0.20 270))",
                 },
                 {
@@ -330,12 +328,11 @@ function DriverLanding() {
                   title: "Instale, rode e ganhe",
                   desc: "Aplique o kit, mande as fotos de comprovação e receba mensalmente via PIX.",
                   icon: HandCoins,
-                  accent: "from-warning/40 via-brand-cyan/10 to-transparent",
-                  ringColor: "ring-warning/50",
-                  glowColor: "bg-warning/25",
+                  accentColor: "oklch(0.78 0.15 75)",
+                  ringColor: "border-warning/60",
                   iconBg: "linear-gradient(135deg, oklch(0.78 0.15 75), oklch(0.82 0.13 210))",
                 },
-              ].map(({ step, title, desc, icon: Icon, accent, ringColor, glowColor, iconBg }, i) => (
+              ].map(({ step, title, desc, icon: Icon, accentColor, ringColor, iconBg }, i) => (
                 <motion.div
                   key={step}
                   variants={fadeUp}
@@ -344,7 +341,10 @@ function DriverLanding() {
                 >
                   {/* Inner radial accent tint */}
                   <div
-                    className={`pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full bg-gradient-radial ${accent} blur-3xl opacity-70`}
+                    className="pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full blur-3xl opacity-60"
+                    style={{
+                      background: `radial-gradient(circle, ${accentColor} 0%, transparent 65%)`,
+                    }}
                   />
                   {/* Outlined giant step number watermark */}
                   <span
