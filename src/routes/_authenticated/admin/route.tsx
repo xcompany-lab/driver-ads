@@ -66,7 +66,7 @@ function NavBar() {
   const isAdmin = useIsAdmin();
   const items = navItems.filter((i) => isAdmin || i.to !== "/admin/auditoria");
   return (
-    <nav className="mx-auto max-w-7xl px-6 pb-2 flex gap-1 overflow-x-auto">
+    <nav className="mx-auto max-w-7xl px-6 pb-3 flex gap-1 overflow-x-auto">
       {items.map((item) => {
         const Icon = item.icon;
         return (
@@ -75,9 +75,9 @@ function NavBar() {
             to={item.to}
             activeOptions={{ exact: item.exact ?? false }}
             className={cn(
-              "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition",
+              "inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition",
             )}
-            activeProps={{ className: "!text-foreground !bg-muted" }}
+            activeProps={{ className: "nav-pill-active !text-foreground" }}
           >
             <Icon className="h-4 w-4" />
             {item.label}
