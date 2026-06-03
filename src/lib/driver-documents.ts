@@ -1,20 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type DriverDocKey = "cnh_front_url" | "cnh_back_url" | "selfie_doc_url" | "address_proof_url";
+export type DriverDocKey = "cnh_front_url" | "selfie_doc_url" | "address_proof_url";
 
 export const DRIVER_DOC_LABELS: Record<DriverDocKey, string> = {
-  cnh_front_url: "CNH (frente)",
-  cnh_back_url: "CNH (verso)",
+  cnh_front_url: "CNH",
   selfie_doc_url: "Selfie com documento",
   address_proof_url: "Comprovante de residência",
 };
 
 export const DRIVER_DOC_ORDER: DriverDocKey[] = [
   "cnh_front_url",
-  "cnh_back_url",
   "selfie_doc_url",
   "address_proof_url",
 ];
+
 
 const BUCKET = "driver-documents";
 
