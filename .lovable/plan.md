@@ -1,132 +1,64 @@
+# Plano: Reescrita do Plano Mestre Driver Ads como Checklist
 
-# Driver Ads — Plano de Implementação em 15 Fases
+Vou gerar um documento `.md` reescrito do plano mestre, mantendo a estrutura original (seções 1–23) e adicionando, em cada item de entrega/fase/regra, uma marcação de status:
 
-Plataforma operacional de gestão de publicidade física em veículos. Sem matching automático. Perfis: Admin, Operador, Anunciante, Motorista. Stack: TanStack Start + Supabase (Auth, DB, Storage, RLS) + Lovable Cloud para serviços externos (email/WhatsApp futuros).
+- `[x]` — implementado e verificável no código atual
+- `[~]` — parcialmente implementado (com nota do que falta)
+- `[ ]` — não iniciado
 
-## Identidade Visual (aplicada em todas as fases)
-- **Cores**: Azul Noturno `#041E4F` (background principal), Azul Elétrico `#1678FF` (primário/CTA), Cyan Mobility `#1FD0E8` (accent), Cinza Claro `#F4F7FA`, Cinza Escuro `#2E3440`. Gradiente oficial `#1678FF → #1FD0E8`.
-- **Tipografia**: Montserrat Bold (títulos), Inter Regular/Medium (texto/UI).
-- **Logo**: ícone com fundo (uploaded) em telas de login/splash; versão sem fundo em headers e documentos.
-- **Tom**: profissional, mobility-tech, confiável.
+O arquivo final será salvo em `/mnt/documents/driver_ads_plano_checklist.md` e disponibilizado como artefato para download.
 
----
+## Mapeamento do estado atual (base da auditoria)
 
-## FASE 1 — Fundação Visual & Design System
-- Configurar `src/styles.css` com tokens oklch das cores da marca, gradiente, sombras, raios.
-- Importar Montserrat + Inter via Google Fonts.
-- Salvar logo (com/sem fundo) em `src/assets/` como Lovable Assets.
-- Criar variantes de Button (`hero`, `primary`, `outline-brand`), Card, Badge de status com cores semânticas (pending/approved/rejected/active).
-- Layout shell base (sidebar admin, top-bar anunciante, bottom-nav mobile motorista).
+Levantado a partir de `supabase/migrations/`, `src/routes/`, `src/lib/` e `.lovable/plan.md`:
 
-## FASE 2 — Schema do Banco (Supabase) — Núcleo
-Migration única criando:
-- `profiles` (id=auth.uid, role, full_name, phone, avatar_url, created_at).
-- `app_role` enum: `admin`, `operator`, `advertiser`, `driver`.
-- `user_roles` (tabela separada) + função `has_role()` security definer.
-- `advertisers` (company_name, cnpj, responsible, email, phone, city, segment, status).
-- `drivers` (cpf, birth_date, phone, email, city, regions[], pix_key, photo_url, status, terms_accepted_at).
-- `vehicles` (driver_id, plate, model, year, color, type, photo_url, status).
-- RLS + GRANTs corretos em todas.
+**Implementado (`[x]`)**
+- Stack TanStack Start + Supabase (Auth, DB, Storage, RLS).
+- Migrations criadas: profiles, user_roles + `has_role()`, advertisers, drivers, vehicles, campaigns, campaign_assets, campaign_driver_assignments, installation_proofs, advertiser_payments, driver_payouts, admin_notes, activity_logs, notifications, system_settings.
+- Enum `app_role` (admin, operator, advertiser, driver) e enums de status operacionais.
+- Status granular de documentos do motorista (`doc_review_status` + colunas `cnh_front_status`, `selfie_doc_status`, `address_proof_status`, `crlv_status`).
+- Auth separado por perfil: `/auth`, `/auth/anunciante`, `/auth/motorista`, `/auth/admin`.
+- Layout `_authenticated` com redirect por role.
+- Painel Admin: dashboard (`index`), anunciantes, motoristas, veículos, campanhas (lista + detalhe), comprovações, auditoria, financeiro.
+- Aprovação/reprovação por documento individual no admin (CNH, selfie, comprovante, CRLV).
+- Portal Anunciante: index, perfil, financeiro.
+- Área Motorista (mobile-first): index, perfil, veículos, campanhas, ganhos, auditoria (verificação de identidade + foto de instalação atrelada à campanha).
+- Upload de documentos com preview de imagem e PDF (`DocumentUploadField`, `DocumentPreview`).
+- Storage buckets configurados (avatars, vehicles, campaign-arts, installation-proofs, payment-receipts).
+- Páginas Termos e Privacidade.
+- Notificações in-app (NotificationBell + `/notificacoes`).
+- Conta admin seed: `guime.eventos@gmail.com`.
+- Design system: tokens em `src/styles.css`, Montserrat + Inter, logo.
 
-## FASE 3 — Autenticação Separada (Anunciante x Motorista x Admin)
-- Configurar Supabase Auth (email/senha, sem confirmação no dev).
-- Tela `/auth` única com **abas**: "Sou Anunciante" / "Sou Motorista" (login + cadastro).
-- Tela `/admin/login` separada para Admin/Operador.
-- Trigger `handle_new_user` cria `profiles` + grava `user_roles` baseado em metadata do signup.
-- Layout `_authenticated` com redirect por role: motorista→`/driver`, anunciante→`/advertiser`, admin→`/admin`.
-- Recuperação de senha + página `/reset-password`.
+**Parcial (`[~]`)**
+- Operador interno: role existe no enum, sem UI/permissões diferenciadas.
+- Pagamentos/repasses: tabelas e tela financeira existem; falta fluxo completo de marcar pago + anexar comprovante PIX e cálculo automático de repasse por vínculo ativo.
+- Relatório do anunciante: dados visíveis na tela da campanha; falta um "relatório" consolidado dedicado.
+- Activity logs: tabela existe; falta gravação sistemática em todas as ações críticas.
+- LGPD: termos publicados; falta exportação de dados do usuário.
+- Vinculação manual admin↔motorista: assignments existem no schema; revisar se a tela de "vincular motorista à campanha" cobre todos os filtros e transições de status descritos na Fase 5.
 
-## FASE 4 — Schema do Banco — Operação
-Migration:
-- `campaigns` (advertiser_id, name, description, city, regions[], vehicles_qty, period_start/end, plan_value, art_url, observations, status).
-- `campaign_assets` (campaign_id, file_url, type, uploaded_by).
-- `campaign_driver_assignments` (campaign_id, driver_id, vehicle_id, status, monthly_payout, assigned_by, notes).
-- `installation_proofs` (assignment_id, photo_url, submitted_at, geo_lat, geo_lng, observation, status, reviewed_by, reviewed_at, rejection_reason).
-- Enums para todos os status operacionais.
+**Não iniciado (`[ ]`)**
+- Integrações externas: Resend (email), WhatsApp, gateway de pagamento.
+- App Android (fora do MVP, mantido em roadmap).
+- Documentação técnica final / README de operação (existe `docs/OPERACAO.md` parcial).
+- Checklist de produção (backup, domínio próprio em produção, remoção de usuários de teste, etc.).
 
-## FASE 5 — Schema do Banco — Financeiro & Auditoria
-- `advertiser_payments` (campaign_id, amount, due_date, paid_at, status, external_id, receipt_url).
-- `driver_payouts` (assignment_id, driver_id, amount, period_ref, status, paid_at, receipt_url, pix_key_snapshot).
-- `admin_notes` (entity_type, entity_id, note, created_by).
-- `activity_logs` (actor_id, action, entity_type, entity_id, payload jsonb).
-- `notifications` (user_id, type, title, body, read_at).
-- `system_settings` (key, value jsonb).
-- Storage buckets: `avatars`, `vehicles`, `campaign-arts`, `installation-proofs`, `payment-receipts` com policies adequadas.
+## Formato do documento entregue
 
-## FASE 6 — Cadastro & Onboarding do Anunciante
-- Wizard de cadastro (empresa, CNPJ, responsável, contato, cidade, segmento).
-- Página "Aguardando aprovação" se status=`pending_review`.
-- Edição de dados cadastrais.
-- Server functions: `createAdvertiserProfile`, `updateAdvertiser`.
+Manter a numeração 1–23 original. Para as seções 10 (Fases) e 14 (Regras de Negócio) cada bullet vira um checkbox. Adicionar duas seções novas no final:
 
-## FASE 7 — Cadastro & Onboarding do Motorista (Mobile-First)
-- Cadastro multi-step responsivo: dados pessoais → veículo → PIX → fotos → termos LGPD.
-- Upload de foto motorista + foto veículo (Storage).
-- Validação CPF/placa.
-- Tela "Cadastro em análise".
-- Server functions: `createDriverProfile`, `addVehicle`, `acceptTerms`.
+- **24. Resumo do Progresso** — contagem por fase (`x/total` itens) e barra textual.
+- **25. Próximos Passos Prioritários** — lista ordenada das pendências críticas para fechar o MVP (operador, fluxo completo de pagamentos/repasses, activity_logs em ações críticas, relatório consolidado do anunciante, checklist de produção).
 
-## FASE 8 — Portal do Anunciante: Campanhas
-- Listagem de campanhas com filtros por status.
-- Wizard "Nova solicitação de campanha" (nome, cidade, regiões, qtd veículos, período, plano, upload de arte, observações).
-- Página de detalhe da campanha (status timeline, veículos vinculados quando aprovado, comprovantes).
-- Relatório básico (somente dados operacionais confirmados — sem promessa de métricas).
+Preservar integralmente as seções de "Fora do Escopo", "Riscos", "Roadmap Pós-MVP" e a "Regra de Ouro" (sem matching) — apenas marcadas como referência, sem checkboxes.
 
-## FASE 9 — Área do Motorista: Campanhas Atribuídas
-- Bottom-nav: Início, Campanhas, Ganhos, Perfil.
-- Lista de campanhas atribuídas manualmente (status do vínculo).
-- Detalhe: aceitar/recusar, instruções, valor de repasse.
-- Tela de envio de comprovação de instalação (câmera/upload, geo opcional, observação).
-- Histórico de comprovantes e status.
+## Entrega
 
-## FASE 10 — Painel Administrativo: Dashboard & Gestão de Pessoas
-- Dashboard com KPIs (anunciantes, motoristas, veículos, campanhas por status, instalações/pagamentos pendentes).
-- Gestão de Anunciantes (listar, buscar, aprovar/suspender, notas internas).
-- Gestão de Motoristas (listar, buscar, aprovar/reprovar/suspender, ver histórico).
-- Gestão de Veículos (listar, vincular, aprovar/suspender).
+Um único arquivo:
 
-## FASE 11 — Painel Administrativo: Campanhas & Vínculos Manuais
-- CRUD de campanhas (criar manual, aprovar solicitação, editar, pausar, encerrar).
-- Tela "Vincular Motoristas à Campanha": busca/filtros por cidade, status, veículo. Vincular/desvincular. Definir valor de repasse mensal.
-- Transições de status do vínculo (convidado → aceito → aguardando instalação → ativo → ...).
-- **Sem matching, sem sugestão automática, sem ranking.**
+```
+/mnt/documents/driver_ads_plano_checklist.md
+```
 
-## FASE 12 — Painel Administrativo: Instalações & Comprovações
-- Fila de comprovações pendentes.
-- Visualizador de foto com EXIF/geo.
-- Ações: aprovar / reprovar / solicitar nova foto (com motivo).
-- Registro automático em `activity_logs`.
-
-## FASE 13 — Financeiro: Pagamentos & Repasses
-- Gestão de pagamentos de anunciantes (marcar pago, anexar comprovante, status).
-- Gestão de repasses a motoristas (calcular valor por vínculo ativo, marcar pago/falhou, anexar comprovante PIX).
-- Painel de ganhos do motorista (previsto, acumulado, histórico).
-- Cálculo de margem bruta estimada no dashboard admin.
-
-## FASE 14 — Notificações, Logs & LGPD
-- Sistema de notificações in-app (sino no header, lista, marcar como lida).
-- Eventos: campanha solicitada/aprovada, motorista aprovado, vínculo criado, instalação enviada/aprovada, pagamento/repasse.
-- `activity_logs` em todas as ações administrativas críticas.
-- Página de Termos de Uso + Política de Privacidade (LGPD).
-- Exportar dados do usuário (placeholder para fase futura).
-- **Integrações externas (email/WhatsApp via Resend) marcadas como TODO** — habilitar quando solicitado.
-
-## FASE 15 — Polish, Permissões Finais & Operador Interno
-- Perfil Operador Interno com permissões reduzidas (sem ações financeiras sensíveis).
-- Revisão completa de RLS por role (testes manuais com cada perfil).
-- Empty states, loadings, error boundaries em todas as rotas.
-- Responsividade final (admin web, anunciante web, motorista mobile).
-- Splash/login estilizados com logo.
-- README técnico + documentação de status operacionais.
-
----
-
-## Sobre integrações externas (Resend, WhatsApp, Gateway de Pagamento)
-Não habilitadas no MVP. Ganchos prontos nas fases 13 e 14 — quando você pedir, adiciono os secrets necessários e implemento.
-
-## Domínio próprio
-Conectado depois do MVP funcional, via configurações de Publish do Lovable.
-
----
-
-**Confirma que posso começar pela Fase 1 (Design System + identidade visual)?** Em seguida sigo direto para Fase 2 (schema núcleo) já preparando a migration para sua aprovação.
+Disponibilizado via `<presentation-artifact>` para download direto.
