@@ -103,10 +103,14 @@ function DriverLanding() {
 
         <div className="relative max-w-5xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.div variants={fadeUp} className="flex justify-center mb-6">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[0.72rem] sm:text-[0.78rem] tracking-[0.28em] uppercase text-white/80 backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5 text-brand-cyan" />
-                Renda extra rodando como sempre
+            <motion.div variants={fadeUp} className="flex flex-col items-center mb-8">
+              <img
+                src={logoFull.url}
+                alt="Driver Ads"
+                className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-[0_8px_30px_rgba(22,120,255,0.35)]"
+              />
+              <span className="mt-3 text-[0.7rem] sm:text-xs font-semibold tracking-[0.32em] uppercase text-white/70">
+                Sua mídia em movimento
               </span>
             </motion.div>
 
