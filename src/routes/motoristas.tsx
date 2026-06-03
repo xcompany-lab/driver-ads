@@ -365,12 +365,15 @@ function DriverLanding() {
                   </div>
                   {/* Icon with dashed halo + glow */}
                   <div className="relative mb-6 h-16 w-16">
-                    <div className={`absolute inset-0 rounded-full ${glowColor} blur-2xl opacity-80`} />
                     <div
-                      className={`absolute -inset-2 rounded-full border border-dashed ${ringColor} opacity-60 [animation:spin_20s_linear_infinite]`}
+                      className="absolute inset-0 rounded-full blur-2xl opacity-70"
+                      style={{ background: accentColor }}
                     />
                     <div
-                      className={`relative h-16 w-16 rounded-2xl rotate-[8deg] ring-1 ring-inset ring-white/20 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] flex items-center justify-center`}
+                      className={`absolute -inset-2 rounded-full border border-dashed ${ringColor} opacity-70 [animation:spin_20s_linear_infinite]`}
+                    />
+                    <div
+                      className="relative h-16 w-16 rounded-2xl rotate-[8deg] ring-1 ring-inset ring-white/20 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] flex items-center justify-center"
                       style={{ backgroundImage: iconBg }}
                     >
                       <Icon className="h-7 w-7 text-white -rotate-[8deg]" strokeWidth={2.25} />
