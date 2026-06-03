@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/useSession";
-import { getMyAdvertiser, updateMyAdvertiser } from "@/lib/advertiser";
+import { getMyAdvertiser, updateMyAdvertiser, createMyAdvertiser } from "@/lib/advertiser";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
