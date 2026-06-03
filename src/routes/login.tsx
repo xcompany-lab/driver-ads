@@ -10,7 +10,7 @@ import { roleHome, type AppRole } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 
-export const Route = createFileRoute("/auth/")({
+export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — Driver Ads" }] }),
   component: AuthIndex,
 });
