@@ -24,6 +24,7 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMotoristaIndexRouteImport } from './routes/_authenticated/motorista/index'
 import { Route as AuthenticatedAnuncianteIndexRouteImport } from './routes/_authenticated/anunciante/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as ApiPublicProcessEmailOutboxRouteImport } from './routes/api/public/process-email-outbox'
 import { Route as AuthenticatedMotoristaVeiculosRouteImport } from './routes/_authenticated/motorista/veiculos'
 import { Route as AuthenticatedMotoristaPerfilRouteImport } from './routes/_authenticated/motorista/perfil'
 import { Route as AuthenticatedMotoristaGanhosRouteImport } from './routes/_authenticated/motorista/ganhos'
@@ -119,6 +120,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const ApiPublicProcessEmailOutboxRoute =
+  ApiPublicProcessEmailOutboxRouteImport.update({
+    id: '/api/public/process-email-outbox',
+    path: '/api/public/process-email-outbox',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedMotoristaVeiculosRoute =
   AuthenticatedMotoristaVeiculosRouteImport.update({
     id: '/veiculos',
@@ -236,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
+  '/api/public/process-email-outbox': typeof ApiPublicProcessEmailOutboxRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
+  '/api/public/process-email-outbox': typeof ApiPublicProcessEmailOutboxRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista': typeof AuthenticatedMotoristaIndexRoute
@@ -297,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/_authenticated/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/_authenticated/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
+  '/api/public/process-email-outbox': typeof ApiPublicProcessEmailOutboxRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/_authenticated/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/motorista/ganhos'
     | '/motorista/perfil'
     | '/motorista/veiculos'
+    | '/api/public/process-email-outbox'
     | '/admin/'
     | '/anunciante/'
     | '/motorista/'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/motorista/ganhos'
     | '/motorista/perfil'
     | '/motorista/veiculos'
+    | '/api/public/process-email-outbox'
     | '/admin'
     | '/anunciante'
     | '/motorista'
@@ -390,6 +402,7 @@ export interface FileRouteTypes {
     | '/_authenticated/motorista/ganhos'
     | '/_authenticated/motorista/perfil'
     | '/_authenticated/motorista/veiculos'
+    | '/api/public/process-email-outbox'
     | '/_authenticated/admin/'
     | '/_authenticated/anunciante/'
     | '/_authenticated/motorista/'
@@ -405,6 +418,7 @@ export interface RootRouteChildren {
   AuthAnuncianteRoute: typeof AuthAnuncianteRoute
   AuthMotoristaRoute: typeof AuthMotoristaRoute
   AuthIndexRoute: typeof AuthIndexRoute
+  ApiPublicProcessEmailOutboxRoute: typeof ApiPublicProcessEmailOutboxRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -513,6 +527,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/api/public/process-email-outbox': {
+      id: '/api/public/process-email-outbox'
+      path: '/api/public/process-email-outbox'
+      fullPath: '/api/public/process-email-outbox'
+      preLoaderRoute: typeof ApiPublicProcessEmailOutboxRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/motorista/veiculos': {
       id: '/_authenticated/motorista/veiculos'
@@ -736,6 +757,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthAnuncianteRoute: AuthAnuncianteRoute,
   AuthMotoristaRoute: AuthMotoristaRoute,
   AuthIndexRoute: AuthIndexRoute,
+  ApiPublicProcessEmailOutboxRoute: ApiPublicProcessEmailOutboxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
