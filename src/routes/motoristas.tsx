@@ -80,7 +80,7 @@ function DriverLanding() {
       </nav>
 
       {/* HERO */}
-      <section className="relative pt-28 pb-16 lg:pt-32 lg:pb-24 px-4 sm:px-6 overflow-hidden">
+      <section className="relative pt-20 pb-10 lg:pt-20 lg:pb-14 px-4 sm:px-6 overflow-hidden">
         {/* Brand glows */}
         <div
           className="absolute inset-0 -z-10 opacity-70"
@@ -101,7 +101,7 @@ function DriverLanding() {
 
         <div className="relative max-w-5xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.div variants={fadeUp} className="flex flex-col items-center mb-8">
+            <motion.div variants={fadeUp} className="flex flex-col items-center mb-3">
               <img
                 src={logoFull.url}
                 alt="Driver Ads"
@@ -109,11 +109,8 @@ function DriverLanding() {
                 height={288}
                 fetchPriority="high"
                 decoding="async"
-                className="h-64 sm:h-80 md:h-96 lg:h-[28rem] w-auto object-contain drop-shadow-[0_14px_50px_rgba(22,120,255,0.45)]"
+                className="h-56 sm:h-64 md:h-72 lg:h-80 w-auto object-contain drop-shadow-[0_14px_50px_rgba(22,120,255,0.45)] -my-8 sm:-my-10 md:-my-12"
               />
-              <span className="mt-4 text-[0.72rem] sm:text-sm font-semibold tracking-[0.36em] uppercase text-white/75">
-                Sua mídia em movimento
-              </span>
             </motion.div>
 
             <motion.h1
