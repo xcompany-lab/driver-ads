@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { History } from "lucide-react";
@@ -8,8 +8,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { AppRole } from "@/hooks/useSession";
 
 export const Route = createFileRoute("/_authenticated/admin/auditoria")({
+  beforeLoad: ({ context }) => {
+    const roles = ((context as { roles?: AppRole[] }).roles ?? []) as AppRole[];
+    if (!roles.includes("admin")) {
+      throw redirect({ to: "/admin" });
+    }
+  },
   component: AuditPage,
 });
 
