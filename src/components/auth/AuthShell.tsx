@@ -47,6 +47,7 @@ function SignInForm({ expectedRole }: { expectedRole: AppRole | AppRole[] }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const allowed = Array.isArray(expectedRole) ? expectedRole : [expectedRole];
 
