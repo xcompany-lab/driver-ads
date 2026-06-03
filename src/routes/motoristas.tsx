@@ -59,7 +59,7 @@ function DriverLanding() {
   return (
     <div className="dark min-h-screen bg-[#020617] text-white overflow-x-hidden">
       {/* NAV */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-[#020617]/70 backdrop-blur-xl">
+      <nav className="fixed top-0 inset-x-0 z-50 glass-panel border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6">
           <Logo variant="light" size={36} />
           <div className="hidden md:flex items-center gap-8 text-sm text-white/70">
