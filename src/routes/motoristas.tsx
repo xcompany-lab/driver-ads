@@ -184,13 +184,12 @@ function DriverLanding() {
             <motion.div
               variants={fadeUp}
               custom={5}
-              className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto"
+              className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto"
             >
               {[
-                { v: "+5.000", l: "Motoristas parceiros" },
+                { v: "+1.000", l: "Motoristas parceiros" },
                 { v: "100%", l: "Pagamento via PIX" },
-                { v: "0", l: "Taxa de inscrição" },
-                { v: "30 dias", l: "Ciclo de repasse" },
+                { v: "Grátis", l: "Taxa de inscrição" },
               ].map((s) => (
                 <div
                   key={s.l}
