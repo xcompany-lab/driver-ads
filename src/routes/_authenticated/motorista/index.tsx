@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Car, UserCircle, ClipboardCheck, Wallet, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver, listMyVehicles } from "@/lib/driver";
+import { listMyAssignments } from "@/lib/proofs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/motorista/")({
@@ -69,6 +71,13 @@ function DriverHome() {
     queryFn: () => listMyVehicles(driver!.id),
     enabled: !!driver,
   });
+  const { data: assignments } = useQuery({
+    queryKey: ["my-assignments", driver?.id],
+    queryFn: () => listMyAssignments(driver!.id),
+    enabled: !!driver,
+  });
+  const invites = (assignments ?? []).filter((a) => a.status === "invited").length;
+  const active = (assignments ?? []).filter((a) => ["accepted", "awaiting_installation", "active"].includes(a.status)).length;
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
 
@@ -116,11 +125,26 @@ function DriverHome() {
         </Card>
       )}
 
+      {canAct && invites > 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
+            <div className="flex items-center gap-2">
+              <Badge>{invites}</Badge>
+              <CardTitle className="text-base">Você tem novos convites de campanha</CardTitle>
+            </div>
+            <Button asChild size="sm" variant="hero">
+              <Link to="/motorista/campanhas">Ver convites</Link>
+            </Button>
+          </CardHeader>
+        </Card>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashCard to="/motorista/perfil" icon={UserCircle} title="Meu perfil" desc="Dados pessoais, PIX e cidade." />
-        <DashCard to="/motorista/veiculos" icon={Car} title="Meus veículos" desc={`${vehicles?.length ?? 0} cadastrado(s)`} />
-        <DashCard to="/motorista/comprovacoes" icon={ClipboardCheck} title="Comprovações" desc="Envie a foto da instalação" disabled={!canAct} />
-        <DashCard to="/motorista" icon={Wallet} title="Repasses" desc="Em breve" disabled />
+        <DashCard to="/motorista/campanhas" icon={Megaphone} title="Campanhas" desc={`${active} ativa(s) · ${invites} convite(s)`} disabled={!canAct} />
+        <DashCard to="/motorista/comprovacoes" icon={Camera} title="Comprovações" desc="Envie a foto da instalação" disabled={!canAct} />
+        <DashCard to="/motorista/ganhos" icon={Wallet} title="Ganhos" desc="Repasses previstos" disabled={!canAct} />
+        <DashCard to="/motorista/veiculos" icon={Car} title="Veículos" desc={`${vehicles?.length ?? 0} cadastrado(s)`} />
+        <DashCard to="/motorista/perfil" icon={UserCircle} title="Meu perfil" desc="Dados pessoais e PIX." />
       </div>
     </div>
   );
