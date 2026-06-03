@@ -28,8 +28,8 @@ function DriverLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <header className="border-b bg-card">
+    <div className="min-h-screen bg-platform pb-20 md:pb-0">
+      <header className="platform-header sticky top-0 z-30">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <Link to="/motorista"><Logo size={32} /></Link>
           <div className="flex items-center gap-2">
@@ -44,7 +44,7 @@ function DriverLayout() {
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8"><Outlet /></main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 platform-header md:hidden">
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {NAV.map(({ to, label, icon: Icon, match }) => {
             const active = match(pathname);
@@ -54,7 +54,7 @@ function DriverLayout() {
                   to={to}
                   className={cn(
                     "flex flex-col items-center gap-1 py-2.5 text-xs transition-colors",
-                    active ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                    active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Icon className="h-5 w-5" />
