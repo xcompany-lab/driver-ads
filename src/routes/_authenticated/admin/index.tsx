@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, Users, Car, Megaphone, ClipboardCheck, ArrowRight } from "lucide-react";
+import { Building2, Users, Car, Megaphone, ClipboardCheck, ArrowRight, Wallet } from "lucide-react";
 import { getAdminKPIs } from "@/lib/admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
