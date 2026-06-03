@@ -110,6 +110,19 @@ function DriverHome() {
   const canAct = driver.status === "approved";
   const hasVehicle = (vehicles?.length ?? 0) > 0;
 
+  const approvedDismissKey = `driver-approved-dismissed:${driver.id}`;
+  const [approvedDismissed, setApprovedDismissed] = useState(true);
+  useEffect(() => {
+    if (driver.status !== "approved") return;
+    setApprovedDismissed(sessionStorage.getItem(approvedDismissKey) === "1");
+  }, [driver.status, approvedDismissKey]);
+  const dismissApproved = () => {
+    sessionStorage.setItem(approvedDismissKey, "1");
+    setApprovedDismissed(true);
+  };
+
+  const showStatusPanel = driver.status !== "approved" || !approvedDismissed;
+
   return (
     <div className="space-y-6">
       <div>
@@ -117,7 +130,13 @@ function DriverHome() {
         <p className="mt-1 text-muted-foreground">Gerencie seus dados, veículos e campanhas.</p>
       </div>
 
-      <StatusPanel status={driver.status} />
+      {showStatusPanel && (
+        <StatusPanel
+          status={driver.status}
+          dismissible={driver.status === "approved"}
+          onDismiss={dismissApproved}
+        />
+      )}
 
       {driver.status === "approved" && !hasVehicle && (
         <Card className="border-amber-500/40 bg-amber-500/5">
