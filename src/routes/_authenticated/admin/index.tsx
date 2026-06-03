@@ -50,18 +50,23 @@ function AdminDashboard() {
               pending={kpis.vehicles.pending}
               approved={kpis.vehicles.approved}
             />
-            <Card>
-              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Campanhas</CardTitle>
-                <Megaphone className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{kpis.campaigns.total}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {kpis.campaigns.pendingReview} aguardando análise · {kpis.campaigns.active} ativas
-                </p>
-              </CardContent>
-            </Card>
+            <Link to="/admin/campanhas" className="block group">
+              <Card className="transition hover:border-primary/40 hover:shadow-brand">
+                <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Campanhas</CardTitle>
+                  <Megaphone className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{kpis.campaigns.total}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {kpis.campaigns.pendingReview} aguardando análise · {kpis.campaigns.active} ativas
+                  </p>
+                  <p className="mt-3 inline-flex items-center text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition">
+                    Gerenciar <ArrowRight className="ml-1 h-3 w-3" />
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           </section>
 
           <section className="grid gap-4 md:grid-cols-2">
