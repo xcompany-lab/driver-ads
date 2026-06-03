@@ -31,8 +31,8 @@ const navItems: { to: "/admin" | "/admin/anunciantes" | "/admin/motoristas" | "/
 
 function AdminLayout() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+    <div className="min-h-screen bg-platform">
+      <header className="platform-header sticky top-0 z-30">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
           <Link to="/admin"><Logo size={32} /></Link>
           <div className="flex items-center gap-2">
