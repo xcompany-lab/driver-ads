@@ -2,24 +2,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Car,
-  Wallet,
   MapPin,
   ShieldCheck,
-  Clock,
-  TrendingUp,
   CheckCircle2,
   ArrowRight,
   Sparkles,
-  Camera,
   FileCheck,
   HandCoins,
-  Route as RouteIcon,
-  Users,
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/Logo";
 import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
+import kitComAnuncio from "@/assets/kit-traseiro-com-anuncio.png.asset.json";
+import kitSuaMarca from "@/assets/kit-traseiro-sua-marca.png.asset.json";
 
 export const Route = createFileRoute("/motoristas")({
   head: () => ({
@@ -182,13 +178,12 @@ function DriverLanding() {
             <motion.div
               variants={fadeUp}
               custom={5}
-              className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto"
+              className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto"
             >
               {[
-                { v: "+5.000", l: "Motoristas parceiros" },
+                { v: "+1.000", l: "Motoristas parceiros" },
                 { v: "100%", l: "Pagamento via PIX" },
-                { v: "0", l: "Taxa de inscrição" },
-                { v: "30 dias", l: "Ciclo de repasse" },
+                { v: "Grátis", l: "Taxa de inscrição" },
               ].map((s) => (
                 <div
                   key={s.l}
@@ -243,8 +238,11 @@ function DriverLanding() {
         </div>
       </section>
 
-      {/* SOLUTION */}
-      <section className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent">
+      {/* SOLUTION + HOW IT WORKS */}
+      <section
+        id="como-funciona"
+        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
+      >
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial="hidden"
@@ -261,48 +259,12 @@ function DriverLanding() {
             <motion.p
               variants={fadeUp}
               custom={1}
-              className="text-lg text-white/70 text-center max-w-3xl mx-auto mb-12"
+              className="text-lg text-white/70 text-center max-w-3xl mx-auto mb-14"
             >
               A Driver Ads conecta marcas a motoristas como você. A gente cuida de tudo:
               campanhas, materiais, instalação e repasse mensal.
             </motion.p>
-            <motion.div
-              variants={fadeUp}
-              custom={2}
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto"
-            >
-              {[
-                { icon: Car, label: "Cadastra seu veículo na plataforma" },
-                { icon: FileCheck, label: "Vinculamos você a uma campanha ativa" },
-                { icon: Camera, label: "Você instala e envia as fotos pelo app" },
-                { icon: RouteIcon, label: "Dirige normalmente pela sua cidade" },
-                { icon: HandCoins, label: "Recebe via PIX no fim de cada ciclo" },
-                { icon: ShieldCheck, label: "Plataforma segura e em conformidade com a LGPD" },
-              ].map(({ icon: Icon, label }) => (
-                <div
-                  key={label}
-                  className="glass-panel metallic-beam metallic-beam-slow flex items-center gap-3 p-4 rounded-2xl"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand shrink-0">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-sm font-medium text-white">{label}</span>
-                </div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* HOW IT WORKS */}
-      <section id="como-funciona" className="py-20 lg:py-28 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={stagger}
-          >
             <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
               {[
                 {
@@ -310,40 +272,32 @@ function DriverLanding() {
                   title: "Cadastre-se",
                   desc: "Crie sua conta de motorista e envie os documentos do CNH e do veículo pelo app.",
                   icon: FileCheck,
-                  accentColor: "oklch(0.82 0.13 210)",
-                  ringColor: "border-brand-cyan/50",
-                  iconBg: "linear-gradient(135deg, oklch(0.82 0.13 210), oklch(0.60 0.22 258))",
                 },
                 {
                   step: "02",
                   title: "Receba sua campanha",
                   desc: "Nossa equipe vincula você a uma campanha ativa compatível com a sua cidade.",
                   icon: MapPin,
-                  accentColor: "oklch(0.60 0.22 258)",
-                  ringColor: "border-brand-electric/60",
-                  iconBg: "linear-gradient(135deg, oklch(0.60 0.22 258), oklch(0.45 0.20 270))",
                 },
                 {
                   step: "03",
                   title: "Instale, rode e ganhe",
                   desc: "Aplique o kit, mande as fotos de comprovação e receba mensalmente via PIX.",
                   icon: HandCoins,
-                  accentColor: "oklch(0.78 0.15 75)",
-                  ringColor: "border-warning/60",
-                  iconBg: "linear-gradient(135deg, oklch(0.78 0.15 75), oklch(0.82 0.13 210))",
                 },
-              ].map(({ step, title, desc, icon: Icon, accentColor, ringColor, iconBg }, i) => (
+              ].map(({ step, title, desc, icon: Icon }, i) => (
                 <motion.div
                   key={step}
                   variants={fadeUp}
                   custom={i}
                   className="glass-panel metallic-beam relative rounded-3xl p-7 pt-12 overflow-hidden group"
                 >
-                  {/* Inner radial accent tint */}
+                  {/* Inner radial accent tint — brand blue */}
                   <div
                     className="pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full blur-3xl opacity-60"
                     style={{
-                      background: `radial-gradient(circle, ${accentColor} 0%, transparent 65%)`,
+                      background:
+                        "radial-gradient(circle, oklch(0.60 0.22 258) 0%, transparent 65%)",
                     }}
                   />
                   {/* Outlined giant step number watermark */}
@@ -363,18 +317,12 @@ function DriverLanding() {
                       Passo {step}
                     </span>
                   </div>
-                  {/* Icon with dashed halo + glow */}
+                  {/* Icon with dashed halo + glow — brand identity */}
                   <div className="relative mb-6 h-16 w-16">
+                    <div className="absolute inset-0 rounded-full blur-2xl opacity-70 bg-brand-electric" />
+                    <div className="absolute -inset-2 rounded-full border border-dashed border-brand-cyan/50 opacity-70 [animation:spin_20s_linear_infinite]" />
                     <div
-                      className="absolute inset-0 rounded-full blur-2xl opacity-70"
-                      style={{ background: accentColor }}
-                    />
-                    <div
-                      className={`absolute -inset-2 rounded-full border border-dashed ${ringColor} opacity-70 [animation:spin_20s_linear_infinite]`}
-                    />
-                    <div
-                      className="relative h-16 w-16 rounded-2xl rotate-[8deg] ring-1 ring-inset ring-white/20 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] flex items-center justify-center"
-                      style={{ backgroundImage: iconBg }}
+                      className="relative h-16 w-16 rounded-2xl rotate-[8deg] ring-1 ring-inset ring-white/20 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.6)] flex items-center justify-center bg-gradient-brand"
                     >
                       <Icon className="h-7 w-7 text-white -rotate-[8deg]" strokeWidth={2.25} />
                     </div>
@@ -388,45 +336,9 @@ function DriverLanding() {
         </div>
       </section>
 
-      {/* BENEFITS */}
-      <section
-        id="beneficios"
-        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
-      >
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={stagger}
-          >
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { icon: Wallet, title: "Renda extra mensal", desc: "Receba todo mês via PIX, sem complicação. Quanto mais campanhas, mais você ganha." },
-                { icon: Car, title: "Sem mudar sua rotina", desc: "Continue dirigindo como sempre — para trabalhar, estudar ou levar a família." },
-                { icon: ShieldCheck, title: "Adesivos seguros", desc: "Material de alta qualidade, fácil remoção e sem danos à pintura do veículo." },
-                { icon: Clock, title: "Sem fidelidade", desc: "Sem multa, sem mensalidade. Encerre sua participação quando quiser." },
-                { icon: TrendingUp, title: "Acompanhe seus ganhos", desc: "Painel completo no app: campanhas ativas, comprovações enviadas e histórico de repasses." },
-                { icon: Users, title: "Suporte humano", desc: "Equipe pronta para te ajudar do cadastro à instalação dos adesivos." },
-              ].map(({ icon: Icon, title, desc }, i) => (
-                <motion.div
-                  key={title}
-                  variants={fadeUp}
-                  custom={i}
-                  className="glass-panel metallic-beam p-6 rounded-2xl hover:bg-white/[0.08] transition-all"
-                >
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand mb-4">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-display text-lg font-bold mb-2">{title}</h3>
-                  <p className="text-sm text-white/70">{desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
+
+
 
       {/* EARNINGS */}
       <section id="ganhos" className="py-20 lg:py-28 px-4 sm:px-6">
@@ -463,7 +375,6 @@ function DriverLanding() {
                 {[
                   "Padrão único: sem confusão sobre tamanho ou posição",
                   "Instalação rápida, fácil remoção, sem dano ao tecido",
-                  "Você combina o valor da campanha direto pelo app antes de aceitar",
                   "Pagamento mensal via PIX assim que a comprovação é aprovada",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-white/80">
@@ -485,31 +396,23 @@ function DriverLanding() {
                   </span>
                 </div>
 
-                {/* Diagram of two seat backs */}
-                <div className="relative grid grid-cols-2 gap-4 mb-6">
+                {/* Two real kit-traseiro photos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   {[
-                    { label: "Banco do motorista" },
-                    { label: "Banco do carona" },
-                  ].map(({ label }) => (
+                    { src: kitSuaMarca.url, alt: "Kit traseiro sem anunciante" },
+                    { src: kitComAnuncio.url, alt: "Kit traseiro com anunciante" },
+                  ].map(({ src, alt }) => (
                     <div
-                      key={label}
-                      className="relative aspect-[3/4] rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.06] to-white/[0.02] overflow-hidden"
+                      key={alt}
+                      className="relative aspect-square rounded-2xl overflow-hidden border border-white/15 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.7)]"
                     >
-                      {/* Seat back silhouette */}
-                      <div className="absolute inset-3 rounded-xl rounded-b-3xl bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/10" />
-                      {/* Ad sticker preview */}
-                      <div
-                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[78%] aspect-[4/3] rounded-md shadow-[0_10px_30px_-10px_rgba(22,120,255,0.6)] flex items-center justify-center text-[10px] font-bold tracking-[0.22em] text-white/90"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, oklch(0.60 0.22 258), oklch(0.82 0.13 210))",
-                        }}
-                      >
-                        ANÚNCIO
-                      </div>
-                      <span className="absolute bottom-2 left-0 right-0 text-center text-[10px] uppercase tracking-[0.18em] text-white/55">
-                        {label}
-                      </span>
+                      <img
+                        src={src}
+                        alt={alt}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>
@@ -531,10 +434,6 @@ function DriverLanding() {
                     </div>
                   ))}
                 </div>
-
-                <p className="text-[11px] text-white/50 px-1 pt-5">
-                  Valor da campanha combinado diretamente no app antes de você aceitar.
-                </p>
               </div>
               <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-brand-electric/20 to-brand-cyan/20 blur-xl -z-10" />
             </motion.div>
