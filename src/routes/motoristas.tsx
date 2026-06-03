@@ -349,12 +349,6 @@ function DriverLanding() {
             viewport={{ once: true, amount: 0.2 }}
             variants={stagger}
           >
-            <motion.h2
-              variants={fadeUp}
-              className="font-display text-3xl sm:text-4xl font-bold text-center mb-16"
-            >
-              Por que ser um <span className="text-gradient-brand">motorista parceiro</span>
-            </motion.h2>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
