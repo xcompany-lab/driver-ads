@@ -16,6 +16,8 @@ export function Logo({ className, size = 40, showWordmark = true, variant = "def
         alt="Driver Ads"
         width={size}
         height={size}
+        loading="lazy"
+        decoding="async"
         className="rounded-xl shadow-elevated"
         style={{ width: size, height: size }}
       />
