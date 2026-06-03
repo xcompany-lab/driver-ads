@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthCard } from "@/components/auth/AuthCard";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { signIn } from "@/lib/auth";
 import { roleHome } from "@/hooks/useSession";
 import type { AppRole } from "@/hooks/useSession";
