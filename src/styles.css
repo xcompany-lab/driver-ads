@@ -168,6 +168,24 @@
 }
 
 @layer utilities {
+  /* Performance: skip layout/paint for sections that are off-screen */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 720px;
+  }
+
+  /* Respect user motion preference: pause expensive infinite animations */
+  @media (prefers-reduced-motion: reduce) {
+    .text-gradient-brand-flow,
+    .bg-gradient-brand-flow,
+    .border-gradient-brand-flow::before,
+    .metallic-beam::before,
+    .platform-header::after {
+      animation: none !important;
+    }
+  }
+
+
   .bg-gradient-brand { background-image: var(--gradient-brand); }
   .bg-gradient-night { background-image: var(--gradient-night); }
   .shadow-brand { box-shadow: var(--shadow-brand); }

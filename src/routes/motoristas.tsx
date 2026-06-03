@@ -223,25 +223,27 @@ function DriverLanding() {
       </div>
 
       {/* PROBLEM */}
-      <section className="relative py-20 lg:py-28 px-4 sm:px-6 overflow-hidden">
+      <section className="relative isolate py-20 lg:py-28 px-4 sm:px-6 overflow-hidden cv-auto">
         {/* Background photo */}
         <img
           src={bgInteriorMotorista.url}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 z-0 h-full w-full object-cover object-center"
         />
         {/* Dark gradient overlay for legibility */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10"
+          className="absolute inset-0 z-[1]"
           style={{
             background:
               "linear-gradient(180deg, #020617 0%, rgba(2,6,23,0.55) 25%, rgba(2,6,23,0.55) 75%, #020617 100%), linear-gradient(90deg, rgba(2,6,23,0.85) 0%, rgba(2,6,23,0.35) 50%, rgba(2,6,23,0.85) 100%)",
           }}
         />
 
-        <div className="relative max-w-4xl mx-auto text-center">
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -289,7 +291,7 @@ function DriverLanding() {
       {/* SOLUTION + HOW IT WORKS */}
       <section
         id="como-funciona"
-        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
+        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent cv-auto"
       >
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -354,7 +356,7 @@ function DriverLanding() {
                       src={phoneCadastroMockup.url}
                       alt=""
                       aria-hidden="true"
-                      loading="eager"
+                      loading="lazy"
                       decoding="async"
                       className="pointer-events-none select-none absolute top-4 right-4 z-0 w-1/2 max-w-[170px] opacity-60 brightness-125 contrast-125 saturate-125 drop-shadow-[0_10px_34px_rgba(56,189,248,0.65)] rotate-[8deg]"
                     />
@@ -400,7 +402,7 @@ function DriverLanding() {
 
 
       {/* EARNINGS */}
-      <section id="ganhos" className="py-20 lg:py-28 px-4 sm:px-6">
+      <section id="ganhos" className="py-20 lg:py-28 px-4 sm:px-6 cv-auto">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial="hidden"
@@ -503,7 +505,7 @@ function DriverLanding() {
       {/* REQUIREMENTS */}
       <section
         id="requisitos"
-        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent"
+        className="py-20 lg:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent via-[#0a1428]/60 to-transparent cv-auto"
       >
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -574,7 +576,7 @@ function DriverLanding() {
       </section>
 
       {/* SOCIAL PROOF */}
-      <section className="py-20 lg:py-28 px-4 sm:px-6">
+      <section className="py-20 lg:py-28 px-4 sm:px-6 cv-auto">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial="hidden"
@@ -633,7 +635,7 @@ function DriverLanding() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="py-20 lg:py-28 px-4 sm:px-6">
+      <section className="py-20 lg:py-28 px-4 sm:px-6 cv-auto">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial="hidden"
