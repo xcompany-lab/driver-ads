@@ -273,7 +273,6 @@ function DriverLanding() {
                   title: "Cadastre-se",
                   desc: "Crie sua conta de motorista e envie os documentos do CNH e do veículo pelo app.",
                   icon: FileCheck,
-                  image: phoneCadastroMockup.url,
                 },
                 {
                   step: "02",
@@ -287,7 +286,7 @@ function DriverLanding() {
                   desc: "Aplique o kit, mande as fotos de comprovação e receba mensalmente via PIX.",
                   icon: HandCoins,
                 },
-              ].map(({ step, title, desc, icon: Icon, image }, i) => (
+              ].map(({ step, title, desc, icon: Icon }, i) => (
                 <motion.div
                   key={step}
                   variants={fadeUp}
@@ -303,18 +302,19 @@ function DriverLanding() {
                     }}
                   />
                   {/* Phone mockup decoration (step 01 only) */}
-                  {image && (
+                  {step === "01" && (
                     <img
-                      src={image}
+                      src={phoneCadastroMockup.url}
                       alt=""
                       aria-hidden="true"
-                      loading="lazy"
-                      className="pointer-events-none select-none absolute -top-6 -right-6 w-[50%] max-w-[180px] opacity-70 brightness-110 contrast-110 drop-shadow-[0_10px_30px_rgba(56,189,248,0.5)] rotate-[8deg] [mask-image:linear-gradient(to_bottom_left,black_60%,transparent_100%)]"
+                      loading="eager"
+                      decoding="async"
+                      className="pointer-events-none select-none absolute -top-3 -right-3 z-10 w-1/2 max-w-[180px] opacity-75 brightness-125 contrast-125 saturate-125 drop-shadow-[0_10px_34px_rgba(56,189,248,0.65)] rotate-[8deg]"
                     />
                   )}
                   {/* Outlined giant step number watermark */}
                   <span
-                    className={`absolute -top-2 right-4 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none ${image ? "opacity-30" : ""}`}
+                    className={`absolute -top-2 right-4 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none ${step === "01" ? "opacity-20" : ""}`}
                     style={{
                       WebkitTextStroke: "1.5px rgba(255,255,255,0.12)",
                       color: "transparent",
