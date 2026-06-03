@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, getSignedDocUrl, type DriverDocKey } from "@/lib/driver-documents";
+import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, type DriverDocKey } from "@/lib/driver-documents";
+import { DocumentPreview, isPdfPath } from "@/components/brand/DocumentPreview";
 
 export const Route = createFileRoute("/_authenticated/admin/motoristas")({
   component: DriversAdmin,
