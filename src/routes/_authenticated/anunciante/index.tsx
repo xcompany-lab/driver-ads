@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Megaphone, Settings, Clock, CheckCircle2, XCircle, Ban } from "lucide-react";
+import { Megaphone, Settings, Clock, CheckCircle2, XCircle, Ban, Wallet } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyAdvertiser } from "@/lib/advertiser";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
