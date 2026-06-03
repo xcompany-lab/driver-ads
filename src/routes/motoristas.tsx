@@ -151,9 +151,14 @@ function DriverLanding() {
               custom={4}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Button size="xl" variant="hero" asChild>
+              <Button
+                size="xl"
+                variant="hero"
+                className="bg-gradient-brand-flow shadow-brand border-gradient-brand-flow"
+                asChild
+              >
                 <Link to="/auth/motorista">
-                  Quero ganhar com meu carro <ArrowRight />
+                  Quero ganhar dinheiro com meu carro <ArrowRight />
                 </Link>
               </Button>
               <Button
