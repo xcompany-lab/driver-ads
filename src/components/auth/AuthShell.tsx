@@ -82,10 +82,16 @@ function SignInForm({ expectedRole }: { expectedRole: AppRole | AppRole[] }) {
       <Field id="password" label="Senha">
         <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </Field>
+      <div className="flex justify-end -mt-2">
+        <button type="button" onClick={() => setForgotOpen(true)} className="text-sm text-primary hover:underline">
+          Esqueceu sua senha?
+        </button>
+      </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" variant="hero" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Entrar
       </Button>
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={email} />
     </form>
   );
 }
