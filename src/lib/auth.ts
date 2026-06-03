@@ -77,7 +77,7 @@ export async function signUpDriver(input: SignUpDriverInput) {
   }
   await assignRole("driver");
   const { error } = await supabase.from("drivers").insert({
-    user_id: data.user!.id,
+    user_id: res.user!.id,
     full_name: input.full_name,
     cpf: input.cpf,
     email: input.email,
