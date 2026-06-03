@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Check, Ban, RotateCcw, X } from "lucide-react";
+import { Search, Check, Ban, RotateCcw, X, FileText, Eye, CheckCircle2, AlertTriangle } from "lucide-react";
 import { listDrivers, updateDriverStatus, type DriverStatus } from "@/lib/admin";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, getSignedDocUrl, type DriverDocKey } from "@/lib/driver-documents";
 
 export const Route = createFileRoute("/_authenticated/admin/motoristas")({
   component: DriversAdmin,
@@ -71,6 +73,9 @@ function DriversAdmin() {
                     <span>PIX ({d.pix_key_type}): <span className="text-foreground">{d.pix_key}</span></span>
                   )}
                 </div>
+
+                <DriverDocsReview driverId={d.id} driver={d as unknown as Record<DriverDocKey, string | null>} />
+
                 <div className="flex flex-wrap gap-2 pt-2">
                   {d.status !== "approved" && (
                     <Button size="sm" onClick={() => mut.mutate({ id: d.id, status: "approved" })} disabled={mut.isPending}>
@@ -97,6 +102,77 @@ function DriversAdmin() {
             </Card>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function DriverDocsReview({ driverId, driver }: { driverId: string; driver: Record<DriverDocKey, string | null> }) {
+  const [open, setOpen] = useState(false);
+  const { data: vehicles } = useQuery({
+    queryKey: ["admin", "driver-vehicles", driverId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("vehicles").select("id, plate, crlv_url").eq("driver_id", driverId);
+      if (error) throw error;
+      return data as unknown as Array<{ id: string; plate: string; crlv_url: string | null }>;
+    },
+    enabled: open,
+  });
+
+  const driverDocsCount = DRIVER_DOC_ORDER.filter((k) => driver[k]).length;
+  const totalDriverDocs = DRIVER_DOC_ORDER.length;
+  const allDriverOk = driverDocsCount === totalDriverDocs;
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 text-sm"
+      >
+        <span className="flex items-center gap-2 font-medium">
+          {allDriverOk ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4 text-amber-600" />}
+          Documentos do motorista ({driverDocsCount}/{totalDriverDocs})
+        </span>
+        <span className="text-xs text-muted-foreground">{open ? "Ocultar" : "Auditar"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {DRIVER_DOC_ORDER.map((k) => (
+            <DocLink key={k} label={DRIVER_DOC_LABELS[k]} path={driver[k]} />
+          ))}
+          {(vehicles ?? []).map((v) => (
+            <DocLink key={v.id} label={`CRLV — ${v.plate}`} path={v.crlv_url} />
+          ))}
+          {vehicles && vehicles.length === 0 && (
+            <p className="text-xs text-muted-foreground sm:col-span-2">Nenhum veículo cadastrado.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DocLink({ label, path }: { label: string; path: string | null }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    if (path) getSignedDocUrl(path).then((u) => active && setUrl(u));
+    return () => { active = false; };
+  }, [path]);
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-card/50 p-2 text-sm">
+      <span className="flex items-center gap-2 min-w-0">
+        {path ? <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" /> : <FileText className="h-3 w-3 text-muted-foreground shrink-0" />}
+        <span className="truncate">{label}</span>
+      </span>
+      {path && url ? (
+        <a href={url} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1 hover:underline shrink-0">
+          <Eye className="h-3 w-3" /> Abrir
+        </a>
+      ) : (
+        <span className="text-xs text-muted-foreground">Pendente</span>
       )}
     </div>
   );

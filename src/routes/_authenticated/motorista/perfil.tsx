@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/brand/StatusBadge";
+import { DocumentUploadField } from "@/components/brand/DocumentUploadField";
+import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, uploadDriverDoc, updateDriverDoc, type DriverDocKey } from "@/lib/driver-documents";
 
 export const Route = createFileRoute("/_authenticated/motorista/perfil")({
   component: DriverProfilePage,
@@ -155,6 +157,31 @@ function DriverProfilePage() {
           </form>
         </CardContent>
       </Card>
+
+      {driver && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Documentos para auditoria</CardTitle>
+            <CardDescription>
+              Envie os documentos abaixo para validarmos seu cadastro. O perfil só é aprovado após a verificação manual do nosso time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            {DRIVER_DOC_ORDER.map((key) => (
+              <DocumentUploadField
+                key={key}
+                label={DRIVER_DOC_LABELS[key]}
+                currentPath={(driver as unknown as Record<DriverDocKey, string | null>)[key]}
+                onUpload={async (file) => {
+                  const path = await uploadDriverDoc({ userId: user!.id, driverId: driver.id, key, file });
+                  await updateDriverDoc(driver.id, key, path);
+                  qc.invalidateQueries({ queryKey: ["my-driver"] });
+                }}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera, X } from "lucide-react";
+import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera, X, FileText } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver, listMyVehicles } from "@/lib/driver";
 import { listMyAssignments } from "@/lib/proofs";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, type DriverDocKey } from "@/lib/driver-documents";
 import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/motorista/")({
@@ -138,6 +139,47 @@ function DriverHome() {
           onDismiss={dismissApproved}
         />
       )}
+
+      {(() => {
+        const d = driver as unknown as Record<DriverDocKey, string | null>;
+        const missingDriverDocs = DRIVER_DOC_ORDER.filter((k) => !d[k]);
+        const missingCrlv = (vehicles ?? []).filter((v) => !(v as unknown as { crlv_url?: string | null }).crlv_url);
+        const hasMissing = missingDriverDocs.length > 0 || ((vehicles?.length ?? 0) > 0 && missingCrlv.length > 0);
+        if (!hasMissing) return null;
+        return (
+          <Card className="border-amber-500/40 bg-amber-500/5">
+            <CardHeader className="flex-row items-start gap-3 space-y-0">
+              <FileText className="h-5 w-5 mt-0.5 text-amber-700" />
+              <div className="flex-1">
+                <CardTitle className="text-base">Documentos pendentes de auditoria</CardTitle>
+                <CardDescription>
+                  Envie os documentos abaixo para que nosso time aprove seu cadastro como motorista apto.
+                </CardDescription>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {missingDriverDocs.map((k) => (
+                    <li key={k} className="text-foreground">• {DRIVER_DOC_LABELS[k]}</li>
+                  ))}
+                  {missingCrlv.map((v) => (
+                    <li key={v.id} className="text-foreground">• CRLV do veículo {v.plate}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex flex-col gap-2">
+                {missingDriverDocs.length > 0 && (
+                  <Button asChild size="sm" variant="hero">
+                    <Link to="/motorista/perfil">Enviar documentos</Link>
+                  </Button>
+                )}
+                {missingCrlv.length > 0 && (
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/motorista/veiculos">Enviar CRLV</Link>
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+          </Card>
+        );
+      })()}
 
       {driver.status === "approved" && !hasVehicle && (
         <Card className="border-amber-500/40 bg-amber-500/5">
