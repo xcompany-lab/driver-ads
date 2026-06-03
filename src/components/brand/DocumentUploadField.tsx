@@ -72,7 +72,9 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
             {currentPath ? "Reenviar" : "Enviar arquivo"}
           </label>
         </Button>
-        <span className="text-xs text-muted-foreground">{currentPath ? "Enviado" : "Pendente"}</span>
+        <span className={`text-xs font-medium ${currentPath ? "text-amber-600" : "text-muted-foreground"}`}>
+          {currentPath ? "Em análise" : "Pendente"}
+        </span>
       </div>
     </div>
   );
