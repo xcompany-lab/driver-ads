@@ -430,6 +430,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          payload: Json
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template: string
+          to_email: string
+          to_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template: string
+          to_email: string
+          to_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template?: string
+          to_email?: string
+          to_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       installation_proofs: {
         Row: {
           assignment_id: string
@@ -634,6 +679,15 @@ export type Database = {
       assign_self_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
+      }
+      enqueue_email: {
+        Args: {
+          _payload: Json
+          _template: string
+          _to_email: string
+          _to_name: string
+        }
+        Returns: string
       }
       get_my_roles: {
         Args: never
