@@ -21,6 +21,7 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMotoristaIndexRouteImport } from './routes/_authenticated/motorista/index'
 import { Route as AuthenticatedAnuncianteIndexRouteImport } from './routes/_authenticated/anunciante/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAnunciantePerfilRouteImport } from './routes/_authenticated/anunciante/perfil'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -85,6 +86,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAnunciantePerfilRoute =
+  AuthenticatedAnunciantePerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedAnuncianteRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
+  '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth': typeof AuthIndexRoute
+  '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista': typeof AuthenticatedMotoristaIndexRoute
@@ -120,6 +129,7 @@ export interface FileRoutesById {
   '/auth/anunciante': typeof AuthAnuncianteRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/': typeof AuthIndexRoute
+  '/_authenticated/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/_authenticated/motorista/': typeof AuthenticatedMotoristaIndexRoute
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/auth/anunciante'
     | '/auth/motorista'
     | '/auth/'
+    | '/anunciante/perfil'
     | '/admin/'
     | '/anunciante/'
     | '/motorista/'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/auth/anunciante'
     | '/auth/motorista'
     | '/auth'
+    | '/anunciante/perfil'
     | '/admin'
     | '/anunciante'
     | '/motorista'
@@ -159,6 +171,7 @@ export interface FileRouteTypes {
     | '/auth/anunciante'
     | '/auth/motorista'
     | '/auth/'
+    | '/_authenticated/anunciante/perfil'
     | '/_authenticated/admin/'
     | '/_authenticated/anunciante/'
     | '/_authenticated/motorista/'
@@ -259,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/anunciante/perfil': {
+      id: '/_authenticated/anunciante/perfil'
+      path: '/perfil'
+      fullPath: '/anunciante/perfil'
+      preLoaderRoute: typeof AuthenticatedAnunciantePerfilRouteImport
+      parentRoute: typeof AuthenticatedAnuncianteRouteRoute
+    }
   }
 }
 
@@ -277,11 +297,13 @@ const AuthenticatedAdminRouteRouteWithChildren =
   )
 
 interface AuthenticatedAnuncianteRouteRouteChildren {
+  AuthenticatedAnunciantePerfilRoute: typeof AuthenticatedAnunciantePerfilRoute
   AuthenticatedAnuncianteIndexRoute: typeof AuthenticatedAnuncianteIndexRoute
 }
 
 const AuthenticatedAnuncianteRouteRouteChildren: AuthenticatedAnuncianteRouteRouteChildren =
   {
+    AuthenticatedAnunciantePerfilRoute: AuthenticatedAnunciantePerfilRoute,
     AuthenticatedAnuncianteIndexRoute: AuthenticatedAnuncianteIndexRoute,
   }
 
