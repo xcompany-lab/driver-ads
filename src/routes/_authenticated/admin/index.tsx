@@ -88,17 +88,23 @@ function AdminDashboard() {
               </Card>
             </Link>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Próximas fases</CardTitle>
-                <CardDescription>Roadmap operacional</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm text-muted-foreground">
-                <p>Fase 11 — Gestão de campanhas e vínculos manuais.</p>
-                <p>Fase 12 — Fila de comprovações de instalação.</p>
-                <p>Fase 13 — Pagamentos e repasses.</p>
-              </CardContent>
-            </Card>
+            <Link to="/admin/financeiro" className="block">
+              <Card className="transition hover:border-primary/40 hover:shadow-brand">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-base">Financeiro</CardTitle>
+                  </div>
+                  <CardDescription>Faturas dos anunciantes e repasses para motoristas.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">Lance cobranças, gere repasses mensais e anexe comprovantes.</p>
+                  <p className="mt-2 inline-flex items-center text-xs font-medium text-primary">
+                    Abrir financeiro <ArrowRight className="ml-1 h-3 w-3" />
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           </section>
         </>
       )}
