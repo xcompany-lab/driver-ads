@@ -119,8 +119,8 @@ function DriverHome() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashCard to="/motorista/perfil" icon={UserCircle} title="Meu perfil" desc="Dados pessoais, PIX e cidade." />
         <DashCard to="/motorista/veiculos" icon={Car} title="Meus veículos" desc={`${vehicles?.length ?? 0} cadastrado(s)`} />
-        <DashCard to="/motorista" icon={ClipboardCheck} title="Convites" desc="Em breve" disabled={!canAct} />
-        <DashCard to="/motorista" icon={Wallet} title="Repasses" desc="Em breve" disabled={!canAct} />
+        <DashCard to="/motorista/comprovacoes" icon={ClipboardCheck} title="Comprovações" desc="Envie a foto da instalação" disabled={!canAct} />
+        <DashCard to="/motorista" icon={Wallet} title="Repasses" desc="Em breve" disabled />
       </div>
     </div>
   );
