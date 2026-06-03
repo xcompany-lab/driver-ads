@@ -291,7 +291,7 @@ function DriverLanding() {
                   key={step}
                   variants={fadeUp}
                   custom={i}
-                  className="glass-panel metallic-beam relative rounded-3xl p-7 pt-12 overflow-hidden group"
+                  className="glass-panel metallic-beam relative isolate rounded-3xl p-7 pt-12 overflow-hidden group"
                 >
                   {/* Inner radial accent tint — brand blue */}
                   <div
@@ -309,12 +309,12 @@ function DriverLanding() {
                       aria-hidden="true"
                       loading="eager"
                       decoding="async"
-                      className="pointer-events-none select-none absolute -top-3 -right-3 z-10 w-1/2 max-w-[180px] opacity-75 brightness-125 contrast-125 saturate-125 drop-shadow-[0_10px_34px_rgba(56,189,248,0.65)] rotate-[8deg]"
+                      className="pointer-events-none select-none absolute top-4 right-4 z-0 w-1/2 max-w-[170px] opacity-60 brightness-125 contrast-125 saturate-125 drop-shadow-[0_10px_34px_rgba(56,189,248,0.65)] rotate-[8deg]"
                     />
                   )}
                   {/* Outlined giant step number watermark */}
                   <span
-                    className={`absolute -top-2 right-4 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none ${step === "01" ? "opacity-20" : ""}`}
+                    className={`absolute -top-2 right-4 z-0 font-display text-[7rem] leading-none font-black tracking-tighter pointer-events-none select-none ${step === "01" ? "opacity-15" : ""}`}
                     style={{
                       WebkitTextStroke: "1.5px rgba(255,255,255,0.12)",
                       color: "transparent",
@@ -323,14 +323,14 @@ function DriverLanding() {
                     {step}
                   </span>
                   {/* Step pill */}
-                  <div className="relative inline-flex items-center gap-2 mb-6">
+                  <div className="relative z-10 inline-flex items-center gap-2 mb-6">
                     <span className="h-px w-8 bg-gradient-to-r from-transparent to-white/40" />
                     <span className="text-[10px] font-mono tracking-[0.32em] uppercase text-white/60">
                       Passo {step}
                     </span>
                   </div>
                   {/* Icon with dashed halo + glow — brand identity */}
-                  <div className="relative mb-6 h-16 w-16">
+                  <div className="relative z-10 mb-6 h-16 w-16">
                     <div className="absolute inset-0 rounded-full blur-2xl opacity-70 bg-brand-electric" />
                     <div className="absolute -inset-2 rounded-full border border-dashed border-brand-cyan/50 opacity-70 [animation:spin_20s_linear_infinite]" />
                     <div
@@ -339,8 +339,8 @@ function DriverLanding() {
                       <Icon className="h-7 w-7 text-white -rotate-[8deg]" strokeWidth={2.25} />
                     </div>
                   </div>
-                  <h3 className="font-display text-xl font-bold mb-2 text-white">{title}</h3>
-                  <p className="text-sm text-white/70 leading-relaxed">{desc}</p>
+                  <h3 className="relative z-10 font-display text-xl font-bold mb-2 text-white">{title}</h3>
+                  <p className="relative z-10 text-sm text-white/70 leading-relaxed">{desc}</p>
                 </motion.div>
               ))}
             </div>
