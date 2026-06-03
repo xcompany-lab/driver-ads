@@ -83,7 +83,7 @@ function DriversAdmin() {
                   )}
                 </div>
 
-                <DriverDocsReview driverId={d.id} driver={d as unknown as Record<DriverDocKey, string | null>} />
+                <DriverDocsReview driverId={d.id} driver={d as unknown as DriverWithDocs} />
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   {d.status !== "approved" && (
