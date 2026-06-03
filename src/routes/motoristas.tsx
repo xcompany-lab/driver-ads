@@ -320,7 +320,7 @@ function DriverLanding() {
                   key={step}
                   variants={fadeUp}
                   custom={i}
-                  className="relative rounded-2xl border border-white/10 bg-white/[0.04] p-7 backdrop-blur-sm overflow-hidden group"
+                  className="glass-panel metallic-beam relative rounded-2xl p-7 overflow-hidden group"
                 >
                   <span className="absolute right-5 top-4 font-display text-5xl font-extrabold text-gradient-brand opacity-30">
                     {step}
