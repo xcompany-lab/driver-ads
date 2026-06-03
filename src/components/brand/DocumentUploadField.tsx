@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Loader2, Upload, CheckCircle2, FileText, Eye } from "lucide-react";
+import { Loader2, Upload, CheckCircle2, FileText, Eye, FileImage } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { getSignedDocUrl } from "@/lib/driver-documents";
+import { DocumentPreview, isPdfPath } from "@/components/brand/DocumentPreview";
 
 interface Props {
   label: string;
@@ -14,19 +14,13 @@ interface Props {
 
 export function DocumentUploadField({ label, currentPath, onUpload, accept = "image/*,application/pdf" }: Props) {
   const [busy, setBusy] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const hasUploaded = Boolean(currentPath) || sent;
+  const isPdf = isPdfPath(currentPath);
 
   useEffect(() => {
-    let active = true;
-    if (currentPath) {
-      setSent(false);
-      getSignedDocUrl(currentPath).then((u) => active && setPreview(u));
-    } else {
-      setPreview(null);
-    }
-    return () => { active = false; };
+    if (currentPath) setSent(false);
   }, [currentPath]);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,15 +51,24 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
         <div className="flex items-center gap-2 min-w-0">
           {hasUploaded ? (
             <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-          ) : (
+          ) : isPdf ? (
             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+          ) : (
+            <FileImage className="h-4 w-4 text-muted-foreground shrink-0" />
           )}
-          <Label htmlFor={inputId} className="text-sm font-medium truncate">{label}</Label>
+          <Label htmlFor={inputId} className="text-sm font-medium truncate">
+            {label}
+            {currentPath && isPdf && <span className="ml-1 text-xs text-muted-foreground">(PDF)</span>}
+          </Label>
         </div>
-        {currentPath && preview && (
-          <a href={preview} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1 hover:underline shrink-0">
+        {currentPath && (
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            className="text-xs text-primary inline-flex items-center gap-1 hover:underline shrink-0"
+          >
             <Eye className="h-3 w-3" /> Ver
-          </a>
+          </button>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -79,7 +82,16 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
         <span className={`text-xs font-medium ${hasUploaded ? "text-amber-600" : "text-muted-foreground"}`}>
           {hasUploaded ? "Em análise" : "Pendente"}
         </span>
+        <span className="ml-auto text-[10px] text-muted-foreground hidden sm:inline">JPG, PNG ou PDF</span>
       </div>
+
+      <DocumentPreview
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        path={currentPath ?? null}
+        label={label}
+      />
     </div>
   );
 }
+
