@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import bgDesktop from "@/assets/auth-bg-desktop.png.asset.json";
 import bgMobile from "@/assets/auth-bg-mobile.png.asset.json";
+import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
 
 interface AuthCardProps {
   title: string;
