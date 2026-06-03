@@ -29,6 +29,7 @@ import { Route as AuthenticatedMotoristaPerfilRouteImport } from './routes/_auth
 import { Route as AuthenticatedMotoristaGanhosRouteImport } from './routes/_authenticated/motorista/ganhos'
 import { Route as AuthenticatedMotoristaComprovacoesRouteImport } from './routes/_authenticated/motorista/comprovacoes'
 import { Route as AuthenticatedMotoristaCampanhasRouteImport } from './routes/_authenticated/motorista/campanhas'
+import { Route as AuthenticatedMotoristaAuditoriaRouteImport } from './routes/_authenticated/motorista/auditoria'
 import { Route as AuthenticatedAnunciantePerfilRouteImport } from './routes/_authenticated/anunciante/perfil'
 import { Route as AuthenticatedAnuncianteFinanceiroRouteImport } from './routes/_authenticated/anunciante/financeiro'
 import { Route as AuthenticatedAdminVeiculosRouteImport } from './routes/_authenticated/admin/veiculos'
@@ -149,6 +150,12 @@ const AuthenticatedMotoristaCampanhasRoute =
     path: '/campanhas',
     getParentRoute: () => AuthenticatedMotoristaRouteRoute,
   } as any)
+const AuthenticatedMotoristaAuditoriaRoute =
+  AuthenticatedMotoristaAuditoriaRouteImport.update({
+    id: '/auditoria',
+    path: '/auditoria',
+    getParentRoute: () => AuthenticatedMotoristaRouteRoute,
+  } as any)
 const AuthenticatedAnunciantePerfilRoute =
   AuthenticatedAnunciantePerfilRouteImport.update({
     id: '/perfil',
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/anunciante/financeiro': typeof AuthenticatedAnuncianteFinanceiroRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/motorista/auditoria': typeof AuthenticatedMotoristaAuditoriaRoute
   '/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/motorista/comprovacoes': typeof AuthenticatedMotoristaComprovacoesRoute
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
@@ -259,6 +267,7 @@ export interface FileRoutesByTo {
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/anunciante/financeiro': typeof AuthenticatedAnuncianteFinanceiroRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/motorista/auditoria': typeof AuthenticatedMotoristaAuditoriaRoute
   '/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/motorista/comprovacoes': typeof AuthenticatedMotoristaComprovacoesRoute
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
@@ -292,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
   '/_authenticated/anunciante/financeiro': typeof AuthenticatedAnuncianteFinanceiroRoute
   '/_authenticated/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
+  '/_authenticated/motorista/auditoria': typeof AuthenticatedMotoristaAuditoriaRoute
   '/_authenticated/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/_authenticated/motorista/comprovacoes': typeof AuthenticatedMotoristaComprovacoesRoute
   '/_authenticated/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/admin/veiculos'
     | '/anunciante/financeiro'
     | '/anunciante/perfil'
+    | '/motorista/auditoria'
     | '/motorista/campanhas'
     | '/motorista/comprovacoes'
     | '/motorista/ganhos'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/admin/veiculos'
     | '/anunciante/financeiro'
     | '/anunciante/perfil'
+    | '/motorista/auditoria'
     | '/motorista/campanhas'
     | '/motorista/comprovacoes'
     | '/motorista/ganhos'
@@ -385,6 +397,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/veiculos'
     | '/_authenticated/anunciante/financeiro'
     | '/_authenticated/anunciante/perfil'
+    | '/_authenticated/motorista/auditoria'
     | '/_authenticated/motorista/campanhas'
     | '/_authenticated/motorista/comprovacoes'
     | '/_authenticated/motorista/ganhos'
@@ -549,6 +562,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMotoristaCampanhasRouteImport
       parentRoute: typeof AuthenticatedMotoristaRouteRoute
     }
+    '/_authenticated/motorista/auditoria': {
+      id: '/_authenticated/motorista/auditoria'
+      path: '/auditoria'
+      fullPath: '/motorista/auditoria'
+      preLoaderRoute: typeof AuthenticatedMotoristaAuditoriaRouteImport
+      parentRoute: typeof AuthenticatedMotoristaRouteRoute
+    }
     '/_authenticated/anunciante/perfil': {
       id: '/_authenticated/anunciante/perfil'
       path: '/perfil'
@@ -685,6 +705,7 @@ const AuthenticatedAnuncianteRouteRouteWithChildren =
   )
 
 interface AuthenticatedMotoristaRouteRouteChildren {
+  AuthenticatedMotoristaAuditoriaRoute: typeof AuthenticatedMotoristaAuditoriaRoute
   AuthenticatedMotoristaCampanhasRoute: typeof AuthenticatedMotoristaCampanhasRoute
   AuthenticatedMotoristaComprovacoesRoute: typeof AuthenticatedMotoristaComprovacoesRoute
   AuthenticatedMotoristaGanhosRoute: typeof AuthenticatedMotoristaGanhosRoute
@@ -695,6 +716,7 @@ interface AuthenticatedMotoristaRouteRouteChildren {
 
 const AuthenticatedMotoristaRouteRouteChildren: AuthenticatedMotoristaRouteRouteChildren =
   {
+    AuthenticatedMotoristaAuditoriaRoute: AuthenticatedMotoristaAuditoriaRoute,
     AuthenticatedMotoristaCampanhasRoute: AuthenticatedMotoristaCampanhasRoute,
     AuthenticatedMotoristaComprovacoesRoute:
       AuthenticatedMotoristaComprovacoesRoute,
