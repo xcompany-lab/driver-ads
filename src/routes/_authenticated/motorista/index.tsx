@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera, X } from "lucide-react";
+import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera, X, FileText } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver, listMyVehicles } from "@/lib/driver";
 import { listMyAssignments } from "@/lib/proofs";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, type DriverDocKey } from "@/lib/driver-documents";
 import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/motorista/")({
