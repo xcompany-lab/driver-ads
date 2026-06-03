@@ -4,6 +4,7 @@ import type { AppRole } from "@/hooks/useSession";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth";
+import { NotificationBell } from "@/components/NotificationBell";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/motorista")({
