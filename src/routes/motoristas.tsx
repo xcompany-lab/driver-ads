@@ -37,6 +37,9 @@ export const Route = createFileRoute("/motoristas")({
           "Ganhe uma renda extra rodando com o seu carro. Sem mensalidades, sem fidelidade — você dirige, a gente paga.",
       },
     ],
+    links: [
+      { rel: "preload", as: "image", href: logoFull.url, fetchpriority: "high" },
+    ],
   }),
   component: DriverLanding,
 });
