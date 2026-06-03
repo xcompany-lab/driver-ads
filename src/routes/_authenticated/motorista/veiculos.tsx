@@ -171,6 +171,17 @@ function DriverVehiclesPage() {
                 </div>
                 <StatusBadge status={v.status} />
               </CardHeader>
+              <CardContent>
+                <DocumentUploadField
+                  label="CRLV do veículo"
+                  currentPath={(v as unknown as { crlv_url?: string | null }).crlv_url}
+                  onUpload={async (file) => {
+                    const path = await uploadDriverDoc({ userId: user!.id, driverId: driver.id, key: "crlv", file, vehicleId: v.id });
+                    await updateVehicleCrlv(v.id, path);
+                    qc.invalidateQueries({ queryKey: ["my-vehicles"] });
+                  }}
+                />
+              </CardContent>
             </Card>
           ))}
         </div>
