@@ -41,6 +41,8 @@ const STATUS_TONES: Record<string, { tone: Tone; label: string }> = {
 
   // Installation / payment
   pending: { tone: "warning", label: "Pendente" },
+  processing: { tone: "info", label: "Processando" },
+  cancelled: { tone: "destructive", label: "Cancelado" },
   failed: { tone: "destructive", label: "Falhou" },
   overdue: { tone: "destructive", label: "Vencido" },
   refunded: { tone: "neutral", label: "Reembolsado" },

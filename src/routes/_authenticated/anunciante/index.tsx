@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Megaphone, Settings, Clock, CheckCircle2, XCircle, Ban } from "lucide-react";
+import { Megaphone, Settings, Clock, CheckCircle2, XCircle, Ban, Wallet } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyAdvertiser } from "@/lib/advertiser";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,13 +49,20 @@ function AdvertiserHome() {
 
       <StatusPanel status={advertiser.status} />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <DashCard
           icon={<Megaphone className="h-5 w-5" />}
           title="Campanhas"
           description="Solicite e acompanhe suas campanhas publicitárias."
           actionLabel="Em breve"
           disabled
+        />
+        <DashCard
+          icon={<Wallet className="h-5 w-5" />}
+          title="Financeiro"
+          description="Veja suas faturas e comprovantes de pagamento."
+          actionLabel="Abrir financeiro"
+          to="/anunciante/financeiro"
         />
         <DashCard
           icon={<Settings className="h-5 w-5" />}
