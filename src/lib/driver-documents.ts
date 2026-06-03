@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type DriverDocKey = "cnh_front_url" | "selfie_doc_url" | "address_proof_url";
+export type DriverDocStatusKey = "cnh_front_status" | "selfie_doc_status" | "address_proof_status";
+export type DocReviewStatus = "pending" | "approved" | "rejected";
 
 export const DRIVER_DOC_LABELS: Record<DriverDocKey, string> = {
   cnh_front_url: "CNH",
@@ -8,11 +10,33 @@ export const DRIVER_DOC_LABELS: Record<DriverDocKey, string> = {
   address_proof_url: "Comprovante de residência",
 };
 
+export const DRIVER_DOC_STATUS_KEY: Record<DriverDocKey, DriverDocStatusKey> = {
+  cnh_front_url: "cnh_front_status",
+  selfie_doc_url: "selfie_doc_status",
+  address_proof_url: "address_proof_status",
+};
+
 export const DRIVER_DOC_ORDER: DriverDocKey[] = [
   "cnh_front_url",
   "selfie_doc_url",
   "address_proof_url",
 ];
+
+export async function setDriverDocStatus(driverId: string, statusKey: DriverDocStatusKey, status: DocReviewStatus) {
+  const { error } = await supabase
+    .from("drivers")
+    .update({ [statusKey]: status } as never)
+    .eq("id", driverId);
+  if (error) throw error;
+}
+
+export async function setVehicleCrlvStatus(vehicleId: string, status: DocReviewStatus) {
+  const { error } = await supabase
+    .from("vehicles")
+    .update({ crlv_status: status } as never)
+    .eq("id", vehicleId);
+  if (error) throw error;
+}
 
 
 const BUCKET = "installation-proofs";
