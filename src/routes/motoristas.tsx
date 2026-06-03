@@ -309,7 +309,7 @@ function DriverLanding() {
                       alt=""
                       aria-hidden="true"
                       loading="lazy"
-                      className="pointer-events-none select-none absolute -top-4 -right-4 w-[50%] max-w-[180px] opacity-25 mix-blend-screen drop-shadow-[0_10px_30px_rgba(56,189,248,0.35)] [mask-image:linear-gradient(to_bottom_left,black_55%,transparent_100%)]"
+                      className="pointer-events-none select-none absolute -top-6 -right-6 w-[50%] max-w-[180px] opacity-70 brightness-110 contrast-110 drop-shadow-[0_10px_30px_rgba(56,189,248,0.5)] rotate-[8deg] [mask-image:linear-gradient(to_bottom_left,black_60%,transparent_100%)]"
                     />
                   )}
                   {/* Outlined giant step number watermark */}
