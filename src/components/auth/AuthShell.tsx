@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthCard } from "@/components/auth/AuthCard";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { signIn } from "@/lib/auth";
 import { roleHome } from "@/hooks/useSession";
 import type { AppRole } from "@/hooks/useSession";
@@ -46,6 +47,7 @@ function SignInForm({ expectedRole }: { expectedRole: AppRole | AppRole[] }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const allowed = Array.isArray(expectedRole) ? expectedRole : [expectedRole];
 
@@ -80,10 +82,16 @@ function SignInForm({ expectedRole }: { expectedRole: AppRole | AppRole[] }) {
       <Field id="password" label="Senha">
         <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </Field>
+      <div className="flex justify-end -mt-2">
+        <button type="button" onClick={() => setForgotOpen(true)} className="text-sm text-primary hover:underline">
+          Esqueceu sua senha?
+        </button>
+      </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" variant="hero" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Entrar
       </Button>
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={email} />
     </form>
   );
 }

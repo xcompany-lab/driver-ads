@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { signIn } from "@/lib/auth";
 import { roleHome, type AppRole } from "@/hooks/useSession";
 import { supabase } from "@/integrations/supabase/client";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 
 export const Route = createFileRoute("/auth/")({
   head: () => ({ meta: [{ title: "Entrar — Driver Ads" }] }),
@@ -37,6 +38,7 @@ function SignInForm({ onSignupClick }: { onSignupClick: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -105,11 +107,17 @@ function SignInForm({ onSignupClick }: { onSignupClick: () => void }) {
           </button>
         </div>
         <div className="flex justify-end pt-1">
-          <Link to="/auth" className="text-sm text-primary hover:underline">
+          <button
+            type="button"
+            onClick={() => setForgotOpen(true)}
+            className="text-sm text-primary hover:underline"
+          >
             Esqueceu sua senha?
-          </Link>
+          </button>
         </div>
       </div>
+
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={email} />
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
