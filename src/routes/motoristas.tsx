@@ -363,7 +363,7 @@ function DriverLanding() {
                   key={title}
                   variants={fadeUp}
                   custom={i}
-                  className="p-6 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm hover:border-brand-cyan/40 hover:bg-white/[0.06] transition-all"
+                  className="glass-panel metallic-beam p-6 rounded-2xl hover:bg-white/[0.08] transition-all"
                 >
                   <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand mb-4">
                     <Icon className="h-5 w-5" />
