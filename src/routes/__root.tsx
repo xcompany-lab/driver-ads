@@ -89,6 +89,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Com apenas R$500/mês sua marca pode impactar de 600 a 900 passageiros em um único veículo" },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/G0cOIMbiuefJiVdBgjOpHdQ83wn2/social-images/social-1780453264274-Logo-Sem-Fundo-Driver_Ads.webp" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/G0cOIMbiuefJiVdBgjOpHdQ83wn2/social-images/social-1780453264274-Logo-Sem-Fundo-Driver_Ads.webp" },
+      { name: "theme-color", content: "#020617" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ],
     links: [
       {
