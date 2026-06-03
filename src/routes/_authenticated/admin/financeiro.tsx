@@ -396,6 +396,7 @@ function PayoutsTab() {
 }
 
 function PayoutRow({ payout, onChange }: { payout: DriverPayoutWithRelations; onChange: () => void }) {
+  const isAdmin = useIsAdmin();
   const setStatusMut = useMutation({
     mutationFn: (s: DriverPayoutStatus) => updateDriverPayoutStatus(payout.id, s),
     onSuccess: () => { toast.success("Repasse atualizado"); onChange(); },
@@ -433,34 +434,38 @@ function PayoutRow({ payout, onChange }: { payout: DriverPayoutWithRelations; on
       <TableCell><StatusBadge status={payout.status} /></TableCell>
       <TableCell className="text-right space-x-1 whitespace-nowrap">
         {payout.receipt_url && <ReceiptLinkButton path={payout.receipt_url} />}
-        <label>
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) uploadMut.mutate(f);
-              e.currentTarget.value = "";
-            }}
-          />
-          <Button asChild variant="outline" size="sm"><span><Receipt className="mr-1 h-3 w-3" />Anexar</span></Button>
-        </label>
-        {payout.status === "pending" && (
+        {isAdmin && (
+          <label>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadMut.mutate(f);
+                e.currentTarget.value = "";
+              }}
+            />
+            <Button asChild variant="outline" size="sm"><span><Receipt className="mr-1 h-3 w-3" />Anexar</span></Button>
+          </label>
+        )}
+        {isAdmin && payout.status === "pending" && (
           <Button size="sm" variant="outline" onClick={() => setStatusMut.mutate("processing")}>Processar</Button>
         )}
-        {payout.status !== "paid" && (
+        {isAdmin && payout.status !== "paid" && (
           <Button size="sm" onClick={() => setStatusMut.mutate("paid")}>Marcar pago</Button>
         )}
-        {payout.status === "paid" && (
+        {isAdmin && payout.status === "paid" && (
           <Button size="sm" variant="outline" onClick={() => setStatusMut.mutate("pending")}>Reverter</Button>
         )}
-        {payout.status !== "cancelled" && (
+        {isAdmin && payout.status !== "cancelled" && (
           <Button size="sm" variant="ghost" onClick={() => setStatusMut.mutate("cancelled")}>Cancelar</Button>
         )}
-        <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir repasse?")) delMut.mutate(); }}>
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        {isAdmin && (
+          <Button size="sm" variant="ghost" onClick={() => { if (confirm("Excluir repasse?")) delMut.mutate(); }}>
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        )}
       </TableCell>
     </TableRow>
   );
