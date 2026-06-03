@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/Logo";
 import logoFull from "@/assets/driver-ads-logo-full.png.asset.json";
+import kitComAnuncio from "@/assets/kit-traseiro-com-anuncio.png.asset.json";
+import kitSuaMarca from "@/assets/kit-traseiro-sua-marca.png.asset.json";
 
 export const Route = createFileRoute("/motoristas")({
   head: () => ({
