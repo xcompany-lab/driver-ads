@@ -356,15 +356,17 @@ function PayoutsTab() {
             {PAY_STATUSES.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="flex items-end gap-2">
-          <div>
-            <Label className="text-xs">Mês de referência</Label>
-            <Input type="month" value={refMonth.slice(0, 7)} onChange={(e) => setRefMonth(`${e.target.value}-01`)} />
+        {isAdmin && (
+          <div className="flex items-end gap-2">
+            <div>
+              <Label className="text-xs">Mês de referência</Label>
+              <Input type="month" value={refMonth.slice(0, 7)} onChange={(e) => setRefMonth(`${e.target.value}-01`)} />
+            </div>
+            <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
+              <RefreshCw className="mr-2 h-4 w-4" />Gerar repasses
+            </Button>
           </div>
-          <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
-            <RefreshCw className="mr-2 h-4 w-4" />Gerar repasses
-          </Button>
-        </div>
+        )}
       </div>
 
       {isLoading ? (
