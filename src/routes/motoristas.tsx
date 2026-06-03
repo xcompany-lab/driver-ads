@@ -421,7 +421,7 @@ function DriverLanding() {
             </div>
 
             <motion.div variants={fadeUp} custom={2} className="relative">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm p-6 space-y-4">
+              <div className="glass-panel-strong metallic-beam rounded-2xl p-6 space-y-4">
                 {[
                   { label: "Adesivo lateral pequeno", value: "R$ 150", color: "text-brand-cyan" },
                   { label: "Adesivo lateral grande", value: "R$ 300", color: "text-white" },
