@@ -22,6 +22,7 @@ import kitSuaMarca from "@/assets/kit-traseiro-sua-marca.png.asset.json";
 import phoneCadastroMockup from "@/assets/phone-cadastro-mockup.png.asset.json";
 import phoneCampanhaMockup from "@/assets/phone-campanha-mockup.png.asset.json";
 import bgInteriorMotorista from "@/assets/bg-interior-motorista.png.asset.json";
+import bgMidiaTradicional from "@/assets/midia-tradicional-cara.png.asset.json";
 
 export const Route = createFileRoute("/anunciantes")({
   head: () => ({
@@ -205,7 +206,7 @@ function AdvertiserLanding() {
       {/* PROBLEM */}
       <section className="relative isolate py-20 lg:py-28 px-4 sm:px-6 overflow-hidden cv-auto">
         <img
-          src={bgInteriorMotorista.url}
+          src={bgMidiaTradicional.url}
           alt=""
           aria-hidden="true"
           loading="lazy"
