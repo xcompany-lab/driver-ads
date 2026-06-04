@@ -4,21 +4,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultEmail?: string;
-}
-
-const PUBLIC_SITE_URL = "https://driverads.com.br";
-
-function getRedirectOrigin() {
-  if (typeof window !== "undefined" && !/localhost|127\.0\.0\.1|lovable\.app/i.test(window.location.origin)) {
-    return window.location.origin;
-  }
-  return PUBLIC_SITE_URL;
 }
 
 export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "" }: Props) {
@@ -32,9 +22,12 @@ export function ForgotPasswordDialog({ open, onOpenChange, defaultEmail = "" }: 
     setLoading(true);
     setError(null);
     try {
-      const redirectTo = `${getRedirectOrigin()}/auth/reset-password`;
-      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
-      if (err) throw err;
+      const res = await fetch("/api/public/password-recovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (!res.ok) throw new Error("Não foi possível enviar o e-mail.");
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível enviar o e-mail.");

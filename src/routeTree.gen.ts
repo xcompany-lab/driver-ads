@@ -27,6 +27,7 @@ import { Route as AuthenticatedMotoristaIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedAnuncianteIndexRouteImport } from './routes/_authenticated/anunciante/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as ApiPublicProcessEmailOutboxRouteImport } from './routes/api/public/process-email-outbox'
+import { Route as ApiPublicPasswordRecoveryRouteImport } from './routes/api/public/password-recovery'
 import { Route as ApiPublicAuthEmailHookRouteImport } from './routes/api/public/auth-email-hook'
 import { Route as AuthenticatedMotoristaVeiculosRouteImport } from './routes/_authenticated/motorista/veiculos'
 import { Route as AuthenticatedMotoristaPerfilRouteImport } from './routes/_authenticated/motorista/perfil'
@@ -137,6 +138,12 @@ const ApiPublicProcessEmailOutboxRoute =
   ApiPublicProcessEmailOutboxRouteImport.update({
     id: '/api/public/process-email-outbox',
     path: '/api/public/process-email-outbox',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPasswordRecoveryRoute =
+  ApiPublicPasswordRecoveryRouteImport.update({
+    id: '/api/public/password-recovery',
+    path: '/api/public/password-recovery',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicAuthEmailHookRoute = ApiPublicAuthEmailHookRouteImport.update({
@@ -264,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/api/public/auth-email-hook': typeof ApiPublicAuthEmailHookRoute
+  '/api/public/password-recovery': typeof ApiPublicPasswordRecoveryRoute
   '/api/public/process-email-outbox': typeof ApiPublicProcessEmailOutboxRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
@@ -296,6 +304,7 @@ export interface FileRoutesByTo {
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/api/public/auth-email-hook': typeof ApiPublicAuthEmailHookRoute
+  '/api/public/password-recovery': typeof ApiPublicPasswordRecoveryRoute
   '/api/public/process-email-outbox': typeof ApiPublicProcessEmailOutboxRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
@@ -333,6 +342,7 @@ export interface FileRoutesById {
   '/_authenticated/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
   '/_authenticated/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/api/public/auth-email-hook': typeof ApiPublicAuthEmailHookRoute
+  '/api/public/password-recovery': typeof ApiPublicPasswordRecoveryRoute
   '/api/public/process-email-outbox': typeof ApiPublicProcessEmailOutboxRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
@@ -370,6 +380,7 @@ export interface FileRouteTypes {
     | '/motorista/perfil'
     | '/motorista/veiculos'
     | '/api/public/auth-email-hook'
+    | '/api/public/password-recovery'
     | '/api/public/process-email-outbox'
     | '/admin/'
     | '/anunciante/'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/motorista/perfil'
     | '/motorista/veiculos'
     | '/api/public/auth-email-hook'
+    | '/api/public/password-recovery'
     | '/api/public/process-email-outbox'
     | '/admin'
     | '/anunciante'
@@ -438,6 +450,7 @@ export interface FileRouteTypes {
     | '/_authenticated/motorista/perfil'
     | '/_authenticated/motorista/veiculos'
     | '/api/public/auth-email-hook'
+    | '/api/public/password-recovery'
     | '/api/public/process-email-outbox'
     | '/_authenticated/admin/'
     | '/_authenticated/anunciante/'
@@ -457,6 +470,7 @@ export interface RootRouteChildren {
   AuthMotoristaRoute: typeof AuthMotoristaRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   ApiPublicAuthEmailHookRoute: typeof ApiPublicAuthEmailHookRoute
+  ApiPublicPasswordRecoveryRoute: typeof ApiPublicPasswordRecoveryRoute
   ApiPublicProcessEmailOutboxRoute: typeof ApiPublicProcessEmailOutboxRoute
 }
 
@@ -586,6 +600,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/process-email-outbox'
       fullPath: '/api/public/process-email-outbox'
       preLoaderRoute: typeof ApiPublicProcessEmailOutboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/password-recovery': {
+      id: '/api/public/password-recovery'
+      path: '/api/public/password-recovery'
+      fullPath: '/api/public/password-recovery'
+      preLoaderRoute: typeof ApiPublicPasswordRecoveryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/auth-email-hook': {
@@ -820,6 +841,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthMotoristaRoute: AuthMotoristaRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   ApiPublicAuthEmailHookRoute: ApiPublicAuthEmailHookRoute,
+  ApiPublicPasswordRecoveryRoute: ApiPublicPasswordRecoveryRoute,
   ApiPublicProcessEmailOutboxRoute: ApiPublicProcessEmailOutboxRoute,
 }
 export const routeTree = rootRouteImport
