@@ -206,7 +206,7 @@ function AdvertiserLanding() {
       {/* PROBLEM */}
       <section className="relative isolate py-20 lg:py-28 px-4 sm:px-6 overflow-hidden cv-auto">
         <img
-          src={bgInteriorMotorista.url}
+          src={bgMidiaTradicional.url}
           alt=""
           aria-hidden="true"
           loading="lazy"
