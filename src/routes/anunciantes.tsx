@@ -22,6 +22,7 @@ import kitSuaMarca from "@/assets/kit-traseiro-sua-marca.png.asset.json";
 import phoneCadastroMockup from "@/assets/phone-cadastro-mockup.png.asset.json";
 import phoneCampanhaMockup from "@/assets/phone-campanha-mockup.png.asset.json";
 import bgInteriorMotorista from "@/assets/bg-interior-motorista.png.asset.json";
+import bgMidiaTradicional from "@/assets/midia-tradicional-cara.png.asset.json";
 
 export const Route = createFileRoute("/anunciantes")({
   head: () => ({
