@@ -146,6 +146,50 @@ const RENDERERS: Record<string, (d: Payload) => Rendered> = {
       { label: "Ver financeiro", href: ctaUrl(String(d.portal_path)) }
     ),
   }),
+  "auth-signup": (d) => ({
+    subject: "Confirme seu e-mail — Driver Ads",
+    html: shell(
+      "Confirme seu e-mail",
+      p("Olá, recebemos seu cadastro na Driver Ads. Para ativar sua conta, confirme o e-mail clicando no botão abaixo.") +
+        muted("Se você não criou esta conta, ignore este e-mail."),
+      { label: "Confirmar e-mail", href: String(d.action_url ?? "") }
+    ),
+  }),
+  "auth-magiclink": (d) => ({
+    subject: "Seu link de acesso — Driver Ads",
+    html: shell(
+      "Acesse sua conta",
+      p("Use o link abaixo para entrar na sua conta Driver Ads. O link expira em 1 hora.") +
+        muted("Se você não solicitou, pode ignorar este e-mail."),
+      { label: "Entrar agora", href: String(d.action_url ?? "") }
+    ),
+  }),
+  "auth-recovery": (d) => ({
+    subject: "Redefinir sua senha — Driver Ads",
+    html: shell(
+      "Redefinir senha",
+      p("Recebemos um pedido para redefinir sua senha. Clique no botão abaixo para escolher uma nova senha.") +
+        muted("Se você não solicitou, ignore este e-mail; sua senha continua a mesma."),
+      { label: "Redefinir senha", href: String(d.action_url ?? "") }
+    ),
+  }),
+  "auth-email-change": (d) => ({
+    subject: "Confirme o novo e-mail — Driver Ads",
+    html: shell(
+      "Confirme a troca de e-mail",
+      p(`Você solicitou alterar o e-mail da sua conta Driver Ads para <strong>${String(d.new_email ?? "")}</strong>.`) +
+        p("Confirme clicando no botão abaixo."),
+      { label: "Confirmar novo e-mail", href: String(d.action_url ?? "") }
+    ),
+  }),
+  "auth-invite": (d) => ({
+    subject: "Você foi convidado para a Driver Ads",
+    html: shell(
+      "Bem-vindo à Driver Ads",
+      p("Você foi convidado a acessar a Driver Ads. Clique no botão abaixo para definir sua senha e entrar."),
+      { label: "Aceitar convite", href: String(d.action_url ?? "") }
+    ),
+  }),
 };
 
 export function renderEmail(template: string, payload: Payload): Rendered | null {
