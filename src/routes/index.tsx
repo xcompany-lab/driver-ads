@@ -117,6 +117,7 @@ function DriverLanding() {
                 src="https://play.tynk.ai/p/2af09e51-b86a-49f9-8d61-01a677c00647"
                 title="Driver Ads — vídeo de apresentação"
                 style={{ width: "100%", aspectRatio: "16 / 9", border: 0, display: "block" }}
+                scrolling="no"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
