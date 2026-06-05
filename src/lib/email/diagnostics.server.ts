@@ -34,7 +34,7 @@ export async function logEmailDiagnostic(input: {
     return;
   }
 
-  const { error } = await client.rpc("log_email_diagnostic", {
+  const { error } = await (client as any).rpc("log_email_diagnostic", {
     _flow: input.flow,
     _step: input.step,
     _status: input.status,
