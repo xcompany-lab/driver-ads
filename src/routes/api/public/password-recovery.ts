@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { logEmailDiagnostic } from "@/lib/email/diagnostics.server";
 import { renderEmail } from "@/lib/email/templates.server";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
@@ -42,9 +43,13 @@ export const Route = createFileRoute("/api/public/password-recovery")({
           return Response.json({ ok: true });
         }
 
-        if (!isValidEmail(email)) return Response.json({ ok: true });
+        if (!isValidEmail(email)) {
+          await logEmailDiagnostic({ flow: "password-recovery", step: "validate-email", status: "skipped" });
+          return Response.json({ ok: true });
+        }
 
         try {
+          await logEmailDiagnostic({ flow: "password-recovery", step: "request-received", status: "started", recipientEmail: email });
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const redirectTo = `${PUBLIC_SITE_URL}/auth/reset-password`;
           const { data, error } = await supabaseAdmin.auth.admin.generateLink({
@@ -55,17 +60,39 @@ export const Route = createFileRoute("/api/public/password-recovery")({
 
           if (error || !data.properties?.action_link) {
             console.warn("[password-recovery] recovery link not generated", { email, message: error?.message });
+            await logEmailDiagnostic({
+              flow: "password-recovery",
+              step: "generate-link",
+              status: "skipped",
+              recipientEmail: email,
+              errorMessage: error?.message ?? "Recovery link was not returned",
+            });
             return Response.json({ ok: true });
           }
+          await logEmailDiagnostic({ flow: "password-recovery", step: "generate-link", status: "success", recipientEmail: email });
 
           const rendered = renderEmail("auth-recovery", { action_url: data.properties.action_link });
           if (!rendered) throw new Error("Recovery email template missing");
 
           await sendViaResend(email, rendered.subject, rendered.html);
+          await logEmailDiagnostic({ flow: "password-recovery", step: "send-email", status: "success", recipientEmail: email });
           return Response.json({ ok: true });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           console.error("[password-recovery] send failed", message);
+          await logEmailDiagnostic({
+            flow: "password-recovery",
+            step: "send-email",
+            status: "failed",
+            recipientEmail: email,
+            errorMessage: message,
+            metadata: {
+              hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
+              hasSupabaseServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+              hasLovableApiKey: Boolean(process.env.LOVABLE_API_KEY),
+              hasResendApiKey: Boolean(process.env.RESEND_API_KEY),
+            },
+          });
           return Response.json({ ok: true });
         }
       },

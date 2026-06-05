@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { logEmailDiagnostic } from "@/lib/email/diagnostics.server";
 import { renderEmail } from "@/lib/email/templates.server";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/api/public/process-email-outbox")({
 });
 
 async function processOutbox() {
+  await logEmailDiagnostic({ flow: "email-outbox", step: "process-start", status: "started" });
   const { data: rows, error } = await supabaseAdmin
     .from("email_outbox")
     .select("*")
@@ -46,6 +48,7 @@ async function processOutbox() {
     .limit(BATCH_SIZE);
 
   if (error) {
+    await logEmailDiagnostic({ flow: "email-outbox", step: "load-pending", status: "failed", errorMessage: error.message });
     return Response.json({ ok: false, error: error.message }, { status: 500 });
   }
 
@@ -56,6 +59,14 @@ async function processOutbox() {
     try {
       const rendered = renderEmail(row.template, (row.payload as Record<string, unknown>) ?? {});
       if (!rendered) {
+        await logEmailDiagnostic({
+          flow: "email-outbox",
+          step: "render-template",
+          status: "failed",
+          recipientEmail: row.to_email,
+          errorMessage: `Unknown template: ${row.template}`,
+          metadata: { outboxId: row.id, template: row.template },
+        });
         await supabaseAdmin
           .from("email_outbox")
           .update({ status: "failed", last_error: `Unknown template: ${row.template}`, attempts: (row.attempts ?? 0) + 1 })
@@ -64,6 +75,13 @@ async function processOutbox() {
         continue;
       }
       await sendViaResend(row.to_email, row.to_name ?? null, rendered.subject, rendered.html);
+      await logEmailDiagnostic({
+        flow: "email-outbox",
+        step: "send-email",
+        status: "success",
+        recipientEmail: row.to_email,
+        metadata: { outboxId: row.id, template: row.template },
+      });
       await supabaseAdmin
         .from("email_outbox")
         .update({ status: "sent", sent_at: new Date().toISOString(), subject: rendered.subject, attempts: (row.attempts ?? 0) + 1, last_error: null })
@@ -72,6 +90,14 @@ async function processOutbox() {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const attempts = (row.attempts ?? 0) + 1;
+      await logEmailDiagnostic({
+        flow: "email-outbox",
+        step: "send-email",
+        status: "failed",
+        recipientEmail: row.to_email,
+        errorMessage: message,
+        metadata: { outboxId: row.id, template: row.template, attempts },
+      });
       await supabaseAdmin
         .from("email_outbox")
         .update({
