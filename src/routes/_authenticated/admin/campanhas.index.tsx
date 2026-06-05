@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export const Route = createFileRoute("/_authenticated/admin/campanhas")({
+export const Route = createFileRoute("/_authenticated/admin/campanhas/")({
   component: CampaignsAdmin,
 });
 

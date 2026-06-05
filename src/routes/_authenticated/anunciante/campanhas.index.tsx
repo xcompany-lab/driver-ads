@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 
-export const Route = createFileRoute("/_authenticated/anunciante/campanhas")({
+export const Route = createFileRoute("/_authenticated/anunciante/campanhas/")({
   component: AdvertiserCampaignsPage,
 });
 
