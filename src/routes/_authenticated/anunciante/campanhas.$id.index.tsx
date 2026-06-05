@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ function fmt(d: string) {
 
 function AdvertiserCampaignDetail() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [art, setArt] = useState<File | null>(null);
   const [artPreview, setArtPreview] = useState<string | null>(null);
@@ -133,10 +134,13 @@ function AdvertiserCampaignDetail() {
           )}
 
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
-            <Button asChild>
-              <Link to="/anunciante/campanhas/$id/checkout" params={{ id: campaign.id }}>
-                <CreditCard className="mr-2 h-4 w-4" /> Contratar / Pagar assinatura
-              </Link>
+            <Button
+              type="button"
+              onClick={() =>
+                navigate({ to: "/anunciante/campanhas/$id/checkout", params: { id: campaign.id } })
+              }
+            >
+              <CreditCard className="mr-2 h-4 w-4" /> Contratar / Pagar assinatura
             </Button>
             {canCancel && (
               <Button
