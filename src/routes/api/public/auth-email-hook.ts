@@ -115,13 +115,24 @@ export const Route = createFileRoute("/api/public/auth-email-hook")({
           return Response.json({ skipped: true, actionType });
         }
 
-        const siteUrl = (payload.email_data?.site_url ?? "https://driverads.com.br").replace(/\/$/, "");
+        // Always send users to our app's /auth/confirm route, which calls
+        // supabase.auth.verifyOtp() client-side. Hitting Supabase's /auth/v1/verify
+        // directly returns "No API key found in request" because the link has no apikey.
+        const appBase = "https://driverads.com.br";
         const tokenHash =
           actionType === "email_change_new"
             ? (payload.email_data?.token_hash_new ?? payload.email_data?.token_hash ?? "")
             : (payload.email_data?.token_hash ?? "");
-        const redirectTo = payload.email_data?.redirect_to ?? "https://driverads.com.br/login";
-        const actionUrl = `${siteUrl}/auth/v1/verify?token=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(actionType)}&redirect_to=${encodeURIComponent(redirectTo)}`;
+        const redirectTo = payload.email_data?.redirect_to ?? `${appBase}/login`;
+        const nextParam = (() => {
+          try {
+            const u = new URL(redirectTo);
+            return u.pathname + u.search + u.hash;
+          } catch {
+            return "/";
+          }
+        })();
+        const actionUrl = `${appBase}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(actionType)}&next=${encodeURIComponent(nextParam)}`;
 
         const rendered = renderEmail(template, {
           action_url: actionUrl,

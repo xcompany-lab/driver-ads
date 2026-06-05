@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthMotoristaRouteImport } from './routes/auth/motorista'
+import { Route as AuthConfirmRouteImport } from './routes/auth/confirm'
 import { Route as AuthAnuncianteRouteImport } from './routes/auth/anunciante'
 import { Route as AuthAdminRouteImport } from './routes/auth/admin'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
@@ -82,6 +83,11 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
 const AuthMotoristaRoute = AuthMotoristaRouteImport.update({
   id: '/auth/motorista',
   path: '/auth/motorista',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthConfirmRoute = AuthConfirmRouteImport.update({
+  id: '/auth/confirm',
+  path: '/auth/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthAnuncianteRoute = AuthAnuncianteRouteImport.update({
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/auth/admin': typeof AuthAdminRoute
   '/auth/anunciante': typeof AuthAnuncianteRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
@@ -363,6 +372,7 @@ export interface FileRouteTypes {
     | '/notificacoes'
     | '/auth/admin'
     | '/auth/anunciante'
+    | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
     | '/admin/anunciantes'
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
     | '/notificacoes'
     | '/auth/admin'
     | '/auth/anunciante'
+    | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
     | '/admin/anunciantes'
@@ -433,6 +444,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notificacoes'
     | '/auth/admin'
     | '/auth/anunciante'
+    | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
     | '/_authenticated/admin/anunciantes'
@@ -467,6 +479,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   AuthAdminRoute: typeof AuthAdminRoute
   AuthAnuncianteRoute: typeof AuthAnuncianteRoute
+  AuthConfirmRoute: typeof AuthConfirmRoute
   AuthMotoristaRoute: typeof AuthMotoristaRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   ApiPublicAuthEmailHookRoute: typeof ApiPublicAuthEmailHookRoute
@@ -530,6 +543,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/motorista'
       fullPath: '/auth/motorista'
       preLoaderRoute: typeof AuthMotoristaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/confirm': {
+      id: '/auth/confirm'
+      path: '/auth/confirm'
+      fullPath: '/auth/confirm'
+      preLoaderRoute: typeof AuthConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/anunciante': {
@@ -838,6 +858,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   AuthAdminRoute: AuthAdminRoute,
   AuthAnuncianteRoute: AuthAnuncianteRoute,
+  AuthConfirmRoute: AuthConfirmRoute,
   AuthMotoristaRoute: AuthMotoristaRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   ApiPublicAuthEmailHookRoute: ApiPublicAuthEmailHookRoute,
