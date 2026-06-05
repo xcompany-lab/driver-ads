@@ -38,6 +38,9 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "preload", as: "image", href: logoFull.url, fetchpriority: "high" },
+      { rel: "preconnect", href: "https://play.tynk.ai" },
+      { rel: "dns-prefetch", href: "https://play.tynk.ai" },
+      { rel: "prerender", href: "https://play.tynk.ai/p/2af09e51-b86a-49f9-8d61-01a677c00647" },
     ],
   }),
   component: DriverLanding,
