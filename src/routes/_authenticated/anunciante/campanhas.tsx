@@ -31,7 +31,7 @@ function AdvertiserCampaignsPage() {
     enabled: !!advertiser?.id,
   });
 
-  const canCreate = advertiser?.status === "approved" || advertiser?.status === "active";
+  const canCreate = advertiser?.status === "approved";
 
   return (
     <div className="space-y-6">

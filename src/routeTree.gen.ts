@@ -37,6 +37,7 @@ import { Route as AuthenticatedMotoristaCampanhasRouteImport } from './routes/_a
 import { Route as AuthenticatedMotoristaAuditoriaRouteImport } from './routes/_authenticated/motorista/auditoria'
 import { Route as AuthenticatedAnunciantePerfilRouteImport } from './routes/_authenticated/anunciante/perfil'
 import { Route as AuthenticatedAnuncianteFinanceiroRouteImport } from './routes/_authenticated/anunciante/financeiro'
+import { Route as AuthenticatedAnuncianteCampanhasRouteImport } from './routes/_authenticated/anunciante/campanhas'
 import { Route as AuthenticatedAdminVeiculosRouteImport } from './routes/_authenticated/admin/veiculos'
 import { Route as AuthenticatedAdminMotoristasRouteImport } from './routes/_authenticated/admin/motoristas'
 import { Route as AuthenticatedAdminFinanceiroRouteImport } from './routes/_authenticated/admin/financeiro'
@@ -44,6 +45,8 @@ import { Route as AuthenticatedAdminComprovacoesRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin/campanhas'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin/auditoria'
 import { Route as AuthenticatedAdminAnunciantesRouteImport } from './routes/_authenticated/admin/anunciantes'
+import { Route as AuthenticatedAnuncianteCampanhasNovaRouteImport } from './routes/_authenticated/anunciante/campanhas.nova'
+import { Route as AuthenticatedAnuncianteCampanhasIdRouteImport } from './routes/_authenticated/anunciante/campanhas.$id'
 import { Route as AuthenticatedAdminCampanhasIdRouteImport } from './routes/_authenticated/admin/campanhas.$id'
 
 const TermosRoute = TermosRouteImport.update({
@@ -199,6 +202,12 @@ const AuthenticatedAnuncianteFinanceiroRoute =
     path: '/financeiro',
     getParentRoute: () => AuthenticatedAnuncianteRouteRoute,
   } as any)
+const AuthenticatedAnuncianteCampanhasRoute =
+  AuthenticatedAnuncianteCampanhasRouteImport.update({
+    id: '/campanhas',
+    path: '/campanhas',
+    getParentRoute: () => AuthenticatedAnuncianteRouteRoute,
+  } as any)
 const AuthenticatedAdminVeiculosRoute =
   AuthenticatedAdminVeiculosRouteImport.update({
     id: '/veiculos',
@@ -241,6 +250,18 @@ const AuthenticatedAdminAnunciantesRoute =
     path: '/anunciantes',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAnuncianteCampanhasNovaRoute =
+  AuthenticatedAnuncianteCampanhasNovaRouteImport.update({
+    id: '/nova',
+    path: '/nova',
+    getParentRoute: () => AuthenticatedAnuncianteCampanhasRoute,
+  } as any)
+const AuthenticatedAnuncianteCampanhasIdRoute =
+  AuthenticatedAnuncianteCampanhasIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAnuncianteCampanhasRoute,
+  } as any)
 const AuthenticatedAdminCampanhasIdRoute =
   AuthenticatedAdminCampanhasIdRouteImport.update({
     id: '/$id',
@@ -270,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
   '/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
+  '/anunciante/campanhas': typeof AuthenticatedAnuncianteCampanhasRouteWithChildren
   '/anunciante/financeiro': typeof AuthenticatedAnuncianteFinanceiroRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
   '/motorista/auditoria': typeof AuthenticatedMotoristaAuditoriaRoute
@@ -284,6 +306,8 @@ export interface FileRoutesByFullPath {
   '/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista/': typeof AuthenticatedMotoristaIndexRoute
   '/admin/campanhas/$id': typeof AuthenticatedAdminCampanhasIdRoute
+  '/anunciante/campanhas/$id': typeof AuthenticatedAnuncianteCampanhasIdRoute
+  '/anunciante/campanhas/nova': typeof AuthenticatedAnuncianteCampanhasNovaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -304,6 +328,7 @@ export interface FileRoutesByTo {
   '/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
   '/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
+  '/anunciante/campanhas': typeof AuthenticatedAnuncianteCampanhasRouteWithChildren
   '/anunciante/financeiro': typeof AuthenticatedAnuncianteFinanceiroRoute
   '/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
   '/motorista/auditoria': typeof AuthenticatedMotoristaAuditoriaRoute
@@ -318,6 +343,8 @@ export interface FileRoutesByTo {
   '/anunciante': typeof AuthenticatedAnuncianteIndexRoute
   '/motorista': typeof AuthenticatedMotoristaIndexRoute
   '/admin/campanhas/$id': typeof AuthenticatedAdminCampanhasIdRoute
+  '/anunciante/campanhas/$id': typeof AuthenticatedAnuncianteCampanhasIdRoute
+  '/anunciante/campanhas/nova': typeof AuthenticatedAnuncianteCampanhasNovaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -343,6 +370,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/financeiro': typeof AuthenticatedAdminFinanceiroRoute
   '/_authenticated/admin/motoristas': typeof AuthenticatedAdminMotoristasRoute
   '/_authenticated/admin/veiculos': typeof AuthenticatedAdminVeiculosRoute
+  '/_authenticated/anunciante/campanhas': typeof AuthenticatedAnuncianteCampanhasRouteWithChildren
   '/_authenticated/anunciante/financeiro': typeof AuthenticatedAnuncianteFinanceiroRoute
   '/_authenticated/anunciante/perfil': typeof AuthenticatedAnunciantePerfilRoute
   '/_authenticated/motorista/auditoria': typeof AuthenticatedMotoristaAuditoriaRoute
@@ -357,6 +385,8 @@ export interface FileRoutesById {
   '/_authenticated/anunciante/': typeof AuthenticatedAnuncianteIndexRoute
   '/_authenticated/motorista/': typeof AuthenticatedMotoristaIndexRoute
   '/_authenticated/admin/campanhas/$id': typeof AuthenticatedAdminCampanhasIdRoute
+  '/_authenticated/anunciante/campanhas/$id': typeof AuthenticatedAnuncianteCampanhasIdRoute
+  '/_authenticated/anunciante/campanhas/nova': typeof AuthenticatedAnuncianteCampanhasNovaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -382,6 +412,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/motoristas'
     | '/admin/veiculos'
+    | '/anunciante/campanhas'
     | '/anunciante/financeiro'
     | '/anunciante/perfil'
     | '/motorista/auditoria'
@@ -396,6 +427,8 @@ export interface FileRouteTypes {
     | '/anunciante/'
     | '/motorista/'
     | '/admin/campanhas/$id'
+    | '/anunciante/campanhas/$id'
+    | '/anunciante/campanhas/nova'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -416,6 +449,7 @@ export interface FileRouteTypes {
     | '/admin/financeiro'
     | '/admin/motoristas'
     | '/admin/veiculos'
+    | '/anunciante/campanhas'
     | '/anunciante/financeiro'
     | '/anunciante/perfil'
     | '/motorista/auditoria'
@@ -430,6 +464,8 @@ export interface FileRouteTypes {
     | '/anunciante'
     | '/motorista'
     | '/admin/campanhas/$id'
+    | '/anunciante/campanhas/$id'
+    | '/anunciante/campanhas/nova'
   id:
     | '__root__'
     | '/'
@@ -454,6 +490,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/financeiro'
     | '/_authenticated/admin/motoristas'
     | '/_authenticated/admin/veiculos'
+    | '/_authenticated/anunciante/campanhas'
     | '/_authenticated/anunciante/financeiro'
     | '/_authenticated/anunciante/perfil'
     | '/_authenticated/motorista/auditoria'
@@ -468,6 +505,8 @@ export interface FileRouteTypes {
     | '/_authenticated/anunciante/'
     | '/_authenticated/motorista/'
     | '/_authenticated/admin/campanhas/$id'
+    | '/_authenticated/anunciante/campanhas/$id'
+    | '/_authenticated/anunciante/campanhas/nova'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -685,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnuncianteFinanceiroRouteImport
       parentRoute: typeof AuthenticatedAnuncianteRouteRoute
     }
+    '/_authenticated/anunciante/campanhas': {
+      id: '/_authenticated/anunciante/campanhas'
+      path: '/campanhas'
+      fullPath: '/anunciante/campanhas'
+      preLoaderRoute: typeof AuthenticatedAnuncianteCampanhasRouteImport
+      parentRoute: typeof AuthenticatedAnuncianteRouteRoute
+    }
     '/_authenticated/admin/veiculos': {
       id: '/_authenticated/admin/veiculos'
       path: '/veiculos'
@@ -733,6 +779,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/anunciantes'
       preLoaderRoute: typeof AuthenticatedAdminAnunciantesRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/anunciante/campanhas/nova': {
+      id: '/_authenticated/anunciante/campanhas/nova'
+      path: '/nova'
+      fullPath: '/anunciante/campanhas/nova'
+      preLoaderRoute: typeof AuthenticatedAnuncianteCampanhasNovaRouteImport
+      parentRoute: typeof AuthenticatedAnuncianteCampanhasRoute
+    }
+    '/_authenticated/anunciante/campanhas/$id': {
+      id: '/_authenticated/anunciante/campanhas/$id'
+      path: '/$id'
+      fullPath: '/anunciante/campanhas/$id'
+      preLoaderRoute: typeof AuthenticatedAnuncianteCampanhasIdRouteImport
+      parentRoute: typeof AuthenticatedAnuncianteCampanhasRoute
     }
     '/_authenticated/admin/campanhas/$id': {
       id: '/_authenticated/admin/campanhas/$id'
@@ -787,7 +847,26 @@ const AuthenticatedAdminRouteRouteWithChildren =
     AuthenticatedAdminRouteRouteChildren,
   )
 
+interface AuthenticatedAnuncianteCampanhasRouteChildren {
+  AuthenticatedAnuncianteCampanhasIdRoute: typeof AuthenticatedAnuncianteCampanhasIdRoute
+  AuthenticatedAnuncianteCampanhasNovaRoute: typeof AuthenticatedAnuncianteCampanhasNovaRoute
+}
+
+const AuthenticatedAnuncianteCampanhasRouteChildren: AuthenticatedAnuncianteCampanhasRouteChildren =
+  {
+    AuthenticatedAnuncianteCampanhasIdRoute:
+      AuthenticatedAnuncianteCampanhasIdRoute,
+    AuthenticatedAnuncianteCampanhasNovaRoute:
+      AuthenticatedAnuncianteCampanhasNovaRoute,
+  }
+
+const AuthenticatedAnuncianteCampanhasRouteWithChildren =
+  AuthenticatedAnuncianteCampanhasRoute._addFileChildren(
+    AuthenticatedAnuncianteCampanhasRouteChildren,
+  )
+
 interface AuthenticatedAnuncianteRouteRouteChildren {
+  AuthenticatedAnuncianteCampanhasRoute: typeof AuthenticatedAnuncianteCampanhasRouteWithChildren
   AuthenticatedAnuncianteFinanceiroRoute: typeof AuthenticatedAnuncianteFinanceiroRoute
   AuthenticatedAnunciantePerfilRoute: typeof AuthenticatedAnunciantePerfilRoute
   AuthenticatedAnuncianteIndexRoute: typeof AuthenticatedAnuncianteIndexRoute
@@ -795,6 +874,8 @@ interface AuthenticatedAnuncianteRouteRouteChildren {
 
 const AuthenticatedAnuncianteRouteRouteChildren: AuthenticatedAnuncianteRouteRouteChildren =
   {
+    AuthenticatedAnuncianteCampanhasRoute:
+      AuthenticatedAnuncianteCampanhasRouteWithChildren,
     AuthenticatedAnuncianteFinanceiroRoute:
       AuthenticatedAnuncianteFinanceiroRoute,
     AuthenticatedAnunciantePerfilRoute: AuthenticatedAnunciantePerfilRoute,
