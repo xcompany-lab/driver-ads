@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, MapPin, FileText, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, FileText, Upload, Loader2, CreditCard } from "lucide-react";
 import {
   getMyCampaign,
   getCampaignArtUrl,
