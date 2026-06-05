@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Loader2, CheckCircle2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -10,11 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { PagouCardElement } from "@/components/checkout/PagouCardElement";
-import {
-  getPagouPublicKey,
-  createPagouSubscription,
-  getCampaignBillingState,
-} from "@/lib/pagou/subscription.functions";
 
 export const Route = createFileRoute(
   "/_authenticated/anunciante/campanhas/$id/checkout",
@@ -33,17 +27,27 @@ export const Route = createFileRoute(
 const brl = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+async function invokeFn<T>(name: string, body?: unknown): Promise<T> {
+  const opts = body !== undefined ? { body: body as Record<string, unknown> } : {};
+  const { data, error } = await supabase.functions.invoke(name, opts);
+  if (error) throw new Error(error.message);
+  if (data && typeof data === "object" && "error" in data && data.error) {
+    throw new Error(String((data as { error: unknown }).error));
+  }
+  return data as T;
+}
+
 function CheckoutPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const getKey = useServerFn(getPagouPublicKey);
-  const createSub = useServerFn(createPagouSubscription);
-  const getBilling = useServerFn(getCampaignBillingState);
 
   // Public key
   const { data: keyData, isLoading: loadingKey } = useQuery({
     queryKey: ["pagou-public-key"],
-    queryFn: () => getKey(),
+    queryFn: () =>
+      invokeFn<{ public_key: string; environment: "sandbox" | "production" }>(
+        "pagou-public-key",
+      ),
     staleTime: 5 * 60_000,
   });
 
@@ -84,7 +88,11 @@ function CheckoutPage() {
   // Poll billing state after submit
   const { data: billing, refetch: refetchBilling } = useQuery({
     queryKey: ["checkout-billing-state", id],
-    queryFn: () => getBilling({ data: { campaign_id: id } }),
+    queryFn: () =>
+      invokeFn<{
+        campaign: { billing_status?: string; operational_status?: string } | null;
+        subscription: { id: string; status: string; card_brand?: string; card_last4?: string } | null;
+      }>("pagou-billing-state", { campaign_id: id }),
     refetchInterval: (q) => {
       const state = q.state.data as { campaign?: { billing_status?: string } } | undefined;
       const status = state?.campaign?.billing_status;
@@ -151,8 +159,9 @@ function CheckoutPage() {
     exp_year?: string;
   }) => {
     try {
-      await createSub({
-        data: {
+      await invokeFn<{ subscription_id: string; status: string }>(
+        "pagou-create-subscription",
+        {
           campaign_id: id,
           plan_id: plan.id,
           token: tokenData.token,
@@ -161,7 +170,7 @@ function CheckoutPage() {
           exp_month: tokenData.exp_month ?? null,
           exp_year: tokenData.exp_year ?? null,
         },
-      });
+      );
       toast.message("Pagamento em processamento", {
         description: "A campanha será ativada após a confirmação da Pagou.ai.",
       });
