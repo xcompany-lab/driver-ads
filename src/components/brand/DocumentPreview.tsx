@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Loader2, ExternalLink, FileText, ImageIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2, ExternalLink, FileText, ImageIcon, RotateCw, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,23 +25,36 @@ interface Props {
 export function DocumentPreview({ open, onOpenChange, path, label }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!path) return;
+    setLoading(true);
+    setError(null);
+    setUrl(null);
+    try {
+      const u = await getSignedDocUrl(path);
+      if (!u) {
+        setError("Não foi possível gerar a URL do arquivo. Verifique permissões ou tente novamente.");
+      } else {
+        setUrl(u);
+      }
+    } catch (e) {
+      setError((e as Error).message || "Erro ao carregar documento.");
+    } finally {
+      setLoading(false);
+    }
+  }, [path]);
 
   useEffect(() => {
-    let active = true;
     if (open && path) {
-      setLoading(true);
-      setUrl(null);
-      getSignedDocUrl(path).then((u) => {
-        if (active) {
-          setUrl(u);
-          setLoading(false);
-        }
-      });
+      void load();
     }
-    return () => {
-      active = false;
-    };
-  }, [open, path]);
+    if (!open) {
+      setUrl(null);
+      setError(null);
+    }
+  }, [open, path, load]);
 
   const isPdf = isPdfPath(path);
 
@@ -58,34 +71,49 @@ export function DocumentPreview({ open, onOpenChange, path, label }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-[60vh] flex items-center justify-center rounded-md border bg-muted/30">
-          {loading || !url ? (
+        <div className="min-h-[60vh] flex items-center justify-center rounded-md border bg-muted/30 p-4">
+          {loading ? (
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          ) : isPdf ? (
-            <iframe
-              src={url}
-              title={label}
-              className="h-[75vh] w-full rounded-md"
-            />
-          ) : (
-            <img
-              src={url}
-              alt={label}
-              className="max-h-[75vh] w-auto rounded-md object-contain"
-            />
-          )}
+          ) : error ? (
+            <div className="flex flex-col items-center gap-3 text-center">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+              <p className="text-sm text-muted-foreground max-w-md">{error}</p>
+              <Button size="sm" variant="outline" onClick={() => void load()}>
+                <RotateCw className="mr-2 h-4 w-4" />
+                Tentar novamente
+              </Button>
+            </div>
+          ) : url ? (
+            isPdf ? (
+              <iframe
+                src={url}
+                title={label}
+                className="h-[75vh] w-full rounded-md bg-white"
+              />
+            ) : (
+              <img
+                src={url}
+                alt={label}
+                className="max-h-[75vh] w-auto rounded-md object-contain"
+              />
+            )
+          ) : null}
         </div>
 
-        {url && (
-          <div className="flex justify-end">
+        <div className="flex justify-between items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => void load()} disabled={loading || !path}>
+            <RotateCw className="mr-2 h-4 w-4" />
+            Atualizar link
+          </Button>
+          {url && (
             <Button asChild variant="outline" size="sm">
               <a href={url} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Abrir em nova aba
               </a>
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
