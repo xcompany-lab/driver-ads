@@ -1,1 +1,13 @@
 project_id = "tonxgsqzjppuaskjstvl"
+
+[functions.pagou-webhook]
+verify_jwt = false
+
+[functions.pagou-public-key]
+verify_jwt = true
+
+[functions.pagou-create-subscription]
+verify_jwt = true
+
+[functions.pagou-billing-state]
+verify_jwt = true
