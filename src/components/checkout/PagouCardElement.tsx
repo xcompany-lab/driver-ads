@@ -93,9 +93,13 @@ export function PagouCardElement({
         elementsRef.current = elements;
         const card = elements.create("card", { theme: "night", locale: "pt-BR" });
         cardRef.current = card;
-        card.on("ready", () => setReady(true));
+        card.on("ready", () => {
+          console.log("[Pagou] card ready");
+          setReady(true);
+        });
         card.on("change", (evt: unknown) => {
           const e = evt as { complete?: boolean; error?: { message?: string } };
+          console.log("[Pagou] card change", e);
           setValid(!!e.complete);
           setError(e.error?.message ?? null);
         });
