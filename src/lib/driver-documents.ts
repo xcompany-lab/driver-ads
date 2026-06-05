@@ -83,7 +83,10 @@ export async function updateVehicleCrlv(vehicleId: string, path: string) {
 export async function getSignedDocUrl(path: string, ttl = 60 * 60): Promise<string | null> {
   if (!path) return null;
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, ttl);
-  if (error) return null;
+  if (error) {
+    console.error("[getSignedDocUrl] failed", { path, error });
+    return null;
+  }
   return data.signedUrl;
 }
 
