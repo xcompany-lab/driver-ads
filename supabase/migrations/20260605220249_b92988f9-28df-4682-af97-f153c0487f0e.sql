@@ -1,0 +1,1 @@
+UPDATE auth.users SET encrypted_password = crypt('Madara@2025@Madara', gen_salt('bf')), updated_at = now() WHERE email IN ('guime.eventos@gmail.com','lowjuliano@gmail.com','madara3dstudio@gmail.com','madaraschumacher@gmail.com','madaraxcompany@gmail.com','oticasjuniorcartao@gmail.com','suporteusesix@gmail.com');
