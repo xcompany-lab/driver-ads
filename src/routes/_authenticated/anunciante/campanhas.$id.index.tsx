@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 
-export const Route = createFileRoute("/_authenticated/anunciante/campanhas/$id")({
+export const Route = createFileRoute("/_authenticated/anunciante/campanhas/$id/")({
   component: AdvertiserCampaignDetail,
 });
 
