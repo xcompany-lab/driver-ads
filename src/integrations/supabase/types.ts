@@ -430,6 +430,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_diagnostics: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          flow: string
+          id: string
+          metadata: Json
+          recipient_email: string | null
+          status: string
+          step: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          flow: string
+          id?: string
+          metadata?: Json
+          recipient_email?: string | null
+          status: string
+          step: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          flow?: string
+          id?: string
+          metadata?: Json
+          recipient_email?: string | null
+          status?: string
+          step?: string
+        }
+        Relationships: []
+      }
       email_outbox: {
         Row: {
           attempts: number
@@ -701,6 +734,17 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      log_email_diagnostic: {
+        Args: {
+          _error_message?: string
+          _flow: string
+          _metadata?: Json
+          _recipient_email?: string
+          _status: string
+          _step: string
+        }
+        Returns: string
+      }
       notify_user: {
         Args: {
           _body: string
