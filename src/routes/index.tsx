@@ -108,6 +108,20 @@ function DriverLanding() {
               suas <span className="text-gradient-brand-flow">corridas</span>.
             </motion.h1>
 
+            <motion.div
+              variants={fadeUp}
+              custom={2}
+              className="max-w-3xl mx-auto mb-9 rounded-xl overflow-hidden ring-1 ring-white/10 shadow-[0_20px_60px_-20px_rgba(22,120,255,0.45)]"
+            >
+              <iframe
+                src="https://play.tynk.ai/p/2af09e51-b86a-49f9-8d61-01a677c00647"
+                title="Driver Ads — vídeo de apresentação"
+                style={{ width: "100%", aspectRatio: "16 / 9", border: 0, display: "block" }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </motion.div>
+
             <motion.p
               variants={fadeUp}
               custom={2}
