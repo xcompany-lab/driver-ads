@@ -1,34 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
 import { logEmailDiagnostic } from "@/lib/email/diagnostics.server";
-import { renderEmail } from "@/lib/email/templates.server";
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
-const FROM = "Driver Ads <suporte@driverads.com.br>";
 const PUBLIC_SITE_URL = "https://driverads.com.br";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
-}
-
-async function sendViaResend(to: string, subject: string, html: string) {
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const resendKey = process.env.RESEND_API_KEY;
-  if (!lovableKey || !resendKey) throw new Error("Missing email credentials");
-
-  const res = await fetch(`${GATEWAY_URL}/emails`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": resendKey,
-    },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Email provider ${res.status}: ${body.slice(0, 500)}`);
-  }
 }
 
 export const Route = createFileRoute("/api/public/password-recovery")({
@@ -48,53 +25,70 @@ export const Route = createFileRoute("/api/public/password-recovery")({
           return Response.json({ ok: true });
         }
 
-        try {
-          await logEmailDiagnostic({ flow: "password-recovery", step: "request-received", status: "started", recipientEmail: email });
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const redirectTo = `${PUBLIC_SITE_URL}/auth/reset-password`;
-          const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-            type: "recovery",
-            email,
-            options: { redirectTo },
-          });
+        const SUPABASE_URL = process.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+        const SUPABASE_PUBLISHABLE_KEY =
+          process.env.SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-          if (error || !data.properties?.action_link) {
-            console.warn("[password-recovery] recovery link not generated", { email, message: error?.message });
-            await logEmailDiagnostic({
-              flow: "password-recovery",
-              step: "generate-link",
-              status: "skipped",
-              recipientEmail: email,
-              errorMessage: error?.message ?? "Recovery link was not returned",
-            });
-            return Response.json({ ok: true });
-          }
-          await logEmailDiagnostic({ flow: "password-recovery", step: "generate-link", status: "success", recipientEmail: email });
+        await logEmailDiagnostic({
+          flow: "password-recovery",
+          step: "request-received",
+          status: "started",
+          recipientEmail: email,
+          metadata: {
+            hasSupabaseUrl: Boolean(SUPABASE_URL),
+            hasPublishableKey: Boolean(SUPABASE_PUBLISHABLE_KEY),
+            hasServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+          },
+        });
 
-          const rendered = renderEmail("auth-recovery", { action_url: data.properties.action_link });
-          if (!rendered) throw new Error("Recovery email template missing");
-
-          await sendViaResend(email, rendered.subject, rendered.html);
-          await logEmailDiagnostic({ flow: "password-recovery", step: "send-email", status: "success", recipientEmail: email });
-          return Response.json({ ok: true });
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error("[password-recovery] send failed", message);
+        if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
           await logEmailDiagnostic({
             flow: "password-recovery",
-            step: "send-email",
+            step: "create-client",
             status: "failed",
             recipientEmail: email,
-            errorMessage: message,
-            metadata: {
-              hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
-              hasSupabaseServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-              hasLovableApiKey: Boolean(process.env.LOVABLE_API_KEY),
-              hasResendApiKey: Boolean(process.env.RESEND_API_KEY),
-            },
+            errorMessage: "Missing Supabase public config",
           });
           return Response.json({ ok: true });
         }
+
+        try {
+          const client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          });
+
+          const { error } = await client.auth.resetPasswordForEmail(email, {
+            redirectTo: `${PUBLIC_SITE_URL}/auth/reset-password`,
+          });
+
+          if (error) {
+            await logEmailDiagnostic({
+              flow: "password-recovery",
+              step: "reset-password-for-email",
+              status: "failed",
+              recipientEmail: email,
+              errorMessage: error.message,
+            });
+          } else {
+            await logEmailDiagnostic({
+              flow: "password-recovery",
+              step: "reset-password-for-email",
+              status: "success",
+              recipientEmail: email,
+            });
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          await logEmailDiagnostic({
+            flow: "password-recovery",
+            step: "reset-password-for-email",
+            status: "failed",
+            recipientEmail: email,
+            errorMessage: message,
+          });
+        }
+
+        return Response.json({ ok: true });
       },
     },
   },
