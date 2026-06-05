@@ -146,7 +146,7 @@ export function PagouCardElement({
         type="button"
         size="lg"
         className="w-full"
-        disabled={disabled || !ready || !valid || submitting}
+        disabled={disabled || !ready || submitting}
         onClick={handleSubmit}
       >
         {submitting ? (
