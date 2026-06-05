@@ -54,8 +54,8 @@ function AdvertiserHome() {
           icon={<Megaphone className="h-5 w-5" />}
           title="Campanhas"
           description="Solicite e acompanhe suas campanhas publicitárias."
-          actionLabel="Em breve"
-          disabled
+          actionLabel="Abrir campanhas"
+          to="/anunciante/campanhas"
         />
         <DashCard
           icon={<Wallet className="h-5 w-5" />}
