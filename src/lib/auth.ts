@@ -31,7 +31,11 @@ export interface SignUpDriverInput {
   city: string;
 }
 
-async function baseSignUp(email: string, password: string, full_name: string, phone: string) {
+async function baseSignUp(
+  email: string,
+  password: string,
+  metadata: Record<string, unknown>,
+) {
   const PUBLIC_SITE_URL = "https://driverads.com.br";
   const origin =
     typeof window !== "undefined" && !/localhost|127\.0\.0\.1|lovable\.app/i.test(window.location.origin)
@@ -43,7 +47,7 @@ async function baseSignUp(email: string, password: string, full_name: string, ph
     password,
     options: {
       emailRedirectTo: redirectTo,
-      data: { full_name, phone },
+      data: metadata,
     },
   });
   if (error) throw error;
@@ -56,8 +60,17 @@ async function assignRole(role: AppRole) {
 }
 
 export async function signUpAdvertiser(input: SignUpAdvertiserInput) {
-  const res = await baseSignUp(input.email, input.password, input.full_name, input.phone);
+  const res = await baseSignUp(input.email, input.password, {
+    account_type: "advertiser",
+    full_name: input.full_name,
+    phone: input.phone,
+    company_name: input.company_name,
+    cnpj: input.cnpj,
+    city: input.city,
+    segment: input.segment ?? "",
+  });
   if (!res.session) {
+    // Email confirmation required — DB trigger finalizes role + advertiser row on confirm
     return { needsEmailConfirmation: true as const };
   }
   await assignRole("advertiser");
@@ -71,13 +84,20 @@ export async function signUpAdvertiser(input: SignUpAdvertiserInput) {
     city: input.city,
     segment: input.segment ?? null,
   });
-  if (error) throw error;
+  if (error && error.code !== "23505") throw error;
   return { needsEmailConfirmation: false as const };
 }
 
 export async function signUpDriver(input: SignUpDriverInput) {
-  const res = await baseSignUp(input.email, input.password, input.full_name, input.phone);
+  const res = await baseSignUp(input.email, input.password, {
+    account_type: "driver",
+    full_name: input.full_name,
+    phone: input.phone,
+    cpf: input.cpf,
+    city: input.city,
+  });
   if (!res.session) {
+    // Email confirmation required — DB trigger finalizes role + driver row on confirm
     return { needsEmailConfirmation: true as const };
   }
   await assignRole("driver");
@@ -90,6 +110,6 @@ export async function signUpDriver(input: SignUpDriverInput) {
     city: input.city,
     regions: [],
   });
-  if (error) throw error;
+  if (error && error.code !== "23505") throw error;
   return { needsEmailConfirmation: false as const };
 }
