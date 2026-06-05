@@ -1724,6 +1724,14 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
       }
+      driver_is_assigned_to_campaign: {
+        Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
+      }
+      driver_owns_assignment: {
+        Args: { _assignment_id: string; _user_id: string }
+        Returns: boolean
+      }
       enqueue_email: {
         Args: {
           _payload: Json
@@ -1765,6 +1773,14 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
+      }
+      user_owns_advertiser: {
+        Args: { _advertiser_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_owns_campaign: {
+        Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
