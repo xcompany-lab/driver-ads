@@ -93,9 +93,13 @@ export function PagouCardElement({
         elementsRef.current = elements;
         const card = elements.create("card", { theme: "night", locale: "pt-BR" });
         cardRef.current = card;
-        card.on("ready", () => setReady(true));
+        card.on("ready", () => {
+          console.log("[Pagou] card ready");
+          setReady(true);
+        });
         card.on("change", (evt: unknown) => {
           const e = evt as { complete?: boolean; error?: { message?: string } };
+          console.log("[Pagou] card change", e);
           setValid(!!e.complete);
           setError(e.error?.message ?? null);
         });
@@ -113,21 +117,40 @@ export function PagouCardElement({
   }, [publicKey, environment]);
 
   async function handleSubmit() {
-    if (!elementsRef.current || submitting) return;
+    console.log("[Pagou] handleSubmit click", { ready, valid, submitting });
+    if (!elementsRef.current) {
+      setError("Formulário ainda não montou");
+      return;
+    }
+    if (submitting) return;
     setSubmitting(true);
     setError(null);
+    let tokenizeCalled = false;
     try {
+      console.log("[Pagou] calling elements.submit()");
       const result = await elementsRef.current.submit({
         mode: "subscription",
         createTransaction: async (tokenData) => {
+          tokenizeCalled = true;
+          console.log("[Pagou] createTransaction received tokenData", {
+            hasToken: !!tokenData?.token,
+            brand: tokenData?.brand,
+            last4: tokenData?.last4,
+          });
           await onTokenize(tokenData);
-          // Return provisional payload — Pagou SDK expects an object
           return { status: "processing" };
         },
       });
+      console.log("[Pagou] elements.submit() result", result);
       if (result?.error?.message) setError(result.error.message);
+      if (!tokenizeCalled && !result?.error?.message) {
+        setError(
+          "O SDK da Pagou não tokenizou o cartão. Verifique se os campos estão completos e válidos.",
+        );
+      }
     } catch (e) {
-      setError((e as Error).message);
+      console.error("[Pagou] submit threw", e);
+      setError((e as Error).message ?? "Falha ao processar pagamento");
     } finally {
       setSubmitting(false);
     }
