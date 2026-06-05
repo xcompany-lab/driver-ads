@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Loader2, CheckCircle2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -10,11 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { PagouCardElement } from "@/components/checkout/PagouCardElement";
-import {
-  getPagouPublicKey,
-  createPagouSubscription,
-  getCampaignBillingState,
-} from "@/lib/pagou/subscription.functions";
 
 export const Route = createFileRoute(
   "/_authenticated/anunciante/campanhas/$id/checkout",
@@ -33,17 +27,26 @@ export const Route = createFileRoute(
 const brl = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+async function invokeFn<T>(name: string, body?: unknown): Promise<T> {
+  const { data, error } = await supabase.functions.invoke(name, body !== undefined ? { body } : undefined);
+  if (error) throw new Error(error.message);
+  if (data && typeof data === "object" && "error" in data && data.error) {
+    throw new Error(String((data as { error: unknown }).error));
+  }
+  return data as T;
+}
+
 function CheckoutPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const getKey = useServerFn(getPagouPublicKey);
-  const createSub = useServerFn(createPagouSubscription);
-  const getBilling = useServerFn(getCampaignBillingState);
 
   // Public key
   const { data: keyData, isLoading: loadingKey } = useQuery({
     queryKey: ["pagou-public-key"],
-    queryFn: () => getKey(),
+    queryFn: () =>
+      invokeFn<{ public_key: string; environment: "sandbox" | "production" }>(
+        "pagou-public-key",
+      ),
     staleTime: 5 * 60_000,
   });
 
