@@ -48,6 +48,16 @@ const STATUS_TONES: Record<string, { tone: Tone; label: string }> = {
   refunded: { tone: "neutral", label: "Reembolsado" },
   scheduled: { tone: "info", label: "Agendado" },
   needs_resubmission: { tone: "warning", label: "Reenviar foto" },
+
+  // Pagou billing_status
+  none: { tone: "neutral", label: "Sem cobrança" },
+  trialing: { tone: "info", label: "Em teste" },
+  past_due: { tone: "destructive", label: "Inadimplente" },
+  payment_failed: { tone: "destructive", label: "Falha no pagamento" },
+  cancel_scheduled: { tone: "warning", label: "Cancelamento agendado" },
+  chargedback: { tone: "destructive", label: "Chargeback" },
+  in_protest: { tone: "warning", label: "Em contestação" },
+  manual_review: { tone: "warning", label: "Em revisão manual" },
 };
 
 interface StatusBadgeProps {

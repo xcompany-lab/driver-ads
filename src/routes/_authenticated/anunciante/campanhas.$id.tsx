@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, MapPin, FileText, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, FileText, Upload, Loader2, CreditCard } from "lucide-react";
 import {
   getMyCampaign,
   getCampaignArtUrl,
@@ -132,8 +132,13 @@ function AdvertiserCampaignDetail() {
             </div>
           )}
 
-          {canCancel && (
-            <div className="pt-2 border-t">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+            <Button asChild>
+              <Link to="/anunciante/campanhas/$id/checkout" params={{ id: campaign.id }}>
+                <CreditCard className="mr-2 h-4 w-4" /> Contratar / Pagar assinatura
+              </Link>
+            </Button>
+            {canCancel && (
               <Button
                 variant="ghost"
                 className="text-destructive"
@@ -142,8 +147,8 @@ function AdvertiserCampaignDetail() {
               >
                 Cancelar campanha
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 

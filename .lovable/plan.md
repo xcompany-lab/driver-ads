@@ -1,83 +1,101 @@
-## Objetivo
+## Integração financeira Driver Ads + Pagou.ai
 
-Resolver o link de confirmação caindo em `localhost` e centralizar todo o envio de e-mail do Driver Ads no Resend, com remetente `suporte@driverads.com.br`.
+Documento de 2.620 linhas + adendo. Escopo enorme — vou implementar em **fases entregáveis**, começando agora pelas Fases 1–4 (fundação + webhook + checkout cartão recorrente). Depois confirmamos cada fase antes de seguir.
 
-## Por que o link cai em localhost
+## Decisões de arquitetura (importante ler)
 
-Hoje o cadastro chama `supabase.auth.signUp(..., { emailRedirectTo: ${window.location.origin}/auth })`. Quando você testa em ambiente de preview/local, `window.location.origin` vira `localhost` (ou o preview da Lovable) e a Supabase usa a **Site URL** do projeto como fallback — que ainda está apontando para localhost. O e-mail é o template padrão da Supabase, não passa pelo Resend.
+1. **Webhook fica em Supabase Edge Function** (`supabase/functions/pagou-webhook/index.ts`). Razão: os 3 webhooks da Pagou.ai já estão apontados para `/functions/v1/pagou-webhook` e o token já está em `PAGOU_WEBHOOK_SECRET`. Mudar URL agora quebraria a integração.
+2. **Demais chamadas server-to-server** (criar customer, assinatura, Pix, Pix Out, reconciliar) ficam em **TanStack server functions** (`createServerFn`) seguindo o padrão do projeto. Helper único `src/lib/pagou/client.server.ts` para chamar a Pagou.
+3. **Tabelas existentes serão estendidas, não substituídas.** O projeto já tem `advertisers`, `drivers`, `campaigns`, `vehicles`, `campaign_driver_assignments`, `advertiser_payments`, `driver_payouts`. Vou **adicionar colunas** Pagou e **criar novas tabelas** específicas (subscriptions, billing_transactions, ledger_entries, driver_payout_methods, driver_earnings, pagou_webhook_events, operational_tasks, pagou_api_logs, provider_balance_snapshots). As tabelas antigas `advertiser_payments` e `driver_payouts` ficam como histórico/registro manual paralelo até a Fase 10, quando consolidamos.
+4. **Secrets**: já existem (`PAGOU_*`). Vou adicionar apenas `VITE_PAGOU_PUBLIC_KEY` no `.env` do frontend (espelho de `PAGOU_PUBLIC_KEY`).
+5. **Sem matching automático** — operação Admin continua manual.
+6. **Variáveis Pagou no contrato**: o documento alterna `PAGOU_SECRET_TOKEN` / `PAGOU_API_TOKEN`. Vou usar `PAGOU_API_TOKEN` (nome já cadastrado).
 
-## Pré-requisitos que você precisa fazer (1 vez só)
+## Fase 1 — Banco de dados (esta entrega)
 
-1. **Adicionar domínio no Resend** (https://resend.com/domains) → `driverads.com.br`. O Resend vai gerar 3 registros DNS (SPF, DKIM, DMARC) para colar no seu provedor de DNS.
-2. **Atualizar Site URL no Supabase** → Dashboard → Authentication → URL Configuration:
-   - Site URL: `https://driverads.com.br`
-   - Redirect URLs (adicionar todas): `https://driverads.com.br/**`, `https://www.driverads.com.br/**`, `https://driver-ads.lovable.app/**`, `https://id-preview--f1dbd651-3cbb-43b9-9ae4-53e107d58496.lovable.app/**`
+Migration única adicionando enums, colunas e tabelas:
 
-Eu mostro os links exatos no chat na hora.
+### Enums novos
+`billing_status`, `payment_method_type`, `driver_payout_method_status`, `earning_status`, `ledger_entry_type`, `webhook_processing_status`, `pagou_subscription_status`, `pagou_transaction_status`, `pagou_transfer_status`.
 
-## O que vou construir
+### Colunas adicionadas em tabelas existentes
+- `advertisers`: `pagou_customer_id text unique`, `document_type`, `address jsonb`.
+- `campaigns`: `plan_id uuid`, `billing_status`, `operational_status`, `current_period_start/end`, `payment_grace_until`, `removal_required_at`.
+- `drivers`: nenhuma — `pix_key` já existe; vamos migrar para tabela dedicada `driver_payout_methods` na Fase 9.
+- `campaign_driver_assignments`: nenhuma por ora.
 
-### 1. Conexão com Resend
-- Conectar o connector "Resend" do Lovable (gateway gerenciado, sem precisar colar API key manualmente).
-- O secret `RESEND_API_KEY` fica disponível automaticamente nas server functions.
+### Tabelas novas
+`campaign_plans`, `subscriptions`, `billing_transactions`, `pagou_webhook_events`, `pagou_api_logs`, `pagou_reconciliation_jobs`, `driver_payout_methods`, `driver_earnings`, `payouts`, `payout_items`, `ledger_entries`, `operational_tasks`, `provider_balance_snapshots`, `audit_logs` (renomeado de `activity_logs`? **não** — mantemos `activity_logs` e criamos `audit_logs` focado em eventos financeiros).
 
-### 2. Endpoint de auth email hook
-- Rota pública `src/routes/api/public/auth-email-hook.ts` que recebe o **Send Email Hook** da Supabase, valida a assinatura (HMAC com `SEND_EMAIL_HOOK_SECRET`), renderiza o template correspondente (`signup`, `recovery`, `email_change`, `magiclink`, `invite`) e envia via Resend.
-- Você configura esse endpoint no Supabase Dashboard → Authentication → Hooks → Send Email Hook, apontando para `https://driverads.com.br/api/public/auth-email-hook`. A partir daí, **todos os e-mails de auth da Supabase passam pelo Resend** com a sua marca.
+### Views
+`admin_finance_summary`, `driver_available_earnings`.
 
-### 3. Templates HTML com identidade Driver Ads
-- 5 templates de auth (confirmação de conta, recuperação de senha, magic link, troca de e-mail, convite).
-- 4 templates transacionais:
-  - **Cadastro aprovado/recusado** — disparado quando admin muda `advertisers.status`/`drivers.status` para `approved`/`rejected`.
-  - **Convite de campanha** — disparado quando `campaign_driver_assignments` ganha linha com `status='invited'`.
-  - **Comprovação revisada** — disparado quando `installation_proofs.status` vira `approved`/`rejected`/`resubmission_requested`.
-  - **Repasse pago / fatura** — disparado quando `driver_payouts.status` vira `paid` (motorista) e quando `advertiser_payments` é criado/marcado pago (anunciante).
-- Todos usam o gradiente azul Driver Ads, logo, e linkam de volta para o portal do destinatário.
+### RLS e GRANTs
+Padrão do projeto: GRANT para `authenticated`/`service_role`, RLS por papel (`has_role`/`is_staff`). Advertiser vê seus subs/transactions/earnings; Driver vê seus earnings/payouts/payout_methods; Staff vê tudo; Admin executa mutações financeiras. `service_role` (edge function webhook) escreve em `pagou_webhook_events`, `billing_transactions`, `subscriptions`, `payouts`, `driver_earnings`, `ledger_entries`.
 
-### 4. Disparo dos transacionais
-- Helper `src/lib/email/send.ts` → POSTa para `/api/public/transactional-email` (rota interna com verificação de origem) que renderiza + chama Resend.
-- Triggers Postgres em cada uma das tabelas acima inserem em uma fila `email_outbox` (tabela nova) com `template`, `to`, `data`.
-- Server function `processEmailOutbox` é chamada por pg_cron a cada 1 min para enviar os pendentes (evita perda em caso de falha do Resend e dá retry).
+## Fase 2 — Helper Pagou + Edge Function webhook
 
-### 5. Correção do link localhost
-- Ajustar `signUpAdvertiser`/`signUpDriver` para usar a URL pública configurada (`VITE_PUBLIC_SITE_URL=https://driverads.com.br`) como `emailRedirectTo`, com fallback para `window.location.origin` em dev.
-- Combinado com a atualização da Site URL no Supabase, os links de confirmação passam a abrir no domínio de produção.
+- `supabase/functions/pagou-webhook/index.ts`: valida `PAGOU_WEBHOOK_SECRET` (header), salva payload bruto em `pagou_webhook_events`, deduplica por `pagou_event_id`, responde `200` imediato. Processa síncrono mas com try/catch — falhas marcam `processing_status='failed'` e ficam para reconciliação.
+- Roteamento por `event` (`subscription` | `transaction` | `payout`/`transfer`) + `event_type` interno. Eventos desconhecidos → status `unhandled`.
+- Handlers organizados em arquivos: `_lib/handlers/subscription.ts`, `transaction.ts`, `payout.ts`, `_lib/pagou-client.ts`, `_lib/db.ts` (Supabase service role).
+- `src/lib/pagou/client.server.ts`: wrapper `pagouRequest(path, init)` para uso em server functions TanStack (Bearer `PAGOU_API_TOKEN`, base `PAGOU_BASE_URL`, captura `requestId`, loga em `pagou_api_logs`, nunca loga token).
 
-## Arquivos novos / alterados
+## Fase 3 — Customer do anunciante
 
+- Server fn `getOrCreatePagouCustomer(advertiserId)` em `src/lib/pagou/customer.functions.ts`. Idempotente via `pagou_customer_id` salvo.
+- Chamada automática no início do checkout (Fase 4).
+
+## Fase 4 — Checkout cartão recorrente (Payment Element)
+
+- Rota `/anunciante/campanhas/$id/checkout` (substitui necessidade de tela genérica).
+- Carrega `https://js.pagou.ai/payments/v3.js` no `<head>` da rota.
+- `VITE_PAGOU_PUBLIC_KEY` + `VITE_PAGOU_ENVIRONMENT` no `.env`.
+- Componente `<PagouCardElement>` que monta iframe, valida, tokeniza e envia `pgct_*` para server fn `createSubscription({ campaignId, planId, token, brand, last4, exp })`.
+- Server fn cria customer (se preciso), chama `POST /v2/subscriptions` com `idempotency_key=sub_campaign_<id>_v1`, persiste em `subscriptions`, atualiza `campaigns.billing_status='pending'`, retorna estado provisório.
+- UI: nunca marca campanha como ativa pela resposta — exibe "aguardando confirmação", reflete real-time o `billing_status` (polling de 3s por 30s ou subscription Realtime).
+- 3DS conduzido pelo SDK Pagou (`next_action`).
+
+## Fase 5 — Handlers de webhook de assinatura
+
+- `subscription.created/started/renewed/payment_failed/past_due/canceled/chargeback_received` → atualiza `subscriptions`, `campaigns.billing_status`, cria `billing_transactions` quando `latest_transaction` chega, gera `ledger_entries` de receita, cria `operational_tasks` (remoção/troca) e notifica via `notify_user`.
+- Regra central: campanha só fica `operational_status='active'` se `billing_status in ('active','trialing')` E período vigente E não em chargeback.
+
+## Próximas fases (planejadas, não implementadas agora)
+
+- **Fase 6** — Pix pré-pago (criar Pix transaction + handler `transaction.paid`).
+- **Fase 7** — Geração de `driver_earnings` por competência ao renovar assinatura.
+- **Fase 8** — `/motorista/pix` cadastro Pix + aprovação Admin.
+- **Fase 9** — `/admin/finance/payouts` Pix Out + handler `payout.*`.
+- **Fase 10** — Reconciliação manual + rotinas agendadas (pg_cron disparando `/api/public/pagou-reconcile`).
+- **Fase 11** — `/admin/finance` (resumo, assinaturas, inadimplência, repasses, webhooks, auditoria).
+- **Fase 12** — Cancelamento/refund/chargeback + RLS final + testes e2e sandbox.
+
+## Riscos e pontos de atenção
+
+- **Pagou.ai SDK v3** carrega de CDN externo — adiciono `preconnect` no `<head>` da rota de checkout.
+- **Idempotência**: toda criação de assinatura/transação/payout tem `external_ref` único calculado por campanha+período ou payout_id. `unique` constraints garantem não-duplicação no banco.
+- **Edge Function precisa do service role** — usa env já disponível.
+- **Migração de dados antigos**: `advertiser_payments` e `driver_payouts` existentes ficam intactos. Novas operações usam `billing_transactions`/`payouts`. Em produção, painel Admin mostrará ambos até reconciliação manual.
+- **Conflito de nomes**: já existe `installation_proofs` no projeto. O documento chama de `installation_checks`. Mantenho `installation_proofs`.
+- **Plano comercial**: ainda preciso saber o valor padrão do plano base. Vou criar `campaign_plans` vazio e o Admin cadastra antes de o primeiro checkout funcionar (seed opcional de "Driver Ads — Mensal R$500" para sandbox).
+
+## O que vai mudar agora (Fases 1–4)
+
+Arquivos:
 ```
-src/routes/api/public/auth-email-hook.ts        (novo — webhook Supabase → Resend)
-src/routes/api/public/transactional-email.ts    (novo — endpoint interno)
-src/lib/email/
-  ├── send.ts                                   (novo — helper)
-  ├── resend.server.ts                          (novo — wrapper do gateway)
-  ├── render.server.ts                          (novo — renderiza templates)
-  └── templates/
-      ├── auth-signup.ts
-      ├── auth-recovery.ts
-      ├── auth-magiclink.ts
-      ├── auth-email-change.ts
-      ├── auth-invite.ts
-      ├── account-approved.ts
-      ├── account-rejected.ts
-      ├── campaign-invite.ts
-      ├── proof-reviewed.ts
-      └── payout-paid.ts
-src/lib/auth.ts                                 (ajustar emailRedirectTo)
-
-Migration:
-  - tabela email_outbox (id, template, to_email, payload, status, attempts, last_error, sent_at, created_at)
-  - triggers em advertisers/drivers/campaign_driver_assignments/installation_proofs/driver_payouts/advertiser_payments
-  - pg_cron job chamando o endpoint processador a cada 1 min
+supabase/migrations/<timestamp>_pagou_financial_foundation.sql   (NOVO — Fase 1)
+supabase/functions/pagou-webhook/index.ts                          (NOVO — Fase 2)
+supabase/functions/pagou-webhook/_lib/pagou-client.ts             (NOVO)
+supabase/functions/pagou-webhook/_lib/db.ts                        (NOVO)
+supabase/functions/pagou-webhook/_lib/handlers/{subscription,transaction,payout}.ts (NOVOS)
+src/lib/pagou/client.server.ts                                     (NOVO — Fase 2)
+src/lib/pagou/customer.functions.ts                                (NOVO — Fase 3)
+src/lib/pagou/subscription.functions.ts                            (NOVO — Fase 4/5)
+src/lib/pagou/types.ts                                             (NOVO)
+src/components/checkout/PagouCardElement.tsx                       (NOVO — Fase 4)
+src/routes/_authenticated/anunciante/campanhas.$id.checkout.tsx    (NOVO — Fase 4)
+src/routes/__root.tsx                                              (EDIT — preload Pagou SDK só na rota de checkout via head())
+.env                                                                (EDIT — VITE_PAGOU_PUBLIC_KEY/ENVIRONMENT)
 ```
 
-## Secrets que vou pedir
-
-- `SEND_EMAIL_HOOK_SECRET` — gerado por você no Supabase Dashboard ao criar o hook (cole o valor exibido lá).
-- `RESEND_API_KEY` — vem automaticamente ao conectar o connector Resend, não precisa colar manualmente.
-
-## Riscos / pontos de atenção
-
-- **DNS do Resend leva até 72h** (geralmente <1h). Enquanto não verificar, os e-mails vão falhar com "domain not verified". Posso deixar tudo codado e você só ativa o hook na Supabase depois que o domínio aparecer como "Verified".
-- O Send Email Hook **substitui** os e-mails padrão da Supabase; se o endpoint ficar fora do ar, ninguém recebe e-mail de auth. A fila `email_outbox` mitiga isso para os transacionais, mas para auth a Supabase chama síncrono — vou logar erros para você ver em `/admin/auditoria`.
-- Os e-mails transacionais dependem de triggers; se uma migration falhar, posso reverter sem afetar os dados existentes.
+Aprovo a abordagem e começo pela migration (Fase 1). Confirma?
