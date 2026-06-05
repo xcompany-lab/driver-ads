@@ -28,7 +28,8 @@ const brl = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 async function invokeFn<T>(name: string, body?: unknown): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(name, body !== undefined ? { body } : undefined);
+  const opts = body !== undefined ? { body: body as Record<string, unknown> } : {};
+  const { data, error } = await supabase.functions.invoke(name, opts);
   if (error) throw new Error(error.message);
   if (data && typeof data === "object" && "error" in data && data.error) {
     throw new Error(String((data as { error: unknown }).error));
@@ -87,7 +88,11 @@ function CheckoutPage() {
   // Poll billing state after submit
   const { data: billing, refetch: refetchBilling } = useQuery({
     queryKey: ["checkout-billing-state", id],
-    queryFn: () => getBilling({ data: { campaign_id: id } }),
+    queryFn: () =>
+      invokeFn<{
+        campaign: { billing_status?: string; operational_status?: string } | null;
+        subscription: { id: string; status: string; card_brand?: string; card_last4?: string } | null;
+      }>("pagou-billing-state", { campaign_id: id }),
     refetchInterval: (q) => {
       const state = q.state.data as { campaign?: { billing_status?: string } } | undefined;
       const status = state?.campaign?.billing_status;
@@ -154,8 +159,9 @@ function CheckoutPage() {
     exp_year?: string;
   }) => {
     try {
-      await createSub({
-        data: {
+      await invokeFn<{ subscription_id: string; status: string }>(
+        "pagou-create-subscription",
+        {
           campaign_id: id,
           plan_id: plan.id,
           token: tokenData.token,
@@ -164,7 +170,7 @@ function CheckoutPage() {
           exp_month: tokenData.exp_month ?? null,
           exp_year: tokenData.exp_year ?? null,
         },
-      });
+      );
       toast.message("Pagamento em processamento", {
         description: "A campanha será ativada após a confirmação da Pagou.ai.",
       });
