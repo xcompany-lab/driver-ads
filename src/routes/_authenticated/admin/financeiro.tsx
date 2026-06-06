@@ -528,3 +528,209 @@ function ReceiptLinkButton({ path }: { path: string }) {
     <Button variant="outline" size="sm" onClick={open}><ExternalLink className="mr-1 h-3 w-3" />Comprovante</Button>
   );
 }
+
+/* ============================= RELEASABLE EARNINGS PANEL ============================= */
+
+function ReleasableEarningsPanel() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "releasable-earnings"],
+    queryFn: () => listReleasableEarnings(),
+  });
+
+  if (isLoading) return <Skeleton className="h-32 rounded-xl" />;
+  if (!data?.length) return null;
+
+  const byDriver = new Map<string, { name: string; city: string; total: number; pixStatus: string; pixMask: string | null; count: number }>();
+  for (const e of data) {
+    const k = e.driver_id;
+    const cur = byDriver.get(k) ?? {
+      name: e.driver?.full_name ?? "—",
+      city: e.driver?.city ?? "",
+      total: 0,
+      pixStatus: e.pix?.status ?? "missing",
+      pixMask: e.pix?.pix_key_value_masked ?? null,
+      count: 0,
+    };
+    cur.total += Number(e.amount_cents) / 100;
+    cur.count += 1;
+    byDriver.set(k, cur);
+  }
+  const rows = Array.from(byDriver.entries());
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Ganhos liberados aguardando repasse</CardTitle>
+        <CardDescription>
+          {data.length} período(s) acumulado(s) de {rows.length} motorista(s). Clique em "Gerar via ganhos" acima para criar os repasses.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Motorista</TableHead>
+              <TableHead>Períodos</TableHead>
+              <TableHead>Total liberado</TableHead>
+              <TableHead>PIX</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map(([driverId, r]) => (
+              <TableRow key={driverId}>
+                <TableCell>
+                  <div className="font-medium">{r.name}</div>
+                  <div className="text-xs text-muted-foreground">{r.city}</div>
+                </TableCell>
+                <TableCell>{r.count}</TableCell>
+                <TableCell className="font-semibold">{brl(r.total)}</TableCell>
+                <TableCell className="text-xs">
+                  {r.pixStatus === "approved" ? (
+                    <span className="text-emerald-600 font-mono">{r.pixMask ?? "aprovado"}</span>
+                  ) : r.pixStatus === "missing" ? (
+                    <span className="text-amber-600">sem chave cadastrada</span>
+                  ) : (
+                    <span className="text-amber-600">PIX {r.pixStatus}</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ============================= PIX REVIEW TAB ============================= */
+
+const PIX_STATUSES: { value: "pending_review" | "approved" | "rejected" | "all"; label: string }[] = [
+  { value: "pending_review", label: "Aguardando análise" },
+  { value: "approved", label: "Aprovadas" },
+  { value: "rejected", label: "Recusadas" },
+  { value: "all", label: "Todas" },
+];
+
+function PixReviewTab() {
+  const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
+  const [status, setStatus] = useState<"pending_review" | "approved" | "rejected" | "all">("pending_review");
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "pix-review", status],
+    queryFn: () => listPixMethodsForReview(status),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-end justify-between">
+        <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+          <SelectTrigger className="sm:w-64"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {PIX_STATUSES.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {isLoading ? (
+        <Skeleton className="h-64 rounded-xl" />
+      ) : !data?.length ? (
+        <Card><CardContent className="py-16 text-center text-muted-foreground">Nenhuma chave PIX no filtro.</CardContent></Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Motorista</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Chave</TableHead>
+                  <TableHead>Titular</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((p) => (
+                  <PixReviewRow
+                    key={p.id}
+                    row={p}
+                    isAdmin={isAdmin}
+                    onChange={() => {
+                      qc.invalidateQueries({ queryKey: ["admin", "pix-review"] });
+                      qc.invalidateQueries({ queryKey: ["admin", "releasable-earnings"] });
+                    }}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function PixReviewRow({ row, isAdmin, onChange }: { row: PixReviewWithDriver; isAdmin: boolean; onChange: () => void }) {
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [reason, setReason] = useState("");
+
+  const approveMut = useMutation({
+    mutationFn: () => approvePixMethod(row.id),
+    onSuccess: () => { toast.success("Chave PIX aprovada"); onChange(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const rejectMut = useMutation({
+    mutationFn: () => rejectPixMethod(row.id, reason),
+    onSuccess: () => { toast.success("Chave PIX recusada"); setRejectOpen(false); setReason(""); onChange(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <TableRow>
+      <TableCell>
+        <div className="font-medium">{row.driver?.full_name ?? "—"}</div>
+        <div className="text-xs text-muted-foreground">{row.driver?.city} · {row.driver?.email}</div>
+      </TableCell>
+      <TableCell className="uppercase text-xs">{row.pix_key_type}</TableCell>
+      <TableCell className="font-mono text-xs">{row.pix_key_value_masked ?? row.pix_key_value}</TableCell>
+      <TableCell className="text-xs">
+        <div>{row.legal_name ?? "—"}</div>
+        <div className="text-muted-foreground">{row.document_type?.toUpperCase()} {row.document_number ?? ""}</div>
+      </TableCell>
+      <TableCell><StatusBadge status={row.status} /></TableCell>
+      <TableCell className="text-right space-x-1 whitespace-nowrap">
+        {isAdmin && row.status !== "approved" && (
+          <Button size="sm" onClick={() => approveMut.mutate()} disabled={approveMut.isPending}>
+            <Check className="mr-1 h-3 w-3" />Aprovar
+          </Button>
+        )}
+        {isAdmin && row.status !== "rejected" && (
+          <Button size="sm" variant="outline" onClick={() => setRejectOpen(true)}>
+            <X className="mr-1 h-3 w-3" />Recusar
+          </Button>
+        )}
+        {row.rejection_reason && (
+          <div className="text-[11px] text-amber-600 mt-1 max-w-[260px] whitespace-normal text-left">
+            Motivo: {row.rejection_reason}
+          </div>
+        )}
+      </TableCell>
+
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recusar chave PIX</DialogTitle>
+            <DialogDescription>
+              O motorista verá o motivo abaixo e precisará reenviar a chave.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex.: Titularidade não confere com o cadastro." />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRejectOpen(false)}>Cancelar</Button>
+            <Button onClick={() => rejectMut.mutate()} disabled={rejectMut.isPending}>Confirmar recusa</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </TableRow>
+  );
+}
