@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw } from "lucide-react";
+import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw, KeyRound, Check, X } from "lucide-react";
 import {
   listAdvertiserPayments,
   createAdvertiserPayment,
@@ -12,12 +12,18 @@ import {
   updateDriverPayoutStatus,
   deleteDriverPayout,
   generateMonthlyPayouts,
+  generatePayoutsFromEarnings,
+  listReleasableEarnings,
+  listPixMethodsForReview,
+  approvePixMethod,
+  rejectPixMethod,
   getReceiptSignedUrl,
   uploadReceipt,
   type AdvertiserPaymentStatus,
   type DriverPayoutStatus,
   type AdvertiserPaymentWithRelations,
   type DriverPayoutWithRelations,
+  type PixReviewWithDriver,
 } from "@/lib/finance";
 import { listCampaignsAdmin } from "@/lib/campaigns-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
