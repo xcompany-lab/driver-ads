@@ -117,7 +117,7 @@ export async function pagouRequest<T = unknown>(
       code = "pagou_network_dns";
       error =
         `Nao foi possivel resolver/conectar ao endpoint Pagou (${PAGOU_BASE_URL()}). ` +
-        "Confirme a secret PAGOU_BASE_URL, o ambiente sandbox/production e a conectividade da Edge Function.";
+        "O host sandbox oficial da Pagou nao esta resolvendo DNS neste momento. Solicite a Pagou um endpoint sandbox v2 funcional antes de retestar.";
     } else {
       error = message;
     }

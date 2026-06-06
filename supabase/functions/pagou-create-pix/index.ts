@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
     let code = "pagou_error";
     if (res.code === "pagou_network_dns") {
       friendly =
-        "A Edge Function nao conseguiu resolver/conectar ao endpoint sandbox da Pagou.ai. Confirme no Supabase Secrets se PAGOU_BASE_URL esta como https://api-sandbox.pagou.ai e se a funcao foi redeployada apos configurar as secrets.";
+        "A Edge Function chegou ao checkout, mas o host sandbox oficial da Pagou.ai nao resolve DNS neste momento. A secret PAGOU_BASE_URL ja deve ficar como https://api-sandbox.pagou.ai; solicite a Pagou um endpoint sandbox v2 funcional antes de retestar.";
       code = "pagou_network_dns";
     } else if (res.code === "pagou_token_missing") {
       friendly =
