@@ -39,7 +39,7 @@ interface Props {
   environment: "sandbox" | "production";
   disabled?: boolean;
   buttonLabel?: string;
-  onTokenize: (data: PagouTokenData) => Promise<void>;
+  onTokenize: (data: PagouTokenData) => Promise<unknown>;
 }
 
 let sdkPromise: Promise<void> | null = null;
@@ -98,10 +98,19 @@ export function PagouCardElement({
           setReady(true);
         });
         card.on("change", (evt: unknown) => {
-          const e = evt as { complete?: boolean; error?: { message?: string } };
+          const e = evt as {
+            valid?: boolean;
+            complete?: boolean;
+            error?: { message?: string };
+            errors?: Record<string, string>;
+          };
           console.log("[Pagou] card change", e);
-          setValid(!!e.complete);
-          setError(e.error?.message ?? null);
+          setValid(!!(e.valid ?? e.complete));
+          setError(e.error?.message ?? Object.values(e.errors ?? {})[0] ?? null);
+        });
+        card.on("error", (evt: unknown) => {
+          const e = evt as { message?: string };
+          setError(e.message ?? "Falha ao inicializar o campo de cartao.");
         });
         card.mount("#pagou-card-element");
       })
@@ -137,8 +146,7 @@ export function PagouCardElement({
             brand: tokenData?.brand,
             last4: tokenData?.last4,
           });
-          await onTokenize(tokenData);
-          return { status: "processing" };
+          return await onTokenize(tokenData);
         },
       });
       console.log("[Pagou] elements.submit() result", result);

@@ -335,8 +335,10 @@ Deno.serve(async (req) => {
   });
 
   return json({
+    id: res.data.id,
     transaction_id: insRow.id,
     pagou_transaction_id: res.data.id,
+    method: "credit_card",
     status: res.data.status,
     next_action: res.data.next_action ?? null,
   });

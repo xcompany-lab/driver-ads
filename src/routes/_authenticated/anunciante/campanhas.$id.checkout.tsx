@@ -216,7 +216,13 @@ function CheckoutPage() {
     exp_year?: string;
   }) => {
     try {
-      await invokeFn<{ transaction_id: string; status: string }>(
+      const transaction = await invokeFn<{
+        id?: string;
+        transaction_id: string;
+        pagou_transaction_id?: string;
+        status: string;
+        next_action?: unknown;
+      }>(
         "pagou-create-subscription",
         {
           campaign_id: id,
@@ -232,6 +238,7 @@ function CheckoutPage() {
         description: "A campanha será ativada após a confirmação da Pagou.ai.",
       });
       refetchBilling();
+      return transaction;
     } catch (e) {
       toast.error("Erro ao criar pagamento", { description: (e as Error).message });
       throw e;
