@@ -1,14 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, CheckCircle2, CreditCard } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, CreditCard, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { PagouCardElement } from "@/components/checkout/PagouCardElement";
+import { PixCheckout } from "@/components/checkout/PixCheckout";
 
 export const Route = createFileRoute(
   "/_authenticated/anunciante/campanhas/$id/checkout",
