@@ -213,11 +213,9 @@ function CheckoutPage() {
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" /> Pagamento por cartão (recorrente)
-            </CardTitle>
+            <CardTitle>Forma de pagamento</CardTitle>
             <CardDescription>
-              Cobrança mensal automática. Você pode cancelar a qualquer momento.
+              Escolha entre cobrança recorrente no cartão ou Pix mensal.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -225,7 +223,7 @@ function CheckoutPage() {
               <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/10 p-4">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 text-success" />
                 <div>
-                  <p className="font-medium text-success">Assinatura ativa</p>
+                  <p className="font-medium text-success">Pagamento confirmado</p>
                   <p className="text-sm text-muted-foreground">
                     A campanha está pronta para entrar em circulação.
                   </p>
@@ -237,25 +235,47 @@ function CheckoutPage() {
                   </Button>
                 </div>
               </div>
-            ) : billing?.subscription && billing.campaign?.billing_status === "pending" ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <div className="text-sm">
-                    <p className="font-medium">Aguardando confirmação da Pagou.ai…</p>
-                    <p className="text-muted-foreground">
-                      A ativação depende da confirmação do pagamento por webhook.
-                    </p>
-                  </div>
-                </div>
-              </div>
             ) : (
-              <PagouCardElement
-                publicKey={keyData?.public_key ?? ""}
-                environment={(keyData?.environment ?? "sandbox") as "sandbox" | "production"}
-                buttonLabel={`Assinar ${brl(plan.monthly_price_cents)} / mês`}
-                onTokenize={handleTokenize}
-              />
+              <Tabs defaultValue={billing?.pix_transaction ? "pix" : "card"} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="card">
+                    <CreditCard className="mr-2 h-4 w-4" /> Cartão (recorrente)
+                  </TabsTrigger>
+                  <TabsTrigger value="pix">
+                    <QrCode className="mr-2 h-4 w-4" /> Pix (mensal)
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="card" className="pt-4">
+                  {billing?.subscription && billing.campaign?.billing_status === "pending" ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <div className="text-sm">
+                        <p className="font-medium">Aguardando confirmação da Pagou.ai…</p>
+                        <p className="text-muted-foreground">
+                          A ativação depende da confirmação do pagamento por webhook.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <PagouCardElement
+                      publicKey={keyData?.public_key ?? ""}
+                      environment={(keyData?.environment ?? "sandbox") as "sandbox" | "production"}
+                      buttonLabel={`Assinar ${brl(plan.monthly_price_cents)} / mês`}
+                      onTokenize={handleTokenize}
+                    />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="pix" className="pt-4">
+                  <PixCheckout
+                    campaignId={id}
+                    planId={plan.id}
+                    amountCents={plan.monthly_price_cents}
+                    existingPix={billing?.pix_transaction ?? null}
+                  />
+                </TabsContent>
+              </Tabs>
             )}
           </CardContent>
         </Card>
