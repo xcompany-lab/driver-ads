@@ -19,12 +19,19 @@ import {
   rejectPixMethod,
   getReceiptSignedUrl,
   uploadReceipt,
+  listPayoutsV2,
+  generatePayoutsV2,
+  executePayoutV2,
+  cancelPayoutV2,
   type AdvertiserPaymentStatus,
   type DriverPayoutStatus,
   type AdvertiserPaymentWithRelations,
   type DriverPayoutWithRelations,
   type PixReviewWithDriver,
+  type PayoutV2WithRelations,
+  type PayoutV2Status,
 } from "@/lib/finance";
+
 import { listCampaignsAdmin } from "@/lib/campaigns-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
