@@ -484,8 +484,10 @@ export async function generatePayoutsV2(): Promise<{
     .select("id, driver_id, status, pix_key_type, pix_key_value_masked")
     .in("driver_id", Array.from(byDriver.keys()))
     .eq("is_default", true);
-  const methodByDriver = new Map<string, (typeof methods)[number]>();
+  type MethodRow = NonNullable<typeof methods>[number];
+  const methodByDriver = new Map<string, MethodRow>();
   for (const m of methods ?? []) methodByDriver.set(m.driver_id, m);
+
 
   let created = 0;
   let skippedNoPix = 0;
