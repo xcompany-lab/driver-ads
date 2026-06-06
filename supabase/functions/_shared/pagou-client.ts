@@ -83,7 +83,12 @@ export async function pagouRequest<T = unknown>(
     requestId = res.headers.get("x-request-id") ?? res.headers.get("request-id");
     const body = await res.text();
     const parsed = body ? safeJson(body) : null;
-    data = parsed as T | null;
+    if (isPagouEnvelope(parsed)) {
+      requestId = parsed.requestId ?? requestId;
+      data = parsed.data as T | null;
+    } else {
+      data = parsed as T | null;
+    }
     if (!res.ok) {
       const msg =
         typeof parsed === "object" && parsed && "message" in (parsed as object)
@@ -114,6 +119,10 @@ export async function pagouRequest<T = unknown>(
   }
 
   return { ok: !error && status >= 200 && status < 300, status, data, requestId, error };
+}
+
+function isPagouEnvelope(value: unknown): value is { requestId?: string; data: unknown } {
+  return typeof value === "object" && value !== null && "data" in value;
 }
 
 function safeJson(s: string): unknown {

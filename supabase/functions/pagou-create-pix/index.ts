@@ -26,45 +26,41 @@ function validate(raw: unknown): Input | null {
   return { campaign_id: r.campaign_id, plan_id: r.plan_id };
 }
 
-async function ensureCustomer(
-  admin: ReturnType<typeof adminClient>,
-  advertiserId: string,
-): Promise<string> {
-  const { data: adv } = await admin
-    .from("advertisers")
-    .select(
-      "id, company_name, cnpj, document_type, email, phone, address, city, pagou_customer_id",
-    )
-    .eq("id", advertiserId)
-    .single();
-  if (!adv) throw new Error("advertiser_not_found");
-  if (adv.pagou_customer_id) return adv.pagou_customer_id as string;
+function normalizeDocument(raw: unknown, rawType: unknown) {
+  const number = String(raw ?? "").replace(/\D/g, "");
+  if (number.length === 11 && !isValidCpf(number)) return null;
+  if (number.length === 14 && !isValidCnpj(number)) return null;
+  if (number.length !== 11 && number.length !== 14) return null;
+  const type =
+    typeof rawType === "string" && rawType.trim()
+      ? rawType.toUpperCase()
+      : number.length === 11
+        ? "CPF"
+        : "CNPJ";
+  return { type, number };
+}
 
-  const document_number = String(adv.cnpj ?? "").replace(/\D/g, "");
-  const document_type =
-    (adv.document_type as string | null) ??
-    (document_number.length === 11 ? "CPF" : "CNPJ");
-  const body = {
-    name: adv.company_name,
-    email: adv.email,
-    phone: adv.phone,
-    document: { type: document_type, number: document_number },
-    externalRef: `advertiser_${adv.id}`,
-    address: adv.address ?? { city: adv.city, country: "BR" },
+function isValidCpf(value: string) {
+  if (!/^\d{11}$/.test(value) || /^(\d)\1+$/.test(value)) return false;
+  const calc = (factor: number) => {
+    let total = 0;
+    for (let i = 0; i < factor - 1; i++) total += Number(value[i]) * (factor - i);
+    const digit = (total * 10) % 11;
+    return digit === 10 ? 0 : digit;
   };
-  const res = await pagouRequest<{ id: string }>(
-    "/v2/customers",
-    { method: "POST", body: JSON.stringify(body) },
-    { entity_type: "advertiser", entity_id: adv.id as string },
-  );
-  if (!res.ok || !res.data?.id) {
-    throw new Error(`pagou_customer_error: ${res.error ?? "unknown"}`);
-  }
-  await admin
-    .from("advertisers")
-    .update({ pagou_customer_id: res.data.id })
-    .eq("id", adv.id);
-  return res.data.id;
+  return calc(10) === Number(value[9]) && calc(11) === Number(value[10]);
+}
+
+function isValidCnpj(value: string) {
+  if (!/^\d{14}$/.test(value) || /^(\d)\1+$/.test(value)) return false;
+  const calc = (weights: number[]) => {
+    const sum = weights.reduce((acc, weight, index) => acc + Number(value[index]) * weight, 0);
+    const rest = sum % 11;
+    return rest < 2 ? 0 : 11 - rest;
+  };
+  const firstWeights = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const secondWeights = [6, ...firstWeights];
+  return calc(firstWeights) === Number(value[12]) && calc(secondWeights) === Number(value[13]);
 }
 
 Deno.serve(async (req) => {
@@ -96,7 +92,7 @@ Deno.serve(async (req) => {
 
   const { data: adv } = await admin
     .from("advertisers")
-    .select("id, user_id")
+    .select("id, user_id, company_name, cnpj, document_type, email, phone")
     .eq("id", campaign.advertiser_id)
     .single();
   if (!adv) return json({ error: "advertiser_not_found" }, 404);
@@ -144,25 +140,27 @@ Deno.serve(async (req) => {
     });
   }
 
-  let customerId: string;
-  try {
-    customerId = await ensureCustomer(admin, adv.id as string);
-  } catch (e) {
-    return json({ error: (e as Error).message }, 502);
-  }
-
   // Período de 30 dias a partir de agora (cobrança Pix mensal)
   const periodStart = new Date();
   const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000);
   const externalRef = `pix_campaign_${campaign.id}_${periodStart.getTime()}`;
 
+  const buyer: Record<string, unknown> = {
+    name: adv.company_name,
+    email: adv.email,
+    phone: adv.phone,
+  };
+  const buyerDocument = normalizeDocument(adv.cnpj, adv.document_type);
+  if (buyerDocument) buyer.document = buyerDocument;
+
   const txBody = {
+    external_ref: externalRef,
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
     method: "pix",
-    customer_id: customerId,
+    buyer,
     expires_in: 60 * 60 * 24, // 24h
-    metadata: {
+    metadata: JSON.stringify({
       driver_ads_env: PAGOU_ENV(),
       advertiser_id: adv.id,
       campaign_id: campaign.id,
@@ -170,8 +168,7 @@ Deno.serve(async (req) => {
       source: "driver_ads_checkout_pix",
       period_start: periodStart.toISOString(),
       period_end: periodEnd.toISOString(),
-    },
-    idempotency_key: externalRef,
+    }),
     products: [
       {
         name: `Driver Ads - ${plan.name} (Pix mensal)`,
@@ -186,10 +183,11 @@ Deno.serve(async (req) => {
   const res = await pagouRequest<{
     id: string;
     status?: string;
-    pix?: { qr_code?: string; qr_code_image?: string; expires_at?: string };
+    pix?: { qr_code?: string; qr_code_image?: string; expires_at?: string; expiration_date?: string };
     qr_code?: string;
     qr_code_image?: string;
     expires_at?: string;
+    expiration_date?: string;
   }>(
     "/v2/transactions",
     {
@@ -206,7 +204,12 @@ Deno.serve(async (req) => {
 
   const qrCode = res.data.pix?.qr_code ?? res.data.qr_code ?? null;
   const qrImage = res.data.pix?.qr_code_image ?? res.data.qr_code_image ?? null;
-  const expiresAt = res.data.pix?.expires_at ?? res.data.expires_at ?? null;
+  const expiresAt =
+    res.data.pix?.expires_at ??
+    res.data.pix?.expiration_date ??
+    res.data.expires_at ??
+    res.data.expiration_date ??
+    null;
 
   const { data: insRow, error: insErr } = await admin
     .from("billing_transactions")
