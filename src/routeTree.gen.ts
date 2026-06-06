@@ -31,6 +31,7 @@ import { Route as ApiPublicProcessEmailOutboxRouteImport } from './routes/api/pu
 import { Route as ApiPublicPasswordRecoveryRouteImport } from './routes/api/public/password-recovery'
 import { Route as ApiPublicAuthEmailHookRouteImport } from './routes/api/public/auth-email-hook'
 import { Route as AuthenticatedMotoristaVeiculosRouteImport } from './routes/_authenticated/motorista/veiculos'
+import { Route as AuthenticatedMotoristaPixRouteImport } from './routes/_authenticated/motorista/pix'
 import { Route as AuthenticatedMotoristaPerfilRouteImport } from './routes/_authenticated/motorista/perfil'
 import { Route as AuthenticatedMotoristaGanhosRouteImport } from './routes/_authenticated/motorista/ganhos'
 import { Route as AuthenticatedMotoristaCampanhasRouteImport } from './routes/_authenticated/motorista/campanhas'
@@ -165,6 +166,12 @@ const AuthenticatedMotoristaVeiculosRoute =
   AuthenticatedMotoristaVeiculosRouteImport.update({
     id: '/veiculos',
     path: '/veiculos',
+    getParentRoute: () => AuthenticatedMotoristaRouteRoute,
+  } as any)
+const AuthenticatedMotoristaPixRoute =
+  AuthenticatedMotoristaPixRouteImport.update({
+    id: '/pix',
+    path: '/pix',
     getParentRoute: () => AuthenticatedMotoristaRouteRoute,
   } as any)
 const AuthenticatedMotoristaPerfilRoute =
@@ -303,6 +310,7 @@ export interface FileRoutesByFullPath {
   '/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
+  '/motorista/pix': typeof AuthenticatedMotoristaPixRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/api/public/auth-email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/password-recovery': typeof ApiPublicPasswordRecoveryRoute
@@ -341,6 +349,7 @@ export interface FileRoutesByTo {
   '/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
+  '/motorista/pix': typeof AuthenticatedMotoristaPixRoute
   '/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/api/public/auth-email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/password-recovery': typeof ApiPublicPasswordRecoveryRoute
@@ -384,6 +393,7 @@ export interface FileRoutesById {
   '/_authenticated/motorista/campanhas': typeof AuthenticatedMotoristaCampanhasRoute
   '/_authenticated/motorista/ganhos': typeof AuthenticatedMotoristaGanhosRoute
   '/_authenticated/motorista/perfil': typeof AuthenticatedMotoristaPerfilRoute
+  '/_authenticated/motorista/pix': typeof AuthenticatedMotoristaPixRoute
   '/_authenticated/motorista/veiculos': typeof AuthenticatedMotoristaVeiculosRoute
   '/api/public/auth-email-hook': typeof ApiPublicAuthEmailHookRoute
   '/api/public/password-recovery': typeof ApiPublicPasswordRecoveryRoute
@@ -427,6 +437,7 @@ export interface FileRouteTypes {
     | '/motorista/campanhas'
     | '/motorista/ganhos'
     | '/motorista/perfil'
+    | '/motorista/pix'
     | '/motorista/veiculos'
     | '/api/public/auth-email-hook'
     | '/api/public/password-recovery'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/motorista/campanhas'
     | '/motorista/ganhos'
     | '/motorista/perfil'
+    | '/motorista/pix'
     | '/motorista/veiculos'
     | '/api/public/auth-email-hook'
     | '/api/public/password-recovery'
@@ -507,6 +519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/motorista/campanhas'
     | '/_authenticated/motorista/ganhos'
     | '/_authenticated/motorista/perfil'
+    | '/_authenticated/motorista/pix'
     | '/_authenticated/motorista/veiculos'
     | '/api/public/auth-email-hook'
     | '/api/public/password-recovery'
@@ -693,6 +706,13 @@ declare module '@tanstack/react-router' {
       path: '/veiculos'
       fullPath: '/motorista/veiculos'
       preLoaderRoute: typeof AuthenticatedMotoristaVeiculosRouteImport
+      parentRoute: typeof AuthenticatedMotoristaRouteRoute
+    }
+    '/_authenticated/motorista/pix': {
+      id: '/_authenticated/motorista/pix'
+      path: '/pix'
+      fullPath: '/motorista/pix'
+      preLoaderRoute: typeof AuthenticatedMotoristaPixRouteImport
       parentRoute: typeof AuthenticatedMotoristaRouteRoute
     }
     '/_authenticated/motorista/perfil': {
@@ -891,6 +911,7 @@ interface AuthenticatedMotoristaRouteRouteChildren {
   AuthenticatedMotoristaCampanhasRoute: typeof AuthenticatedMotoristaCampanhasRoute
   AuthenticatedMotoristaGanhosRoute: typeof AuthenticatedMotoristaGanhosRoute
   AuthenticatedMotoristaPerfilRoute: typeof AuthenticatedMotoristaPerfilRoute
+  AuthenticatedMotoristaPixRoute: typeof AuthenticatedMotoristaPixRoute
   AuthenticatedMotoristaVeiculosRoute: typeof AuthenticatedMotoristaVeiculosRoute
   AuthenticatedMotoristaIndexRoute: typeof AuthenticatedMotoristaIndexRoute
 }
@@ -901,6 +922,7 @@ const AuthenticatedMotoristaRouteRouteChildren: AuthenticatedMotoristaRouteRoute
     AuthenticatedMotoristaCampanhasRoute: AuthenticatedMotoristaCampanhasRoute,
     AuthenticatedMotoristaGanhosRoute: AuthenticatedMotoristaGanhosRoute,
     AuthenticatedMotoristaPerfilRoute: AuthenticatedMotoristaPerfilRoute,
+    AuthenticatedMotoristaPixRoute: AuthenticatedMotoristaPixRoute,
     AuthenticatedMotoristaVeiculosRoute: AuthenticatedMotoristaVeiculosRoute,
     AuthenticatedMotoristaIndexRoute: AuthenticatedMotoristaIndexRoute,
   }

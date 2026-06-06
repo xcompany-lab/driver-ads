@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Wallet, TrendingUp, ExternalLink, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Wallet, TrendingUp, ExternalLink, CheckCircle2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver } from "@/lib/driver";
 import { listMyAssignments } from "@/lib/proofs";
 import { listMyDriverPayouts, getReceiptSignedUrl } from "@/lib/finance";
+import { getMyPayoutMethod } from "@/lib/driver-payout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/motorista/ganhos")({
