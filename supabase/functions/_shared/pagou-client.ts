@@ -85,10 +85,12 @@ export async function pagouRequest<T = unknown>(
     const parsed = body ? safeJson(body) : null;
     data = parsed as T | null;
     if (!res.ok) {
-      error =
+      const msg =
         typeof parsed === "object" && parsed && "message" in (parsed as object)
           ? String((parsed as { message: unknown }).message)
-          : `HTTP ${status}`;
+          : null;
+      // Include raw body (truncated) so 422 validation errors are visible in logs
+      error = `HTTP ${status}${msg ? `: ${msg}` : ""} | body=${body.slice(0, 800)}`;
     }
   } catch (e) {
     error = (e as Error).message;
