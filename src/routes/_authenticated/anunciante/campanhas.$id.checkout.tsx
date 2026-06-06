@@ -1,14 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, CheckCircle2, CreditCard } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, CreditCard, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { PagouCardElement } from "@/components/checkout/PagouCardElement";
+import { PixCheckout } from "@/components/checkout/PixCheckout";
 
 export const Route = createFileRoute(
   "/_authenticated/anunciante/campanhas/$id/checkout",
@@ -92,11 +94,21 @@ function CheckoutPage() {
       invokeFn<{
         campaign: { billing_status?: string; operational_status?: string } | null;
         subscription: { id: string; status: string; card_brand?: string; card_last4?: string } | null;
+        pix_transaction: {
+          id: string;
+          pagou_transaction_id?: string | null;
+          status: string;
+          amount_cents?: number | null;
+          pix_qr_code: string | null;
+          pix_qr_code_image: string | null;
+          expires_at: string | null;
+          paid_at?: string | null;
+        } | null;
       }>("pagou-billing-state", { campaign_id: id }),
     refetchInterval: (q) => {
       const state = q.state.data as { campaign?: { billing_status?: string } } | undefined;
       const status = state?.campaign?.billing_status;
-      if (status === "active" || status === "trialing") return false;
+      if (status === "active" || status === "trialing" || status === "paid") return false;
       return 4000;
     },
     enabled: !!campaign,
@@ -104,7 +116,8 @@ function CheckoutPage() {
 
   const confirmedActive =
     billing?.campaign?.billing_status === "active" ||
-    billing?.campaign?.billing_status === "trialing";
+    billing?.campaign?.billing_status === "trialing" ||
+    billing?.campaign?.billing_status === "paid";
 
   useEffect(() => {
     if (confirmedActive) {
@@ -200,11 +213,9 @@ function CheckoutPage() {
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" /> Pagamento por cartão (recorrente)
-            </CardTitle>
+            <CardTitle>Forma de pagamento</CardTitle>
             <CardDescription>
-              Cobrança mensal automática. Você pode cancelar a qualquer momento.
+              Escolha entre cobrança recorrente no cartão ou Pix mensal.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -212,7 +223,7 @@ function CheckoutPage() {
               <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/10 p-4">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 text-success" />
                 <div>
-                  <p className="font-medium text-success">Assinatura ativa</p>
+                  <p className="font-medium text-success">Pagamento confirmado</p>
                   <p className="text-sm text-muted-foreground">
                     A campanha está pronta para entrar em circulação.
                   </p>
@@ -224,25 +235,47 @@ function CheckoutPage() {
                   </Button>
                 </div>
               </div>
-            ) : billing?.subscription && billing.campaign?.billing_status === "pending" ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <div className="text-sm">
-                    <p className="font-medium">Aguardando confirmação da Pagou.ai…</p>
-                    <p className="text-muted-foreground">
-                      A ativação depende da confirmação do pagamento por webhook.
-                    </p>
-                  </div>
-                </div>
-              </div>
             ) : (
-              <PagouCardElement
-                publicKey={keyData?.public_key ?? ""}
-                environment={(keyData?.environment ?? "sandbox") as "sandbox" | "production"}
-                buttonLabel={`Assinar ${brl(plan.monthly_price_cents)} / mês`}
-                onTokenize={handleTokenize}
-              />
+              <Tabs defaultValue={billing?.pix_transaction ? "pix" : "card"} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="card">
+                    <CreditCard className="mr-2 h-4 w-4" /> Cartão (recorrente)
+                  </TabsTrigger>
+                  <TabsTrigger value="pix">
+                    <QrCode className="mr-2 h-4 w-4" /> Pix (mensal)
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="card" className="pt-4">
+                  {billing?.subscription && billing.campaign?.billing_status === "pending" ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <div className="text-sm">
+                        <p className="font-medium">Aguardando confirmação da Pagou.ai…</p>
+                        <p className="text-muted-foreground">
+                          A ativação depende da confirmação do pagamento por webhook.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <PagouCardElement
+                      publicKey={keyData?.public_key ?? ""}
+                      environment={(keyData?.environment ?? "sandbox") as "sandbox" | "production"}
+                      buttonLabel={`Assinar ${brl(plan.monthly_price_cents)} / mês`}
+                      onTokenize={handleTokenize}
+                    />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="pix" className="pt-4">
+                  <PixCheckout
+                    campaignId={id}
+                    planId={plan.id}
+                    amountCents={plan.monthly_price_cents}
+                    existingPix={billing?.pix_transaction ?? null}
+                  />
+                </TabsContent>
+              </Tabs>
             )}
           </CardContent>
         </Card>
