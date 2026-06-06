@@ -81,13 +81,16 @@ function FinancePage() {
       <Tabs defaultValue="invoices">
         <TabsList>
           <TabsTrigger value="invoices"><FileText className="mr-2 h-4 w-4" />Faturas — Anunciantes</TabsTrigger>
-          <TabsTrigger value="payouts"><Wallet className="mr-2 h-4 w-4" />Repasses — Motoristas</TabsTrigger>
+          <TabsTrigger value="payouts"><Wallet className="mr-2 h-4 w-4" />Repasses (legado)</TabsTrigger>
+          <TabsTrigger value="pixout"><Banknote className="mr-2 h-4 w-4" />Pix Out</TabsTrigger>
           <TabsTrigger value="pix"><KeyRound className="mr-2 h-4 w-4" />Chaves PIX</TabsTrigger>
         </TabsList>
         <TabsContent value="invoices" className="mt-4"><InvoicesTab /></TabsContent>
         <TabsContent value="payouts" className="mt-4"><PayoutsTab /></TabsContent>
+        <TabsContent value="pixout" className="mt-4"><PixOutTab /></TabsContent>
         <TabsContent value="pix" className="mt-4"><PixReviewTab /></TabsContent>
       </Tabs>
+
     </div>
   );
 }
