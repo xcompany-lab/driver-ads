@@ -86,17 +86,21 @@ function FinancePage() {
         </div>
       )}
 
-      <Tabs defaultValue="invoices">
-        <TabsList>
+      <Tabs defaultValue="overview">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="overview"><LayoutDashboard className="mr-2 h-4 w-4" />Visão geral</TabsTrigger>
           <TabsTrigger value="invoices"><FileText className="mr-2 h-4 w-4" />Faturas — Anunciantes</TabsTrigger>
           <TabsTrigger value="payouts"><Wallet className="mr-2 h-4 w-4" />Repasses (legado)</TabsTrigger>
           <TabsTrigger value="pixout"><Banknote className="mr-2 h-4 w-4" />Pix Out</TabsTrigger>
           <TabsTrigger value="pix"><KeyRound className="mr-2 h-4 w-4" />Chaves PIX</TabsTrigger>
+          <TabsTrigger value="recon"><AlertTriangle className="mr-2 h-4 w-4" />Reconciliação</TabsTrigger>
         </TabsList>
+        <TabsContent value="overview" className="mt-4"><OverviewTab /></TabsContent>
         <TabsContent value="invoices" className="mt-4"><InvoicesTab /></TabsContent>
         <TabsContent value="payouts" className="mt-4"><PayoutsTab /></TabsContent>
         <TabsContent value="pixout" className="mt-4"><PixOutTab /></TabsContent>
         <TabsContent value="pix" className="mt-4"><PixReviewTab /></TabsContent>
+        <TabsContent value="recon" className="mt-4"><ReconciliationTab /></TabsContent>
       </Tabs>
 
     </div>
