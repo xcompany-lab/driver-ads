@@ -292,8 +292,8 @@ function friendlyPagouError(error: string | null, code?: string | null) {
 
   if (code === "pagou_network_dns") {
     return (
-      "A Edge Function chegou ao checkout, mas o host sandbox oficial da Pagou.ai nao resolve DNS neste momento. " +
-      "A secret PAGOU_BASE_URL ja deve ficar como https://api-sandbox.pagou.ai; solicite a Pagou um endpoint sandbox v2 funcional antes de retestar."
+      "A Edge Function nao conseguiu conectar ao endpoint Pagou. " +
+      "Use PAGOU_BASE_URL=https://api.sandbox.pagou.ai ou api.sandbox.pagou.ai nas secrets e redeploye a funcao."
     );
   }
 

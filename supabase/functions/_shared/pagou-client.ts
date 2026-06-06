@@ -10,7 +10,7 @@ export const SUPABASE_PUBLISHABLE_KEY =
   "";
 
 export const PAGOU_BASE_URL = () =>
-  normalizeBaseUrl(Deno.env.get("PAGOU_BASE_URL") ?? "https://api-sandbox.pagou.ai");
+  normalizeBaseUrl(Deno.env.get("PAGOU_BASE_URL") ?? "https://api.sandbox.pagou.ai");
 export const PAGOU_TOKEN = () =>
   Deno.env.get("PAGOU_API_TOKEN") ?? Deno.env.get("PAGOU_SECRET_TOKEN") ?? "";
 export const PAGOU_PUBLIC_KEY = () => Deno.env.get("PAGOU_PUBLIC_KEY") ?? "";
@@ -117,7 +117,7 @@ export async function pagouRequest<T = unknown>(
       code = "pagou_network_dns";
       error =
         `Nao foi possivel resolver/conectar ao endpoint Pagou (${PAGOU_BASE_URL()}). ` +
-        "O host sandbox oficial da Pagou nao esta resolvendo DNS neste momento. Solicite a Pagou um endpoint sandbox v2 funcional antes de retestar.";
+        "Confirme se PAGOU_BASE_URL esta como https://api.sandbox.pagou.ai ou api.sandbox.pagou.ai.";
     } else {
       error = message;
     }
@@ -156,7 +156,9 @@ function safeJson(s: string): unknown {
 }
 
 function normalizeBaseUrl(value: string) {
-  return value.trim().replace(/\/+$/, "");
+  const trimmed = value.trim().replace(/\/+$/, "");
+  if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`;
+  return trimmed;
 }
 
 function isNetworkDnsError(message: string) {
