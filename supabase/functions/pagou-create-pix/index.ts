@@ -28,6 +28,8 @@ function validate(raw: unknown): Input | null {
 
 function normalizeDocument(raw: unknown, rawType: unknown) {
   const number = String(raw ?? "").replace(/\D/g, "");
+  if (number.length === 11 && !isValidCpf(number)) return null;
+  if (number.length === 14 && !isValidCnpj(number)) return null;
   if (number.length !== 11 && number.length !== 14) return null;
   const type =
     typeof rawType === "string" && rawType.trim()
@@ -36,6 +38,29 @@ function normalizeDocument(raw: unknown, rawType: unknown) {
         ? "CPF"
         : "CNPJ";
   return { type, number };
+}
+
+function isValidCpf(value: string) {
+  if (!/^\d{11}$/.test(value) || /^(\d)\1+$/.test(value)) return false;
+  const calc = (factor: number) => {
+    let total = 0;
+    for (let i = 0; i < factor - 1; i++) total += Number(value[i]) * (factor - i);
+    const digit = (total * 10) % 11;
+    return digit === 10 ? 0 : digit;
+  };
+  return calc(10) === Number(value[9]) && calc(11) === Number(value[10]);
+}
+
+function isValidCnpj(value: string) {
+  if (!/^\d{14}$/.test(value) || /^(\d)\1+$/.test(value)) return false;
+  const calc = (weights: number[]) => {
+    const sum = weights.reduce((acc, weight, index) => acc + Number(value[index]) * weight, 0);
+    const rest = sum % 11;
+    return rest < 2 ? 0 : 11 - rest;
+  };
+  const firstWeights = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const secondWeights = [6, ...firstWeights];
+  return calc(firstWeights) === Number(value[12]) && calc(secondWeights) === Number(value[13]);
 }
 
 Deno.serve(async (req) => {
