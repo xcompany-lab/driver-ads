@@ -26,59 +26,16 @@ function validate(raw: unknown): Input | null {
   return { campaign_id: r.campaign_id, plan_id: r.plan_id };
 }
 
-async function ensureCustomer(
-  admin: ReturnType<typeof adminClient>,
-  advertiserId: string,
-): Promise<string> {
-  const { data: adv } = await admin
-    .from("advertisers")
-    .select(
-      "id, company_name, cnpj, document_type, email, phone, address, city, pagou_customer_id",
-    )
-    .eq("id", advertiserId)
-    .single();
-  if (!adv) throw new Error("advertiser_not_found");
-  if (adv.pagou_customer_id) return adv.pagou_customer_id as string;
-
-  const document_number = String(adv.cnpj ?? "").replace(/\D/g, "");
-  const document_type =
-    (adv.document_type as string | null) ??
-    (document_number.length === 11 ? "CPF" : "CNPJ");
-
-  const body: Record<string, unknown> = {
-    name: adv.company_name,
-    email: adv.email,
-    phone: adv.phone,
-    externalRef: `advertiser_${adv.id}`,
-  };
-
-  if (document_number.length === 11 || document_number.length === 14) {
-    body.document = { type: document_type, number: document_number };
-  }
-
-  if (isCompleteAddress(adv.address)) {
-    body.address = adv.address;
-  }
-
-  const res = await pagouRequest<{ id: string }>(
-    "/v2/customers",
-    { method: "POST", body: JSON.stringify(body) },
-    { entity_type: "advertiser", entity_id: adv.id as string },
-  );
-  if (!res.ok || !res.data?.id) {
-    throw new Error(`pagou_customer_error: ${res.error ?? "unknown"}`);
-  }
-  await admin
-    .from("advertisers")
-    .update({ pagou_customer_id: res.data.id })
-    .eq("id", adv.id);
-  return res.data.id;
-}
-
-function isCompleteAddress(value: unknown): value is Record<string, unknown> {
-  if (!value || typeof value !== "object") return false;
-  const address = value as Record<string, unknown>;
-  return typeof address.street === "string" && address.street.trim().length > 0;
+function normalizeDocument(raw: unknown, rawType: unknown) {
+  const number = String(raw ?? "").replace(/\D/g, "");
+  if (number.length !== 11 && number.length !== 14) return null;
+  const type =
+    typeof rawType === "string" && rawType.trim()
+      ? rawType.toUpperCase()
+      : number.length === 11
+        ? "CPF"
+        : "CNPJ";
+  return { type, number };
 }
 
 Deno.serve(async (req) => {
