@@ -81,6 +81,23 @@ function normalizeAddress(rawAddress: unknown) {
   return address;
 }
 
+function getClientIp(req: Request) {
+  const forwarded = req.headers.get("forwarded")?.match(/for="?([^;,"]+)/i)?.[1];
+  const candidates = [
+    req.headers.get("cf-connecting-ip"),
+    req.headers.get("true-client-ip"),
+    req.headers.get("x-real-ip"),
+    req.headers.get("x-forwarded-for")?.split(",")[0],
+    forwarded,
+  ];
+  const ip = candidates.find((value) => value && value.trim());
+  return ip?.trim() ?? null;
+}
+
+function getPaymentIp(req: Request) {
+  return getClientIp(req) ?? (PAGOU_ENV() === "sandbox" ? "127.0.0.1" : null);
+}
+
 async function ensureCustomer(
   admin: ReturnType<typeof adminClient>,
   advertiserId: string,
@@ -207,7 +224,19 @@ Deno.serve(async (req) => {
   const buyerDocument = normalizeDocument(adv.cnpj, adv.document_type);
   if (buyerDocument) buyer.document = buyerDocument;
 
-  const txBody = {
+  const paymentIp = getPaymentIp(req);
+  if (!paymentIp) {
+    return json(
+      {
+        error:
+          "Nao foi possivel identificar o IP do comprador para o pagamento no cartao. Tente novamente ou acione o suporte.",
+        code: "ip_address_missing",
+      },
+      400,
+    );
+  }
+
+  const txBody: Record<string, unknown> = {
     external_ref: externalRef,
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
@@ -216,6 +245,7 @@ Deno.serve(async (req) => {
     installments: 1,
     notify_url: PAGOU_WEBHOOK_URL(),
     buyer,
+    ip_address: paymentIp,
     metadata: JSON.stringify({
       driver_ads_env: PAGOU_ENV(),
       advertiser_id: adv.id,

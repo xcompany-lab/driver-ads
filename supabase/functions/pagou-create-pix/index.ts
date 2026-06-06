@@ -74,6 +74,23 @@ function isValidCnpj(value: string) {
   return calc(firstWeights) === Number(value[12]) && calc(secondWeights) === Number(value[13]);
 }
 
+function getClientIp(req: Request) {
+  const forwarded = req.headers.get("forwarded")?.match(/for="?([^;,"]+)/i)?.[1];
+  const candidates = [
+    req.headers.get("cf-connecting-ip"),
+    req.headers.get("true-client-ip"),
+    req.headers.get("x-real-ip"),
+    req.headers.get("x-forwarded-for")?.split(",")[0],
+    forwarded,
+  ];
+  const ip = candidates.find((value) => value && value.trim());
+  return ip?.trim() ?? null;
+}
+
+function getPaymentIp(req: Request) {
+  return getClientIp(req) ?? (PAGOU_ENV() === "sandbox" ? "127.0.0.1" : null);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
@@ -187,7 +204,7 @@ Deno.serve(async (req) => {
   }
   buyer.document = buyerDocument;
 
-  const txBody = {
+  const txBody: Record<string, unknown> = {
     external_ref: externalRef,
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
@@ -213,6 +230,8 @@ Deno.serve(async (req) => {
       },
     ],
   };
+  const paymentIp = getPaymentIp(req);
+  if (paymentIp) txBody.ip_address = paymentIp;
 
   const res = await pagouRequest<{
     id: string;
