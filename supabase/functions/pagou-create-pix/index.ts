@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
 
   const { data: adv } = await admin
     .from("advertisers")
-    .select("id, user_id")
+    .select("id, user_id, company_name, cnpj, document_type, email, phone")
     .eq("id", campaign.advertiser_id)
     .single();
   if (!adv) return json({ error: "advertiser_not_found" }, 404);
@@ -158,24 +158,25 @@ Deno.serve(async (req) => {
     });
   }
 
-  let customerId: string;
-  try {
-    customerId = await ensureCustomer(admin, adv.id as string);
-  } catch (e) {
-    return json({ error: (e as Error).message }, 502);
-  }
-
   // Período de 30 dias a partir de agora (cobrança Pix mensal)
   const periodStart = new Date();
   const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000);
   const externalRef = `pix_campaign_${campaign.id}_${periodStart.getTime()}`;
+
+  const buyer: Record<string, unknown> = {
+    name: adv.company_name,
+    email: adv.email,
+    phone: adv.phone,
+  };
+  const buyerDocument = normalizeDocument(adv.cnpj, adv.document_type);
+  if (buyerDocument) buyer.document = buyerDocument;
 
   const txBody = {
     external_ref: externalRef,
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
     method: "pix",
-    customer_id: customerId,
+    buyer,
     expires_in: 60 * 60 * 24, // 24h
     metadata: {
       driver_ads_env: PAGOU_ENV(),
@@ -201,10 +202,11 @@ Deno.serve(async (req) => {
   const res = await pagouRequest<{
     id: string;
     status?: string;
-    pix?: { qr_code?: string; qr_code_image?: string; expires_at?: string };
+    pix?: { qr_code?: string; qr_code_image?: string; expires_at?: string; expiration_date?: string };
     qr_code?: string;
     qr_code_image?: string;
     expires_at?: string;
+    expiration_date?: string;
   }>(
     "/v2/transactions",
     {
@@ -221,7 +223,12 @@ Deno.serve(async (req) => {
 
   const qrCode = res.data.pix?.qr_code ?? res.data.qr_code ?? null;
   const qrImage = res.data.pix?.qr_code_image ?? res.data.qr_code_image ?? null;
-  const expiresAt = res.data.pix?.expires_at ?? res.data.expires_at ?? null;
+  const expiresAt =
+    res.data.pix?.expires_at ??
+    res.data.pix?.expiration_date ??
+    res.data.expires_at ??
+    res.data.expiration_date ??
+    null;
 
   const { data: insRow, error: insErr } = await admin
     .from("billing_transactions")
