@@ -235,3 +235,189 @@ export async function uploadReceipt(
   if (error) throw error;
   return path;
 }
+
+/* =========================
+   Admin — PIX review queue
+   ========================= */
+
+export type DriverPayoutMethodRow =
+  Database["public"]["Tables"]["driver_payout_methods"]["Row"];
+
+export interface PixReviewWithDriver extends DriverPayoutMethodRow {
+  driver: { id: string; full_name: string; cpf: string; email: string; city: string } | null;
+}
+
+export async function listPixMethodsForReview(
+  status: "pending_review" | "approved" | "rejected" | "all" = "pending_review",
+): Promise<PixReviewWithDriver[]> {
+  let q = supabase
+    .from("driver_payout_methods")
+    .select(`*, driver:drivers(id, full_name, cpf, email, city)`)
+    .order("updated_at", { ascending: false });
+  if (status !== "all") q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as unknown as PixReviewWithDriver[];
+}
+
+export async function approvePixMethod(id: string) {
+  const { data: u } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("driver_payout_methods")
+    .update({
+      status: "approved",
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: u.user?.id ?? null,
+      rejection_reason: null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function rejectPixMethod(id: string, reason: string) {
+  if (!reason.trim()) throw new Error("Informe o motivo da recusa.");
+  const { data: u } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("driver_payout_methods")
+    .update({
+      status: "rejected",
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: u.user?.id ?? null,
+      rejection_reason: reason.trim(),
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+/* =========================
+   Earnings → Payouts (Phase 9 flow)
+   ========================= */
+
+export interface ReleasableEarning {
+  id: string;
+  driver_id: string;
+  assignment_id: string | null;
+  campaign_id: string;
+  amount_cents: number;
+  period_start: string;
+  period_end: string;
+  available_at: string | null;
+  driver: { id: string; full_name: string; city: string } | null;
+  pix: { status: string; pix_key_value_masked: string | null; pix_key_type: string } | null;
+}
+
+/**
+ * Lists driver_earnings that are 'accrued' and whose available_at has passed
+ * (chargeback hold cleared). Each row is enriched with the driver's default
+ * PIX method so the admin can see who is actually payable.
+ */
+export async function listReleasableEarnings(): Promise<ReleasableEarning[]> {
+  const nowIso = new Date().toISOString();
+  const { data: earnings, error } = await supabase
+    .from("driver_earnings")
+    .select(`
+      id, driver_id, assignment_id, campaign_id, amount_cents,
+      period_start, period_end, available_at,
+      driver:drivers(id, full_name, city)
+    `)
+    .eq("status", "accrued")
+    .lte("available_at", nowIso)
+    .order("available_at", { ascending: true });
+  if (error) throw error;
+
+  const driverIds = Array.from(new Set((earnings ?? []).map((e) => e.driver_id)));
+  let pixByDriver = new Map<string, { status: string; pix_key_value_masked: string | null; pix_key_type: string }>();
+  if (driverIds.length) {
+    const { data: pix } = await supabase
+      .from("driver_payout_methods")
+      .select("driver_id, status, pix_key_value_masked, pix_key_type, is_default")
+      .in("driver_id", driverIds)
+      .eq("is_default", true);
+    for (const p of pix ?? []) {
+      pixByDriver.set(p.driver_id, {
+        status: p.status as string,
+        pix_key_value_masked: p.pix_key_value_masked,
+        pix_key_type: p.pix_key_type,
+      });
+    }
+  }
+
+  return (earnings ?? []).map((e) => ({
+    ...(e as Omit<ReleasableEarning, "pix">),
+    pix: pixByDriver.get(e.driver_id) ?? null,
+  })) as ReleasableEarning[];
+}
+
+/**
+ * For each driver with available earnings (PIX approved), creates ONE
+ * driver_payouts row summing the earnings and links them via earnings.payout_id,
+ * flipping the earnings to 'paid'. Skips drivers without an approved PIX.
+ */
+export async function generatePayoutsFromEarnings(
+  refMonth: string,
+): Promise<{ created: number; skippedNoPix: number; totalEarnings: number }> {
+  const { data: u } = await supabase.auth.getUser();
+  const releasable = await listReleasableEarnings();
+  if (!releasable.length) return { created: 0, skippedNoPix: 0, totalEarnings: 0 };
+
+  // Group by driver
+  const byDriver = new Map<string, ReleasableEarning[]>();
+  for (const e of releasable) {
+    const arr = byDriver.get(e.driver_id) ?? [];
+    arr.push(e);
+    byDriver.set(e.driver_id, arr);
+  }
+
+  let created = 0;
+  let skippedNoPix = 0;
+
+  for (const [driverId, items] of byDriver.entries()) {
+    const pix = items[0].pix;
+    if (!pix || pix.status !== "approved") {
+      skippedNoPix++;
+      continue;
+    }
+    // Use one assignment_id for the payout row (legacy column requires NOT NULL)
+    const anyAssignment = items.find((i) => i.assignment_id)?.assignment_id;
+    if (!anyAssignment) {
+      skippedNoPix++;
+      continue;
+    }
+    const totalCents = items.reduce((s, i) => s + Number(i.amount_cents), 0);
+    const amount = totalCents / 100;
+
+    const { data: payout, error: payErr } = await supabase
+      .from("driver_payouts")
+      .insert({
+        assignment_id: anyAssignment,
+        driver_id: driverId,
+        reference_month: refMonth,
+        amount,
+        pix_key: null,
+        pix_key_type: pix.pix_key_type,
+        notes: `Gerado a partir de ${items.length} período(s) de ganhos.`,
+        created_by: u.user?.id ?? null,
+      })
+      .select("id")
+      .single();
+    if (payErr) {
+      // unique violation (assignment+month) — skip; earnings remain accrued
+      continue;
+    }
+
+    const ids = items.map((i) => i.id);
+    const { error: updErr } = await supabase
+      .from("driver_earnings")
+      .update({
+        status: "paid",
+        payout_id: payout.id,
+        paid_at: new Date().toISOString(),
+      })
+      .in("id", ids);
+    if (updErr) throw updErr;
+
+    created++;
+  }
+
+  return { created, skippedNoPix, totalEarnings: releasable.length };
+}
