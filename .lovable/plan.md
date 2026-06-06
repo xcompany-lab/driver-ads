@@ -1,48 +1,41 @@
-# Migração Pagou → Supabase Edge Functions
+## Diagnóstico atual
 
-## Por que essa mudança
+- A chamada mais recente para `pagou-create-pix` chegou na Pagou em `/v2/transactions`.
+- O erro atual não é mais CNPJ inválido, nem endereço, nem ausência de documento.
+- A Pagou retornou:
 
-O plano original era 100% Edge Functions. Eu desviei e criei TanStack server functions (`src/lib/pagou/*.functions.ts`) que leem `process.env` do runtime do Lovable (Cloudflare Workers). Como suas chaves estão no cofre dos Edge Functions do Supabase, elas nunca chegam até esse runtime — daí o erro "Chave pública da Pagou não configurada".
+```text
+HTTP 422
+PAYMENT_BLOCKED
+Transaction blocked: payment policy ticket limit exceeded
+```
 
-A única coisa que segue esse caminho errado é o fluxo Pagou. Tudo o mais (auth, email hooks, password recovery) lê variáveis que são auto-provisionadas pelo Lovable nos dois runtimes (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, etc.) — não precisa migrar.
+- Isso indica que o payload já avançou na validação, mas a conta/política de pagamento da Pagou está bloqueando a transação de R$ 500 por limite de ticket.
+- Sobre o recebedor: sim, o Pix deve ser gerado para a conta/chave mestre da DRIVER ADS configurada nas credenciais Pagou. O CNPJ da Pizzaria entra como documento do pagador/comprador (`buyer.document`) para validação/compliance, não como chave recebedora.
 
-## O que vai ser criado (Edge Functions)
+## Plano de correção
 
-1. **`supabase/functions/_shared/pagou-client.ts`** — cliente HTTP da Pagou em Deno, lendo `PAGOU_API_TOKEN`, `PAGOU_BASE_URL`. Registra em `pagou_api_logs`.
-2. **`supabase/functions/pagou-public-key/index.ts`** — `GET` retorna `{ public_key, environment }` lendo `PAGOU_PUBLIC_KEY` e `PAGOU_ENV`. Verifica JWT do usuário.
-3. **`supabase/functions/pagou-create-subscription/index.ts`** — `POST` recebe `{ campaign_id, plan_id, token, card_* }`, valida com Zod, valida ownership via service-role + checagem `advertiser.user_id = auth.uid()`, garante customer (lógica embutida do `getOrCreatePagouCustomer`), cria assinatura na Pagou, persiste em `subscriptions`, atualiza `campaigns.billing_status='pending'`, escreve `audit_logs`.
-4. **`supabase/functions/pagou-billing-state/index.ts`** — `GET ?campaign_id=...` retorna `{ campaign, subscription }` (usado pelo polling do checkout).
+1. **Manter o CNPJ do anunciante no buyer quando válido**
+   - Garantir que `buyer.document` seja enviado sempre que o CNPJ/CPF cadastrado for válido.
+   - Se o documento estiver ausente ou inválido, retornar uma mensagem clara antes de chamar a Pagou, porque a Pagou agora exige documento para Pix.
 
-Webhook (`pagou-webhook`) já existe como Edge Function — fica.
+2. **Tratar `PAYMENT_BLOCKED` de forma específica**
+   - Quando a Pagou retornar `PAYMENT_BLOCKED` / `payment policy ticket limit exceeded`, a Edge Function não deve devolver apenas “Edge Function returned a non-2xx status code”.
+   - Retornar erro de negócio claro para o frontend, por exemplo:
 
-## O que vai ser removido
+```text
+A Pagou bloqueou esta cobrança porque o valor excede o limite de ticket configurado na conta. Ajuste o limite na Pagou ou use um plano com valor permitido.
+```
 
-- `src/lib/pagou/client.server.ts`
-- `src/lib/pagou/customer.functions.ts`
-- `src/lib/pagou/subscription.functions.ts`
-- `src/lib/pagou/types.ts` → mantido (tipos compartilhados client-safe)
+3. **Melhorar o erro exibido no checkout Pix**
+   - Ajustar o componente `PixCheckout` para mostrar a mensagem detalhada retornada pela função.
+   - Evitar que o usuário veja apenas o 502 genérico.
 
-## O que muda no frontend
+4. **Preservar logs úteis para suporte**
+   - Continuar salvando o corpo retornado pela Pagou em `pagou_api_logs`.
+   - Se possível, capturar o `requestId` da Pagou mesmo quando ele vem só dentro do body, para facilitar suporte com a Pagou.
 
-**`src/routes/_authenticated/anunciante/campanhas.$id.checkout.tsx`**
-- Remover `useServerFn` e imports de `subscription.functions`.
-- Substituir as três chamadas por `supabase.functions.invoke("pagou-public-key" | "pagou-create-subscription" | "pagou-billing-state", ...)`. A sessão do usuário já é injetada como Bearer automaticamente pelo client.
-
-## Segredos
-
-Tudo que a função precisa já está no cofre do Supabase (você confirmou): `PAGOU_PUBLIC_KEY`, `PAGOU_API_TOKEN`, `PAGOU_ENV`, `PAGOU_BASE_URL`, `PAGOU_WEBHOOK_SECRET`. Não vou usar nenhum `add_secret` do Lovable.
-
-## Detalhes técnicos
-
-- Todas as três novas funções: CORS aberto pra `*`, `OPTIONS` handler, `verify_jwt = true` no `config.toml` exceto a webhook que continua sem JWT.
-- Cliente Pagou em Deno usa `fetch` nativo + `Deno.env.get`.
-- Inserções em `pagou_api_logs`, `subscriptions`, `audit_logs`, update em `advertisers`/`campaigns` via `createClient(SUPABASE_URL, SERVICE_ROLE_KEY)`.
-- Idempotência por `external_ref = sub_campaign_{id}_v1` (mesma regra de hoje).
-- Validação de payload com Zod (via `https://deno.land/x/zod`).
-
-## Ordem de execução
-
-1. Criar `_shared/pagou-client.ts` e as três funções novas.
-2. Atualizar `campanhas.$id.checkout.tsx`.
-3. Apagar os três arquivos antigos em `src/lib/pagou/`.
-4. Deploy das funções e teste do botão "Assinar".
+5. **Validar depois da implementação**
+   - Testar a função novamente com a campanha da Pizzaria Bons Amigos.
+   - Resultado esperado se o limite continuar bloqueando: mensagem amigável e específica no app.
+   - Resultado esperado após a Pagou liberar o limite de ticket: QR Code Pix gerado normalmente para recebimento pela DRIVER ADS.
