@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw, KeyRound, Check, X, Send, Banknote, LayoutDashboard, AlertTriangle } from "lucide-react";
+import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw, KeyRound, Check, X, Send, Banknote, LayoutDashboard, AlertTriangle, Ban, Undo2 } from "lucide-react";
 import {
   listAdvertiserPayments,
   createAdvertiserPayment,
@@ -30,7 +30,15 @@ import {
   type PixReviewWithDriver,
   type PayoutV2WithRelations,
   type PayoutV2Status,
+  listSubscriptionsAdmin,
+  cancelSubscriptionAtPagou,
+  listTransactionsAdmin,
+  refundTransactionAtPagou,
+  listChargebackEvents,
+  type SubscriptionAdminRow,
+  type TransactionAdminRow,
 } from "@/lib/finance";
+
 import {
   getFinanceOverview,
   listWebhookIssues,
@@ -90,6 +98,8 @@ function FinancePage() {
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview"><LayoutDashboard className="mr-2 h-4 w-4" />Visão geral</TabsTrigger>
           <TabsTrigger value="invoices"><FileText className="mr-2 h-4 w-4" />Faturas — Anunciantes</TabsTrigger>
+          <TabsTrigger value="subs"><Ban className="mr-2 h-4 w-4" />Assinaturas</TabsTrigger>
+          <TabsTrigger value="tx"><Undo2 className="mr-2 h-4 w-4" />Cobranças & reembolsos</TabsTrigger>
           <TabsTrigger value="payouts"><Wallet className="mr-2 h-4 w-4" />Repasses (legado)</TabsTrigger>
           <TabsTrigger value="pixout"><Banknote className="mr-2 h-4 w-4" />Pix Out</TabsTrigger>
           <TabsTrigger value="pix"><KeyRound className="mr-2 h-4 w-4" />Chaves PIX</TabsTrigger>
@@ -97,11 +107,14 @@ function FinancePage() {
         </TabsList>
         <TabsContent value="overview" className="mt-4"><OverviewTab /></TabsContent>
         <TabsContent value="invoices" className="mt-4"><InvoicesTab /></TabsContent>
+        <TabsContent value="subs" className="mt-4"><SubscriptionsTab /></TabsContent>
+        <TabsContent value="tx" className="mt-4"><TransactionsTab /></TabsContent>
         <TabsContent value="payouts" className="mt-4"><PayoutsTab /></TabsContent>
         <TabsContent value="pixout" className="mt-4"><PixOutTab /></TabsContent>
         <TabsContent value="pix" className="mt-4"><PixReviewTab /></TabsContent>
         <TabsContent value="recon" className="mt-4"><ReconciliationTab /></TabsContent>
       </Tabs>
+
 
     </div>
   );
