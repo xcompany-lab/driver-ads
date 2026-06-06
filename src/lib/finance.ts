@@ -421,3 +421,147 @@ export async function generatePayoutsFromEarnings(
 
   return { created, skippedNoPix, totalEarnings: releasable.length };
 }
+
+/* =========================
+   Phase 10 — Pix Out execution (payouts v2)
+   ========================= */
+
+export type PayoutV2Row = Database["public"]["Tables"]["payouts"]["Row"];
+export type PayoutV2Status = Database["public"]["Enums"]["payout_status"];
+
+export interface PayoutV2WithRelations extends PayoutV2Row {
+  driver: { id: string; full_name: string; city: string } | null;
+  method: {
+    id: string;
+    pix_key_type: string;
+    pix_key_value_masked: string | null;
+    status: string;
+  } | null;
+  items: { id: string; driver_earning_id: string; amount_cents: number }[];
+}
+
+export async function listPayoutsV2(
+  status: PayoutV2Status | "all" = "all",
+): Promise<PayoutV2WithRelations[]> {
+  let q = supabase
+    .from("payouts")
+    .select(`
+      *,
+      driver:drivers(id, full_name, city),
+      method:driver_payout_methods!payouts_payout_method_id_fkey(id, pix_key_type, pix_key_value_masked, status),
+      items:payout_items(id, driver_earning_id, amount_cents)
+    `)
+    .order("created_at", { ascending: false });
+  if (status !== "all") q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as unknown as PayoutV2WithRelations[];
+}
+
+/**
+ * Phase 10 generator: writes to the new `payouts` + `payout_items` tables and
+ * locks the underlying `driver_earnings` via payout_id (status becomes 'locked').
+ * Only consumes earnings whose driver has an approved default PIX method.
+ */
+export async function generatePayoutsV2(): Promise<{
+  created: number;
+  skippedNoPix: number;
+  totalEarnings: number;
+}> {
+  const releasable = await listReleasableEarnings();
+  if (!releasable.length) return { created: 0, skippedNoPix: 0, totalEarnings: 0 };
+
+  const byDriver = new Map<string, typeof releasable>();
+  for (const e of releasable) {
+    const arr = byDriver.get(e.driver_id) ?? [];
+    arr.push(e);
+    byDriver.set(e.driver_id, arr);
+  }
+
+  // Fetch default methods once
+  const { data: methods } = await supabase
+    .from("driver_payout_methods")
+    .select("id, driver_id, status, pix_key_type, pix_key_value_masked")
+    .in("driver_id", Array.from(byDriver.keys()))
+    .eq("is_default", true);
+  const methodByDriver = new Map<string, (typeof methods)[number]>();
+  for (const m of methods ?? []) methodByDriver.set(m.driver_id, m);
+
+  let created = 0;
+  let skippedNoPix = 0;
+
+  for (const [driverId, items] of byDriver.entries()) {
+    const method = methodByDriver.get(driverId);
+    if (!method || method.status !== "approved") {
+      skippedNoPix++;
+      continue;
+    }
+    const totalCents = items.reduce((s, i) => s + Number(i.amount_cents), 0);
+
+    const { data: payout, error: payErr } = await supabase
+      .from("payouts")
+      .insert({
+        driver_id: driverId,
+        payout_method_id: method.id,
+        amount_cents: totalCents,
+        status: "draft" as PayoutV2Status,
+        pix_key_type: method.pix_key_type,
+        pix_key_value_masked: method.pix_key_value_masked,
+        description: `Repasse Driver Ads — ${items.length} período(s) de ganhos`,
+      })
+      .select("id")
+      .single();
+    if (payErr || !payout) continue;
+
+    const itemRows = items.map((i) => ({
+      payout_id: payout.id,
+      driver_earning_id: i.id,
+      amount_cents: Number(i.amount_cents),
+    }));
+    const { error: itemsErr } = await supabase.from("payout_items").insert(itemRows);
+    if (itemsErr) {
+      await supabase.from("payouts").delete().eq("id", payout.id);
+      continue;
+    }
+
+    // Lock earnings to this payout (still 'accrued' but now tied)
+    await supabase
+      .from("driver_earnings")
+      .update({ payout_id: payout.id, status: "locked", locked_reason: "pending_payout" })
+      .in("id", items.map((i) => i.id));
+
+    created++;
+  }
+
+  return { created, skippedNoPix, totalEarnings: releasable.length };
+}
+
+export async function executePayoutV2(payoutId: string): Promise<{
+  pagou_transfer_id: string | null;
+  request_id: string | null;
+}> {
+  const { data, error } = await supabase.functions.invoke("pagou-execute-payout", {
+    body: { payout_id: payoutId },
+  });
+  if (error) {
+    type FnContext = { context?: { error?: string; detail?: string } };
+    const ctx = (error as unknown as FnContext).context;
+    throw new Error(ctx?.detail ?? ctx?.error ?? error.message);
+  }
+  return data as { pagou_transfer_id: string | null; request_id: string | null };
+}
+
+export async function cancelPayoutV2(payoutId: string): Promise<void> {
+  const { error } = await supabase
+    .from("payouts")
+    .update({ status: "cancelled" as PayoutV2Status })
+    .eq("id", payoutId)
+    .in("status", ["draft", "approved", "failed", "rejected", "error"]);
+  if (error) throw error;
+  // Release earnings back to accrued
+  await supabase
+    .from("driver_earnings")
+    .update({ status: "accrued", payout_id: null, locked_reason: null })
+    .eq("payout_id", payoutId);
+}
+
