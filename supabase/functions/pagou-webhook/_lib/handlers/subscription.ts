@@ -1,6 +1,7 @@
 // Subscription event handler — Pagou.ai
 // deno-lint-ignore-file no-explicit-any
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { generateDriverEarnings } from "../earnings.ts";
 
 function mapStatus(pagouStatus?: string): string {
   return pagouStatus ?? "incomplete";
