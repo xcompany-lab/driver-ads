@@ -337,9 +337,25 @@ function PayoutsTab() {
   });
 
   const generate = useMutation({
+    mutationFn: () => generatePayoutsFromEarnings(refMonth),
+    onSuccess: (r) => {
+      if (r.totalEarnings === 0) {
+        toast.info("Nenhum ganho disponível para repasse no momento.");
+      } else {
+        toast.success(
+          `Repasses gerados: ${r.created}. Motoristas sem PIX aprovado: ${r.skippedNoPix}. Períodos consumidos: ${r.totalEarnings}.`,
+        );
+      }
+      qc.invalidateQueries({ queryKey: ["admin", "payouts"] });
+      qc.invalidateQueries({ queryKey: ["admin", "releasable-earnings"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const legacyGen = useMutation({
     mutationFn: () => generateMonthlyPayouts(refMonth),
     onSuccess: (r) => {
-      toast.success(`Repasses gerados: ${r.created} novos, ${r.skipped} já existentes.`);
+      toast.success(`(Legado) Repasses gerados: ${r.created} novos, ${r.skipped} já existentes.`);
       qc.invalidateQueries({ queryKey: ["admin", "payouts"] });
     },
     onError: (e: Error) => toast.error(e.message),
