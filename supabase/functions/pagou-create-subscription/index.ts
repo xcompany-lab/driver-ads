@@ -13,6 +13,7 @@ import {
   PAGOU_WEBHOOK_URL,
   pagouRequest,
 } from "../_shared/pagou-client.ts";
+import { generateDriverEarnings } from "../pagou-webhook/_lib/earnings.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -96,6 +97,10 @@ function getClientIp(req: Request) {
 
 function getPaymentIp(req: Request) {
   return getClientIp(req) ?? (PAGOU_ENV() === "sandbox" ? "127.0.0.1" : null);
+}
+
+function isPaidStatus(status: unknown) {
+  return ["paid", "succeeded", "approved"].includes(String(status ?? "").toLowerCase());
 }
 
 async function ensureCustomer(
@@ -271,6 +276,8 @@ Deno.serve(async (req) => {
     status: string;
     card_brand?: string;
     card_last4?: string;
+    paid_at?: string | null;
+    paid_amount?: number | null;
     next_action?: unknown;
   }>(
     "/v2/transactions",
@@ -294,6 +301,9 @@ Deno.serve(async (req) => {
     );
   }
 
+  const paid = isPaidStatus(res.data.status);
+  const paidAt = paid ? (res.data.paid_at ?? new Date().toISOString()) : null;
+
   const { data: insRow, error: insErr } = await admin
     .from("billing_transactions")
     .insert({
@@ -308,6 +318,8 @@ Deno.serve(async (req) => {
       currency: plan.currency ?? "BRL",
       billing_period_start: periodStart.toISOString(),
       billing_period_end: periodEnd.toISOString(),
+      paid_at: paidAt,
+      paid_amount_cents: paid ? (res.data.paid_amount ?? plan.monthly_price_cents) : 0,
       raw_payload: {
         ...res.data,
         card_brand: res.data.card_brand ?? data.card_brand ?? null,
@@ -320,10 +332,49 @@ Deno.serve(async (req) => {
     .single();
   if (insErr) return json({ error: insErr.message }, 500);
 
-  await admin
-    .from("campaigns")
-    .update({ plan_id: plan.id, billing_status: "pending" })
-    .eq("id", campaign.id);
+  if (paid) {
+    await admin
+      .from("campaigns")
+      .update({
+        plan_id: plan.id,
+        billing_status: "paid",
+        current_period_start: periodStart.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+      })
+      .eq("id", campaign.id);
+
+    const ledgerRef = `tx_paid_${res.data.id}`;
+    const { data: existingLedger } = await admin
+      .from("ledger_entries")
+      .select("id")
+      .eq("external_ref", ledgerRef)
+      .maybeSingle();
+    if (!existingLedger) {
+      await admin.from("ledger_entries").insert({
+        entry_type: "advertiser_payment",
+        direction: "credit",
+        amount_cents: plan.monthly_price_cents,
+        advertiser_id: adv.id,
+        campaign_id: campaign.id,
+        billing_transaction_id: insRow.id,
+        description: "Pagamento confirmado",
+        external_ref: ledgerRef,
+      });
+    }
+
+    await generateDriverEarnings(admin, {
+      campaignId: campaign.id as string,
+      billingTransactionId: insRow.id as string,
+      subscriptionId: null,
+      periodStart: periodStart.toISOString(),
+      periodEnd: periodEnd.toISOString(),
+    });
+  } else {
+    await admin
+      .from("campaigns")
+      .update({ plan_id: plan.id, billing_status: "pending" })
+      .eq("id", campaign.id);
+  }
 
   await admin.from("audit_logs").insert({
     actor_id: user.id,
