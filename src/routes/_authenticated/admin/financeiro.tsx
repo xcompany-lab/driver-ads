@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw, KeyRound, Check, X, Send, Banknote } from "lucide-react";
+import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw, KeyRound, Check, X, Send, Banknote, LayoutDashboard, AlertTriangle } from "lucide-react";
 import {
   listAdvertiserPayments,
   createAdvertiserPayment,
@@ -31,6 +31,14 @@ import {
   type PayoutV2WithRelations,
   type PayoutV2Status,
 } from "@/lib/finance";
+import {
+  getFinanceOverview,
+  listWebhookIssues,
+  listReconJobs,
+  listApiErrors,
+  listBalanceSnapshots,
+  insertBalanceSnapshot,
+} from "@/lib/finance-overview";
 
 import { listCampaignsAdmin } from "@/lib/campaigns-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,17 +86,21 @@ function FinancePage() {
         </div>
       )}
 
-      <Tabs defaultValue="invoices">
-        <TabsList>
+      <Tabs defaultValue="overview">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="overview"><LayoutDashboard className="mr-2 h-4 w-4" />Visão geral</TabsTrigger>
           <TabsTrigger value="invoices"><FileText className="mr-2 h-4 w-4" />Faturas — Anunciantes</TabsTrigger>
           <TabsTrigger value="payouts"><Wallet className="mr-2 h-4 w-4" />Repasses (legado)</TabsTrigger>
           <TabsTrigger value="pixout"><Banknote className="mr-2 h-4 w-4" />Pix Out</TabsTrigger>
           <TabsTrigger value="pix"><KeyRound className="mr-2 h-4 w-4" />Chaves PIX</TabsTrigger>
+          <TabsTrigger value="recon"><AlertTriangle className="mr-2 h-4 w-4" />Reconciliação</TabsTrigger>
         </TabsList>
+        <TabsContent value="overview" className="mt-4"><OverviewTab /></TabsContent>
         <TabsContent value="invoices" className="mt-4"><InvoicesTab /></TabsContent>
         <TabsContent value="payouts" className="mt-4"><PayoutsTab /></TabsContent>
         <TabsContent value="pixout" className="mt-4"><PixOutTab /></TabsContent>
         <TabsContent value="pix" className="mt-4"><PixReviewTab /></TabsContent>
+        <TabsContent value="recon" className="mt-4"><ReconciliationTab /></TabsContent>
       </Tabs>
 
     </div>
@@ -902,5 +914,278 @@ function PixOutRow({ row, isAdmin, onChange }: { row: PayoutV2WithRelations; isA
         )}
       </TableCell>
     </TableRow>
+  );
+}
+
+/* ============================= OVERVIEW TAB ============================= */
+
+function OverviewTab() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "finance-overview"],
+    queryFn: () => getFinanceOverview(),
+    refetchInterval: 60_000,
+  });
+
+  if (isLoading || !data) return <Skeleton className="h-96 rounded-xl" />;
+
+  const onHand =
+    (data.providerAvailableCents ?? 0) - data.payoutsPendingCents;
+  const onHandLabel =
+    data.providerAvailableCents == null
+      ? "Capture um snapshot de saldo na aba Reconciliação para ver."
+      : onHand >= 0
+        ? `Sobra estimada após pagar Pix Out pendentes: ${brl(onHand / 100)}`
+        : `Falta ${brl(Math.abs(onHand) / 100)} para cobrir Pix Out pendentes`;
+
+  return (
+    <div className="space-y-6">
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Receita</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <KpiMini label={`MRR (${data.activeSubscriptions} assinaturas)`} value={brl(data.mrrCents / 100)} />
+          <KpiMini label={`Recebido no mês (${data.monthPaidTxCount} tx)`} value={brl(data.monthRevenueCents / 100)} />
+          <KpiMini label="Saldo Pagou (disponível)" value={data.providerAvailableCents == null ? "—" : brl(data.providerAvailableCents / 100)} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Ganhos dos motoristas</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <KpiMini label="A liberar (accrued)" value={brl(data.accruedCents / 100)} />
+          <KpiMini label="Travados em Pix Out" value={brl(data.lockedCents / 100)} />
+          <KpiMini label="Já pagos (histórico)" value={brl(data.paidEarningsCents / 100)} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Pix Out</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <KpiMini label="A enviar" value={brl(data.payoutsPendingCents / 100)} />
+          <KpiMini label="Pagos (histórico)" value={brl(data.payoutsPaidCents / 100)} />
+          <KpiMini label="Gap travados − Pix Out" value={brl(data.reconciliationGapCents / 100)} />
+        </div>
+      </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Posição de caixa</CardTitle>
+          <CardDescription>{onHandLabel}</CardDescription>
+        </CardHeader>
+        <CardContent className="text-xs text-muted-foreground">
+          Último snapshot Pagou: {data.providerSnapshotAt ? new Date(data.providerSnapshotAt).toLocaleString("pt-BR") : "—"}
+          {data.providerPendingCents != null && <> · Pendente Pagou: {brl(data.providerPendingCents / 100)}</>}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/* ============================= RECONCILIATION TAB ============================= */
+
+function ReconciliationTab() {
+  const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
+  const [snapOpen, setSnapOpen] = useState(false);
+
+  const webhooks = useQuery({ queryKey: ["admin", "recon", "webhooks"], queryFn: () => listWebhookIssues() });
+  const jobs = useQuery({ queryKey: ["admin", "recon", "jobs"], queryFn: () => listReconJobs() });
+  const apiErrors = useQuery({ queryKey: ["admin", "recon", "api-errors"], queryFn: () => listApiErrors() });
+  const snapshots = useQuery({ queryKey: ["admin", "recon", "snapshots"], queryFn: () => listBalanceSnapshots() });
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "recon"] });
+    qc.invalidateQueries({ queryKey: ["admin", "finance-overview"] });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-semibold">Reconciliação Pagou</h2>
+          <p className="text-sm text-muted-foreground">Webhooks pendentes, jobs de reconciliação e chamadas com erro.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={refresh}><RefreshCw className="mr-2 h-4 w-4" />Atualizar</Button>
+          {isAdmin && (
+            <Button size="sm" onClick={() => setSnapOpen(true)}><Plus className="mr-2 h-4 w-4" />Snapshot saldo</Button>
+          )}
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Webhooks pendentes / com erro</CardTitle>
+          <CardDescription>{webhooks.data?.length ?? 0} evento(s)</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          {webhooks.isLoading ? <Skeleton className="m-4 h-24" /> : !webhooks.data?.length ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Nenhum webhook pendente.</div>
+          ) : (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Evento</TableHead><TableHead>Tipo</TableHead><TableHead>Status</TableHead>
+                <TableHead>Recebido</TableHead><TableHead>Erro</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {webhooks.data.map((w) => (
+                  <TableRow key={w.id}>
+                    <TableCell className="font-mono text-xs">{w.pagou_event_id}</TableCell>
+                    <TableCell className="text-xs">{w.event_type ?? "—"}</TableCell>
+                    <TableCell><StatusBadge status={w.processing_status} /></TableCell>
+                    <TableCell className="text-xs">{new Date(w.received_at).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="text-xs text-amber-600 max-w-[320px] truncate">{w.error_message ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Jobs de reconciliação</CardTitle>
+          <CardDescription>{jobs.data?.length ?? 0} job(s) abertos</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          {jobs.isLoading ? <Skeleton className="m-4 h-24" /> : !jobs.data?.length ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Sem jobs pendentes.</div>
+          ) : (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Recurso</TableHead><TableHead>Pagou ID</TableHead><TableHead>Status</TableHead>
+                <TableHead>Tentativas</TableHead><TableHead>Agendado</TableHead><TableHead>Erro</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {jobs.data.map((j) => (
+                  <TableRow key={j.id}>
+                    <TableCell className="text-xs">{j.resource_type}</TableCell>
+                    <TableCell className="font-mono text-xs">{j.pagou_resource_id ?? "—"}</TableCell>
+                    <TableCell><StatusBadge status={j.status} /></TableCell>
+                    <TableCell>{j.attempts}</TableCell>
+                    <TableCell className="text-xs">{new Date(j.scheduled_at).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="text-xs text-amber-600 max-w-[260px] truncate">{j.last_error ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Chamadas Pagou com erro (HTTP ≥ 400)</CardTitle>
+          <CardDescription>{apiErrors.data?.length ?? 0} chamada(s)</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          {apiErrors.isLoading ? <Skeleton className="m-4 h-24" /> : !apiErrors.data?.length ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Sem erros recentes.</div>
+          ) : (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Quando</TableHead><TableHead>Endpoint</TableHead>
+                <TableHead>Status</TableHead><TableHead>Recurso</TableHead><TableHead>Erro</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {apiErrors.data.map((l) => (
+                  <TableRow key={l.id}>
+                    <TableCell className="text-xs">{new Date(l.created_at).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="font-mono text-xs">{l.method} {l.endpoint}</TableCell>
+                    <TableCell><span className="rounded bg-destructive/10 px-2 py-0.5 text-xs text-destructive">{l.http_status}</span></TableCell>
+                    <TableCell className="text-xs">{l.entity_type ?? "—"} {l.entity_id ?? ""}</TableCell>
+                    <TableCell className="text-xs text-amber-600 max-w-[260px] truncate">{l.error_message ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Snapshots de saldo (Pagou)</CardTitle>
+          <CardDescription>Histórico das capturas manuais ou automáticas.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          {snapshots.isLoading ? <Skeleton className="m-4 h-24" /> : !snapshots.data?.length ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">Nenhum snapshot.</div>
+          ) : (
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Quando</TableHead><TableHead>Disponível</TableHead>
+                <TableHead>Pendente</TableHead><TableHead>Origem</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {snapshots.data.map((s) => (
+                  <TableRow key={s.id}>
+                    <TableCell className="text-xs">{new Date(s.captured_at).toLocaleString("pt-BR")}</TableCell>
+                    <TableCell className="font-semibold">{s.available_balance_cents == null ? "—" : brl(s.available_balance_cents / 100)}</TableCell>
+                    <TableCell>{s.pending_balance_cents == null ? "—" : brl(s.pending_balance_cents / 100)}</TableCell>
+                    <TableCell className="text-xs uppercase">{s.source}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <BalanceSnapshotDialog open={snapOpen} onOpenChange={setSnapOpen} onSaved={refresh} />
+    </div>
+  );
+}
+
+function BalanceSnapshotDialog({ open, onOpenChange, onSaved }: { open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void }) {
+  const [available, setAvailable] = useState("");
+  const [pending, setPending] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      const a = Math.round(Number(available) * 100);
+      const p = Math.round(Number(pending || "0") * 100);
+      if (!Number.isFinite(a) || a < 0) throw new Error("Informe o saldo disponível em R$.");
+      await insertBalanceSnapshot({ available_balance_cents: a, pending_balance_cents: p, notes: notes || undefined });
+    },
+    onSuccess: () => {
+      toast.success("Snapshot registrado");
+      onOpenChange(false);
+      setAvailable(""); setPending(""); setNotes("");
+      onSaved();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Registrar snapshot de saldo Pagou</DialogTitle>
+          <DialogDescription>Use os valores que aparecem no painel da Pagou agora mesmo.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Disponível (R$)</Label>
+              <Input type="number" step="0.01" min="0" value={available} onChange={(e) => setAvailable(e.target.value)} />
+            </div>
+            <div>
+              <Label>Pendente (R$)</Label>
+              <Input type="number" step="0.01" min="0" value={pending} onChange={(e) => setPending(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label>Observações</Label>
+            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>Salvar snapshot</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
