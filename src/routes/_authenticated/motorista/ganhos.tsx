@@ -68,6 +68,31 @@ function EarningsPage() {
         <p className="text-sm text-muted-foreground">Acompanhe seus repasses por campanha.</p>
       </div>
 
+      {(!pixMethod || pixMethod.status !== "approved") && (
+        <Alert>
+          <KeyRound className="h-4 w-4" />
+          <AlertTitle>
+            {!pixMethod
+              ? "Cadastre sua chave Pix"
+              : pixMethod.status === "pending_review"
+                ? "Chave Pix em análise"
+                : "Atualize sua chave Pix"}
+          </AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              {pixMethod?.status === "pending_review"
+                ? "Assim que aprovada, seus repasses serão liberados automaticamente."
+                : "Sem chave Pix aprovada não conseguimos enviar seus repasses."}
+            </span>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/motorista/pix">
+                {pixMethod ? "Revisar chave" : "Cadastrar chave"}
+              </Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardHeader>
