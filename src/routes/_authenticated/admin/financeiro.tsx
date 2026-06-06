@@ -744,3 +744,163 @@ function PixReviewRow({ row, isAdmin, onChange }: { row: PixReviewWithDriver; is
     </TableRow>
   );
 }
+
+/* ============================= PIX OUT (payouts v2) ============================= */
+
+const PIXOUT_STATUSES: { value: PayoutV2Status | "all"; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "draft", label: "Rascunhos" },
+  { value: "approved", label: "Aprovados" },
+  { value: "processing", label: "Em processamento" },
+  { value: "in_analysis", label: "Em análise" },
+  { value: "paid", label: "Pagos" },
+  { value: "failed", label: "Falhou" },
+  { value: "rejected", label: "Recusado" },
+  { value: "cancelled", label: "Cancelado" },
+];
+
+function PixOutTab() {
+  const qc = useQueryClient();
+  const isAdmin = useIsAdmin();
+  const [status, setStatus] = useState<PayoutV2Status | "all">("all");
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "payouts-v2", status],
+    queryFn: () => listPayoutsV2(status),
+  });
+
+  const generate = useMutation({
+    mutationFn: () => generatePayoutsV2(),
+    onSuccess: (r) => {
+      if (r.totalEarnings === 0) {
+        toast.info("Nenhum ganho liberado disponível.");
+      } else {
+        toast.success(
+          `Pix Out: ${r.created} novo(s) repasse(s). Motoristas sem PIX aprovado: ${r.skippedNoPix}. Períodos consumidos: ${r.totalEarnings}.`,
+        );
+      }
+      qc.invalidateQueries({ queryKey: ["admin", "payouts-v2"] });
+      qc.invalidateQueries({ queryKey: ["admin", "releasable-earnings"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "payouts-v2"] });
+    qc.invalidateQueries({ queryKey: ["admin", "releasable-earnings"] });
+  };
+
+  const totalCents = (data ?? []).reduce((s, p) => s + Number(p.amount_cents), 0);
+  const pendingCents = (data ?? [])
+    .filter((p) => ["draft", "approved", "processing", "in_analysis"].includes(p.status))
+    .reduce((s, p) => s + Number(p.amount_cents), 0);
+  const paidCents = (data ?? []).filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount_cents), 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <KpiMini label="Total no filtro" value={brl(totalCents / 100)} />
+        <KpiMini label="A enviar" value={brl(pendingCents / 100)} />
+        <KpiMini label="Pago" value={brl(paidCents / 100)} />
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <Select value={status} onValueChange={(v) => setStatus(v as PayoutV2Status | "all")}>
+          <SelectTrigger className="sm:w-64"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {PIXOUT_STATUSES.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {isAdmin && (
+          <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
+            <RefreshCw className="mr-2 h-4 w-4" />Gerar Pix Out dos ganhos liberados
+          </Button>
+        )}
+      </div>
+
+      {isLoading ? (
+        <Skeleton className="h-64 rounded-xl" />
+      ) : !data?.length ? (
+        <Card><CardContent className="py-16 text-center text-muted-foreground">Nenhum Pix Out no filtro.</CardContent></Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Motorista</TableHead>
+                  <TableHead>Períodos</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>PIX</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Pagou ID</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((p) => <PixOutRow key={p.id} row={p} isAdmin={isAdmin} onChange={invalidate} />)}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function PixOutRow({ row, isAdmin, onChange }: { row: PayoutV2WithRelations; isAdmin: boolean; onChange: () => void }) {
+  const execMut = useMutation({
+    mutationFn: () => executePayoutV2(row.id),
+    onSuccess: (r) => {
+      toast.success(`Pix Out enviado à Pagou${r.pagou_transfer_id ? ` (${r.pagou_transfer_id})` : ""}.`);
+      onChange();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const cancelMut = useMutation({
+    mutationFn: () => cancelPayoutV2(row.id),
+    onSuccess: () => { toast.success("Repasse cancelado; ganhos liberados."); onChange(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const canExecute = ["draft", "approved", "failed", "rejected", "error"].includes(row.status) && !row.pagou_transfer_id;
+  const canCancel = ["draft", "approved", "failed", "rejected", "error"].includes(row.status);
+
+  return (
+    <TableRow>
+      <TableCell>
+        <div className="font-medium">{row.driver?.full_name ?? "—"}</div>
+        <div className="text-xs text-muted-foreground">{row.driver?.city}</div>
+      </TableCell>
+      <TableCell>{row.items?.length ?? 0}</TableCell>
+      <TableCell className="font-semibold">{brl(Number(row.amount_cents) / 100)}</TableCell>
+      <TableCell className="text-xs">
+        {row.method ? (
+          <>
+            <div className="font-mono">{row.method.pix_key_value_masked ?? "—"}</div>
+            <div className="text-muted-foreground uppercase">{row.method.pix_key_type}</div>
+          </>
+        ) : "—"}
+      </TableCell>
+      <TableCell><StatusBadge status={row.status} /></TableCell>
+      <TableCell className="text-xs font-mono">
+        {row.pagou_transfer_id ?? "—"}
+        {row.failure_reason && (
+          <div className="text-amber-600 mt-1 max-w-[220px] whitespace-normal">{row.failure_reason}</div>
+        )}
+      </TableCell>
+      <TableCell className="text-right space-x-1 whitespace-nowrap">
+        {isAdmin && canExecute && (
+          <Button size="sm" onClick={() => execMut.mutate()} disabled={execMut.isPending}>
+            <Send className="mr-1 h-3 w-3" />Enviar Pix Out
+          </Button>
+        )}
+        {isAdmin && canCancel && (
+          <Button size="sm" variant="ghost" onClick={() => { if (confirm("Cancelar este repasse e liberar os ganhos?")) cancelMut.mutate(); }}>
+            Cancelar
+          </Button>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
