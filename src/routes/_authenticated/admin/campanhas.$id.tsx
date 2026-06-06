@@ -89,6 +89,9 @@ function CampaignDetailAdmin() {
 
   const adv = (campaign as { advertiser?: { company_name: string; city: string; responsible: string; email: string; phone: string } | null }).advertiser;
   const activeAssignments = (assignments ?? []).filter((a) => !["declined", "cancelled"].includes(a.status));
+  const startReadyAssignments = (assignments ?? []).filter((a) =>
+    ["accepted", "awaiting_installation", "active"].includes(a.status),
+  );
 
   return (
     <div className="space-y-6">
@@ -138,7 +141,16 @@ function CampaignDetailAdmin() {
               </>
             )}
             {campaign.status === "approved" && (
-              <Button size="sm" onClick={() => statusMut.mutate("active")} disabled={statusMut.isPending}>
+              <Button
+                size="sm"
+                onClick={() => statusMut.mutate("active")}
+                disabled={statusMut.isPending || startReadyAssignments.length === 0}
+                title={
+                  startReadyAssignments.length === 0
+                    ? "Vincule um motorista e aguarde o aceite antes de iniciar."
+                    : undefined
+                }
+              >
                 <Play className="mr-1 h-4 w-4" /> Iniciar campanha
               </Button>
             )}
@@ -284,7 +296,7 @@ function NewAssignmentDialog({ campaignId }: { campaignId: string }) {
             <Select value={driverId} onValueChange={(v) => { setDriverId(v); setVehicleId(""); }}>
               <SelectTrigger><SelectValue placeholder={isLoading ? "Carregando…" : "Selecione"} /></SelectTrigger>
               <SelectContent>
-                {(drivers ?? []).filter((d) => d.vehicles.length > 0).map((d) => (
+                {(drivers ?? []).map((d) => (
                   <SelectItem key={d.id} value={d.id}>{d.full_name} · {d.city}</SelectItem>
                 ))}
               </SelectContent>

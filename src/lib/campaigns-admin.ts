@@ -41,6 +41,18 @@ export async function getCampaignAdmin(id: string) {
 }
 
 export async function updateCampaignStatus(id: string, status: CampaignStatus) {
+  if (status === "active") {
+    const { count, error: countError } = await supabase
+      .from("campaign_driver_assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("campaign_id", id)
+      .in("status", ["accepted", "awaiting_installation", "active"]);
+    if (countError) throw countError;
+    if (!count) {
+      throw new Error("Vincule um motorista e aguarde o aceite antes de iniciar a campanha.");
+    }
+  }
+
   const patch: Partial<Campaign> = { status };
   if (status === "approved") {
     const { data: userData } = await supabase.auth.getUser();
@@ -69,7 +81,7 @@ export async function listEligibleDriversForCampaign(campaignId: string) {
     .single();
   let q = supabase
     .from("drivers")
-    .select("id, full_name, city, regions, phone, vehicles:vehicles(id, plate, model, brand, status)")
+    .select("id, full_name, city, regions, phone, vehicles:vehicles(id, plate, model, brand, status, crlv_status)")
     .eq("status", "approved")
     .order("full_name");
   if (campaign?.city) q = q.eq("city", campaign.city);
@@ -81,12 +93,23 @@ export async function listEligibleDriversForCampaign(campaignId: string) {
     city: string;
     regions: string[];
     phone: string;
-    vehicles: { id: string; plate: string; model: string; brand: string | null; status: string }[];
+    vehicles: {
+      id: string;
+      plate: string;
+      model: string;
+      brand: string | null;
+      status: string;
+      crlv_status: string | null;
+    }[];
   };
-  return ((data ?? []) as Row[]).map((d) => ({
-    ...d,
-    vehicles: d.vehicles.filter((v) => v.status === "approved"),
-  }));
+  return ((data ?? []) as Row[])
+    .map((d) => ({
+      ...d,
+      vehicles: d.vehicles.filter(
+        (v) => v.status === "approved" || v.crlv_status === "approved",
+      ),
+    }))
+    .filter((d) => d.vehicles.length > 0);
 }
 
 export async function createAssignment(input: {
