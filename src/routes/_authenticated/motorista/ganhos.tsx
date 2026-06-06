@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Wallet, TrendingUp, ExternalLink, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Wallet, TrendingUp, ExternalLink, CheckCircle2, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver } from "@/lib/driver";
 import { listMyAssignments } from "@/lib/proofs";
 import { listMyDriverPayouts, getReceiptSignedUrl } from "@/lib/finance";
+import { getMyPayoutMethod } from "@/lib/driver-payout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/motorista/ganhos")({
@@ -42,6 +44,12 @@ function EarningsPage() {
     enabled: !!driver,
   });
 
+  const { data: pixMethod } = useQuery({
+    queryKey: ["my-payout-method", driver?.id],
+    queryFn: () => getMyPayoutMethod(driver!.id),
+    enabled: !!driver,
+  });
+
   const active = (assignments ?? []).filter((a) =>
     ["accepted", "awaiting_installation", "active"].includes(a.status),
   );
@@ -59,6 +67,31 @@ function EarningsPage() {
         <h1 className="text-2xl font-bold tracking-tight">Meus ganhos</h1>
         <p className="text-sm text-muted-foreground">Acompanhe seus repasses por campanha.</p>
       </div>
+
+      {(!pixMethod || pixMethod.status !== "approved") && (
+        <Alert>
+          <KeyRound className="h-4 w-4" />
+          <AlertTitle>
+            {!pixMethod
+              ? "Cadastre sua chave Pix"
+              : pixMethod.status === "pending_review"
+                ? "Chave Pix em análise"
+                : "Atualize sua chave Pix"}
+          </AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              {pixMethod?.status === "pending_review"
+                ? "Assim que aprovada, seus repasses serão liberados automaticamente."
+                : "Sem chave Pix aprovada não conseguimos enviar seus repasses."}
+            </span>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/motorista/pix">
+                {pixMethod ? "Revisar chave" : "Cadastrar chave"}
+              </Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
