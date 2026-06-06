@@ -140,6 +140,14 @@ function CheckoutPage() {
           expires_at: string | null;
           paid_at?: string | null;
         } | null;
+        card_transaction: {
+          id: string;
+          pagou_transaction_id?: string | null;
+          status: string;
+          amount_cents?: number | null;
+          paid_at?: string | null;
+          billing_period_end?: string | null;
+        } | null;
       }>("pagou-billing-state", { campaign_id: id }),
     refetchInterval: (q) => {
       const state = q.state.data as { campaign?: { billing_status?: string } } | undefined;
@@ -208,7 +216,7 @@ function CheckoutPage() {
     exp_year?: string;
   }) => {
     try {
-      await invokeFn<{ subscription_id: string; status: string }>(
+      await invokeFn<{ transaction_id: string; status: string }>(
         "pagou-create-subscription",
         {
           campaign_id: id,
@@ -225,7 +233,7 @@ function CheckoutPage() {
       });
       refetchBilling();
     } catch (e) {
-      toast.error("Erro ao criar assinatura", { description: (e as Error).message });
+      toast.error("Erro ao criar pagamento", { description: (e as Error).message });
       throw e;
     }
   };
@@ -283,7 +291,8 @@ function CheckoutPage() {
                 </TabsList>
 
                 <TabsContent value="card" className="pt-4">
-                  {billing?.subscription && billing.campaign?.billing_status === "pending" ? (
+                  {(billing?.subscription || billing?.card_transaction) &&
+                  billing.campaign?.billing_status === "pending" ? (
                     <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />
                       <div className="text-sm">

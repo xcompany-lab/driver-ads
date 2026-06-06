@@ -82,5 +82,16 @@ Deno.serve(async (req) => {
     .limit(1)
     .maybeSingle();
 
-  return json({ campaign, subscription, pix_transaction: pixTx });
+  const { data: cardTx } = await admin
+    .from("billing_transactions")
+    .select(
+      "id, pagou_transaction_id, status, amount_cents, paid_at, billing_period_end",
+    )
+    .eq("campaign_id", campaign_id)
+    .eq("method", "credit_card")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return json({ campaign, subscription, pix_transaction: pixTx, card_transaction: cardTx });
 });

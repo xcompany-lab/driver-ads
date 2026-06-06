@@ -129,7 +129,7 @@ export function PagouCardElement({
     try {
       console.log("[Pagou] calling elements.submit()");
       const result = await elementsRef.current.submit({
-        mode: "subscription",
+        mode: "payment",
         createTransaction: async (tokenData) => {
           tokenizeCalled = true;
           console.log("[Pagou] createTransaction received tokenData", {

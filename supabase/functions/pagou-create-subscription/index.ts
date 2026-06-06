@@ -10,6 +10,7 @@ import {
   getAuthedUser,
   json,
   PAGOU_ENV,
+  PAGOU_WEBHOOK_URL,
   pagouRequest,
 } from "../_shared/pagou-client.ts";
 
@@ -164,7 +165,7 @@ Deno.serve(async (req) => {
 
   const { data: adv, error: ae } = await admin
     .from("advertisers")
-    .select("id, user_id, pagou_customer_id")
+    .select("id, user_id, pagou_customer_id, company_name, cnpj, document_type, responsible, email, phone")
     .eq("id", campaign.advertiser_id)
     .single();
   if (ae || !adv) return json({ error: "advertiser_not_found" }, 404);
@@ -186,51 +187,44 @@ Deno.serve(async (req) => {
     .single();
   if (pe || !plan) return json({ error: "plan_not_found" }, 404);
 
-  const externalRef = `sub_campaign_${campaign.id}_v1`;
-
-  // Idempotency: existing live subscription for this campaign?
-  const { data: existing } = await admin
-    .from("subscriptions")
-    .select("id, pagou_subscription_id, status")
-    .eq("external_ref", externalRef)
-    .maybeSingle();
-  if (existing?.pagou_subscription_id && existing.status !== "canceled") {
+  const periodStart = new Date();
+  const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const externalRef = `card_campaign_${campaign.id}_${periodStart.getTime()}`;
+  const buyerEmail = normalizeEmail(adv.email);
+  if (!buyerEmail) {
     return json({
-      subscription_id: existing.id,
-      pagou_subscription_id: existing.pagou_subscription_id,
-      status: existing.status,
-      next_action: null,
+      error: "O email cadastrado no perfil do anunciante e invalido ou esta ausente. Atualize o email antes de pagar no cartao.",
+      code: "email_invalid",
     });
   }
 
-  let customerId: string;
-  try {
-    customerId = await ensureCustomer(admin, adv.id as string);
-  } catch (e) {
-    return json({
-      error: (e as Error).message,
-      code: "pagou_customer_error",
-      edge_status: 502,
-    });
-  }
+  const buyer: Record<string, unknown> = {
+    name: String(adv.company_name || adv.responsible || buyerEmail).trim(),
+    email: buyerEmail,
+  };
+  const buyerPhone = normalizePhone(adv.phone);
+  if (buyerPhone) buyer.phone = buyerPhone;
+  const buyerDocument = normalizeDocument(adv.cnpj, adv.document_type);
+  if (buyerDocument) buyer.document = buyerDocument;
 
-  const subBody = {
-    customer_id: customerId,
-    token: data.token,
-    interval: plan.billing_interval ?? "month",
-    interval_count: plan.billing_interval_count ?? 1,
-    failure_policy: "retry_then_cancel",
-    retry_offsets_days: [1, 3, 5],
+  const txBody = {
+    external_ref: externalRef,
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
-    metadata: {
+    method: "credit_card",
+    token: data.token,
+    installments: 1,
+    notify_url: PAGOU_WEBHOOK_URL(),
+    buyer,
+    metadata: JSON.stringify({
       driver_ads_env: PAGOU_ENV(),
       advertiser_id: adv.id,
       campaign_id: campaign.id,
       plan_id: plan.id,
       source: "driver_ads_checkout",
-    },
-    idempotency_key: externalRef,
+      period_start: periodStart.toISOString(),
+      period_end: periodEnd.toISOString(),
+    }),
     products: [
       {
         name: `Driver Ads - ${plan.name}`,
@@ -245,17 +239,14 @@ Deno.serve(async (req) => {
   const res = await pagouRequest<{
     id: string;
     status: string;
-    current_period_start?: string;
-    current_period_end?: string;
     card_brand?: string;
     card_last4?: string;
-    latest_transaction?: { id: string; status: string };
     next_action?: unknown;
   }>(
-    "/v2/subscriptions",
+    "/v2/transactions",
     {
       method: "POST",
-      body: JSON.stringify(subBody),
+      body: JSON.stringify(txBody),
       headers: { "X-Idempotency-Key": externalRef },
     },
     { entity_type: "campaign", entity_id: campaign.id as string },
@@ -265,7 +256,7 @@ Deno.serve(async (req) => {
     return json(
       {
         error: friendlyPagouError(res.error, res.code),
-        code: res.code ?? "pagou_subscription_error",
+        code: res.code ?? "pagou_card_transaction_error",
         status: res.status,
         edge_status: 502,
         pagou_request_id: res.requestId,
@@ -274,31 +265,27 @@ Deno.serve(async (req) => {
   }
 
   const { data: insRow, error: insErr } = await admin
-    .from("subscriptions")
-    .upsert(
-      {
-        advertiser_id: adv.id,
-        campaign_id: campaign.id,
-        plan_id: plan.id,
-        pagou_customer_id: customerId,
-        pagou_subscription_id: res.data.id,
-        status: res.data.status ?? "incomplete",
-        payment_method: "credit_card_subscription",
-        amount_cents: plan.monthly_price_cents,
-        currency: plan.currency ?? "BRL",
-        interval: plan.billing_interval ?? "month",
-        interval_count: plan.billing_interval_count ?? 1,
-        current_period_start: res.data.current_period_start ?? null,
-        current_period_end: res.data.current_period_end ?? null,
+    .from("billing_transactions")
+    .insert({
+      advertiser_id: adv.id,
+      campaign_id: campaign.id,
+      pagou_transaction_id: res.data.id,
+      external_ref: externalRef,
+      request_id: res.requestId,
+      method: "credit_card",
+      status: res.data.status ?? "pending",
+      amount_cents: plan.monthly_price_cents,
+      currency: plan.currency ?? "BRL",
+      billing_period_start: periodStart.toISOString(),
+      billing_period_end: periodEnd.toISOString(),
+      raw_payload: {
+        ...res.data,
         card_brand: res.data.card_brand ?? data.card_brand ?? null,
         card_last4: res.data.card_last4 ?? data.card_last4 ?? null,
         card_exp_month: data.exp_month ?? null,
         card_exp_year: data.exp_year ?? null,
-        latest_transaction_id: res.data.latest_transaction?.id ?? null,
-        external_ref: externalRef,
       },
-      { onConflict: "external_ref" },
-    )
+    })
     .select("id")
     .single();
   if (insErr) return json({ error: insErr.message }, 500);
@@ -310,16 +297,16 @@ Deno.serve(async (req) => {
 
   await admin.from("audit_logs").insert({
     actor_id: user.id,
-    action: "pagou.subscription.created",
-    entity_type: "subscription",
+    action: "pagou.card_transaction.created",
+    entity_type: "billing_transaction",
     entity_id: insRow.id,
-    after_data: { pagou_subscription_id: res.data.id, status: res.data.status },
+    after_data: { pagou_transaction_id: res.data.id, status: res.data.status },
     metadata: { request_id: res.requestId, campaign_id: campaign.id },
   });
 
   return json({
-    subscription_id: insRow.id,
-    pagou_subscription_id: res.data.id,
+    transaction_id: insRow.id,
+    pagou_transaction_id: res.data.id,
     status: res.data.status,
     next_action: res.data.next_action ?? null,
   });
