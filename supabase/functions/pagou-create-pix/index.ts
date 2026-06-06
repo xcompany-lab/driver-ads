@@ -151,7 +151,17 @@ Deno.serve(async (req) => {
     phone: adv.phone,
   };
   const buyerDocument = normalizeDocument(adv.cnpj, adv.document_type);
-  if (buyerDocument) buyer.document = buyerDocument;
+  if (!buyerDocument) {
+    return json(
+      {
+        error:
+          "O CNPJ/CPF cadastrado no perfil do anunciante é inválido ou está ausente. Atualize o documento no perfil antes de gerar o Pix.",
+        code: "document_invalid",
+      },
+      400,
+    );
+  }
+  buyer.document = buyerDocument;
 
   const txBody = {
     external_ref: externalRef,
@@ -199,8 +209,40 @@ Deno.serve(async (req) => {
   );
 
   if (!res.ok || !res.data?.id) {
-    return json({ error: `pagou_pix_error: ${res.error ?? "unknown"}` }, 502);
+    const rawError = res.error ?? "unknown";
+    const bodyMatch = rawError.match(/body=(.+)$/s);
+    let parsedBody: { title?: string; detail?: string; requestId?: string } = {};
+    if (bodyMatch) {
+      try {
+        parsedBody = JSON.parse(bodyMatch[1]);
+      } catch {
+        /* ignore */
+      }
+    }
+    const title = parsedBody.title ?? "";
+    const detail = parsedBody.detail ?? "";
+    const reqId = parsedBody.requestId ?? res.requestId ?? null;
+
+    let friendly = rawError;
+    let code = "pagou_error";
+    if (title === "PAYMENT_BLOCKED" || /ticket limit exceeded/i.test(detail)) {
+      friendly =
+        "A Pagou bloqueou esta cobrança porque o valor excede o limite de ticket configurado na conta recebedora da DRIVER ADS. Solicite à Pagou o aumento do limite (payment policy) para esta conta ou ajuste o plano para um valor permitido.";
+      code = "payment_blocked_ticket_limit";
+    } else if (title === "DOCUMENT_REQUIRED" || /Document is required/i.test(detail)) {
+      friendly =
+        "A Pagou exige um documento válido do pagador. Atualize o CNPJ/CPF no perfil do anunciante e tente novamente.";
+      code = "document_required";
+    } else if (title || detail) {
+      friendly = `Pagou recusou a cobrança: ${title}${detail ? ` — ${detail}` : ""}`;
+    }
+
+    return json(
+      { error: friendly, code, pagou_request_id: reqId, status: res.status },
+      502,
+    );
   }
+
 
   const qrCode = res.data.pix?.qr_code ?? res.data.qr_code ?? null;
   const qrImage = res.data.pix?.qr_code_image ?? res.data.qr_code_image ?? null;
