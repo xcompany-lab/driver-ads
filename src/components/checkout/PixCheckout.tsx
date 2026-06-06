@@ -83,7 +83,7 @@ export function PixCheckout({ campaignId, planId, amountCents, existingPix }: Pr
       );
       if (res.pix_transaction) {
         setLocalPix({
-          transaction_id: res.pix_transaction.transaction_id ?? res.pix_transaction.id ?? "" as string,
+          transaction_id: res.pix_transaction.transaction_id ?? "",
           pagou_transaction_id: res.pix_transaction.pagou_transaction_id ?? "",
           pix_qr_code: res.pix_transaction.pix_qr_code,
           pix_qr_code_image: res.pix_transaction.pix_qr_code_image,
