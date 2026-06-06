@@ -387,11 +387,17 @@ function PayoutsTab() {
               <Input type="month" value={refMonth.slice(0, 7)} onChange={(e) => setRefMonth(`${e.target.value}-01`)} />
             </div>
             <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
-              <RefreshCw className="mr-2 h-4 w-4" />Gerar repasses
+              <RefreshCw className="mr-2 h-4 w-4" />Gerar via ganhos
+            </Button>
+            <Button variant="outline" onClick={() => legacyGen.mutate()} disabled={legacyGen.isPending} title="Gera 1 repasse por motorista ativo usando o valor mensal do vínculo (legado, ignora ganhos acumulados).">
+              Legado
             </Button>
           </div>
         )}
       </div>
+
+      {isAdmin && <ReleasableEarningsPanel />}
+
 
       {isLoading ? (
         <Skeleton className="h-64 rounded-xl" />
