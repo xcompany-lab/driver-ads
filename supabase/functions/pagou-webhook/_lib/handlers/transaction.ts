@@ -53,6 +53,16 @@ export async function handleTransactionEvent(
             })
             .eq("id", tx.campaign_id);
         }
+        // Phase 7 — accrue driver earnings for this paid period
+        if (tx.campaign_id) {
+          await generateDriverEarnings(supabase, {
+            campaignId: tx.campaign_id,
+            billingTransactionId: tx.id,
+            subscriptionId: tx.subscription_id ?? null,
+            periodStart: tx.billing_period_start ?? null,
+            periodEnd: tx.billing_period_end ?? null,
+          });
+        }
       }
       break;
 
