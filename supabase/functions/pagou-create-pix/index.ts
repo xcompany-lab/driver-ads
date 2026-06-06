@@ -44,14 +44,22 @@ async function ensureCustomer(
   const document_type =
     (adv.document_type as string | null) ??
     (document_number.length === 11 ? "CPF" : "CNPJ");
-  const body = {
+
+  const body: Record<string, unknown> = {
     name: adv.company_name,
     email: adv.email,
     phone: adv.phone,
-    document: { type: document_type, number: document_number },
     externalRef: `advertiser_${adv.id}`,
-    address: adv.address ?? { city: adv.city, country: "BR" },
   };
+
+  if (document_number.length === 11 || document_number.length === 14) {
+    body.document = { type: document_type, number: document_number };
+  }
+
+  if (isCompleteAddress(adv.address)) {
+    body.address = adv.address;
+  }
+
   const res = await pagouRequest<{ id: string }>(
     "/v2/customers",
     { method: "POST", body: JSON.stringify(body) },
@@ -65,6 +73,12 @@ async function ensureCustomer(
     .update({ pagou_customer_id: res.data.id })
     .eq("id", adv.id);
   return res.data.id;
+}
+
+function isCompleteAddress(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object") return false;
+  const address = value as Record<string, unknown>;
+  return typeof address.street === "string" && address.street.trim().length > 0;
 }
 
 Deno.serve(async (req) => {
@@ -157,6 +171,7 @@ Deno.serve(async (req) => {
   const externalRef = `pix_campaign_${campaign.id}_${periodStart.getTime()}`;
 
   const txBody = {
+    external_ref: externalRef,
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
     method: "pix",
