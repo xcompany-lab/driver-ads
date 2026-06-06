@@ -19,12 +19,26 @@ interface PixTx {
 async function invokeFn<T>(name: string, body?: unknown): Promise<T> {
   const opts = body !== undefined ? { body: body as Record<string, unknown> } : {};
   const { data, error } = await supabase.functions.invoke(name, opts);
-  if (error) throw new Error(error.message);
+  if (error) {
+    // supabase-js wraps non-2xx responses in FunctionsHttpError and stashes the
+    // raw Response on `context`. Read the JSON body to surface the real message.
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === "function") {
+      try {
+        const payload = (await ctx.clone().json()) as { error?: string };
+        if (payload?.error) throw new Error(payload.error);
+      } catch (parseErr) {
+        if (parseErr instanceof Error && parseErr.message) throw parseErr;
+      }
+    }
+    throw new Error(error.message);
+  }
   if (data && typeof data === "object" && "error" in data && data.error) {
     throw new Error(String((data as { error: unknown }).error));
   }
   return data as T;
 }
+
 
 const brl = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
