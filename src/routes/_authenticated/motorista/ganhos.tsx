@@ -44,6 +44,12 @@ function EarningsPage() {
     enabled: !!driver,
   });
 
+  const { data: pixMethod } = useQuery({
+    queryKey: ["my-payout-method", driver?.id],
+    queryFn: () => getMyPayoutMethod(driver!.id),
+    enabled: !!driver,
+  });
+
   const active = (assignments ?? []).filter((a) =>
     ["accepted", "awaiting_installation", "active"].includes(a.status),
   );
