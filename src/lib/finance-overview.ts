@@ -101,7 +101,7 @@ export async function listWebhookIssues(limit = 50): Promise<WebhookIssue[]> {
   const { data, error } = await supabase
     .from("pagou_webhook_events")
     .select("id,pagou_event_id,event_type,processing_status,received_at,error_message")
-    .in("processing_status", ["error", "pending", "received"])
+    .in("processing_status", ["failed", "needs_reconciliation", "received", "unhandled"])
     .order("received_at", { ascending: false })
     .limit(limit);
   if (error) throw error;
