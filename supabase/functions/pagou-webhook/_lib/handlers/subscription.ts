@@ -1,6 +1,7 @@
 // Subscription event handler — Pagou.ai
 // deno-lint-ignore-file no-explicit-any
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { generateDriverEarnings } from "../earnings.ts";
 
 function mapStatus(pagouStatus?: string): string {
   return pagouStatus ?? "incomplete";
@@ -100,41 +101,64 @@ export async function handleSubscriptionEvent(
   }
   await supabase.from("campaigns").update(campUpdate).eq("id", sub.campaign_id);
 
-  // Register billing transaction on renewal
-  if (eventType === "subscription.renewed" && data.latest_transaction?.id) {
-    const tx = data.latest_transaction;
-    await supabase.from("billing_transactions").upsert(
-      {
-        advertiser_id: sub.advertiser_id,
-        campaign_id: sub.campaign_id,
-        subscription_id: sub.id,
-        pagou_transaction_id: tx.id,
-        pagou_subscription_id: data.id,
-        external_ref: `sub_renewal_${data.id}_${tx.id}`,
-        method: "credit_card",
-        status: tx.status ?? "paid",
-        amount_cents: tx.amount ?? 0,
-        paid_amount_cents: tx.status === "paid" ? tx.amount ?? 0 : 0,
-        currency: tx.currency ?? "BRL",
-        billing_period_start: data.current_period_start,
-        billing_period_end: data.current_period_end,
-        paid_at: tx.paid_at ?? null,
-        raw_payload: tx,
-      },
-      { onConflict: "pagou_transaction_id" },
-    );
+  // Register billing transaction whenever Pagou reports a paid charge tied to
+  // the subscription (initial activation OR renewal). Idempotent via
+  // onConflict on pagou_transaction_id.
+  const latestTx = data.latest_transaction;
+  const isPaidEvent =
+    eventType === "subscription.renewed" ||
+    eventType === "subscription.activated" ||
+    eventType === "subscription.created" ||
+    eventType === "subscription.charged";
+  if (latestTx?.id && (isPaidEvent || latestTx.status === "paid")) {
+    const { data: upserted } = await supabase
+      .from("billing_transactions")
+      .upsert(
+        {
+          advertiser_id: sub.advertiser_id,
+          campaign_id: sub.campaign_id,
+          subscription_id: sub.id,
+          pagou_transaction_id: latestTx.id,
+          pagou_subscription_id: data.id,
+          external_ref: `sub_charge_${data.id}_${latestTx.id}`,
+          method: "credit_card",
+          status: latestTx.status ?? "paid",
+          amount_cents: latestTx.amount ?? 0,
+          paid_amount_cents: latestTx.status === "paid" ? latestTx.amount ?? 0 : 0,
+          currency: latestTx.currency ?? "BRL",
+          billing_period_start: data.current_period_start,
+          billing_period_end: data.current_period_end,
+          paid_at: latestTx.paid_at ?? null,
+          raw_payload: latestTx,
+        },
+        { onConflict: "pagou_transaction_id" },
+      )
+      .select("id")
+      .single();
 
-    // Ledger
-    if (tx.status === "paid") {
+    if (latestTx.status === "paid" && upserted?.id) {
       await supabase.from("ledger_entries").insert({
         entry_type: "advertiser_payment",
         direction: "credit",
-        amount_cents: tx.amount ?? 0,
+        amount_cents: latestTx.amount ?? 0,
         advertiser_id: sub.advertiser_id,
         campaign_id: sub.campaign_id,
         subscription_id: sub.id,
-        description: "Renovação de assinatura",
-        external_ref: `sub_renewal_${data.id}_${tx.id}`,
+        billing_transaction_id: upserted.id,
+        description:
+          eventType === "subscription.renewed"
+            ? "Renovação de assinatura"
+            : "Cobrança de assinatura",
+        external_ref: `sub_charge_${data.id}_${latestTx.id}`,
+      });
+
+      // Phase 7 — accrue driver earnings for this paid period
+      await generateDriverEarnings(supabase, {
+        campaignId: sub.campaign_id,
+        billingTransactionId: upserted.id,
+        subscriptionId: sub.id,
+        periodStart: data.current_period_start ?? null,
+        periodEnd: data.current_period_end ?? null,
       });
     }
   }

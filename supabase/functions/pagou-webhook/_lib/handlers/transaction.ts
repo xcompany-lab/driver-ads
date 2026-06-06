@@ -1,6 +1,7 @@
 // Transaction event handler — Pagou.ai
 // deno-lint-ignore-file no-explicit-any
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { generateDriverEarnings } from "../earnings.ts";
 
 export async function handleTransactionEvent(
   supabase: SupabaseClient,
@@ -51,6 +52,16 @@ export async function handleTransactionEvent(
               current_period_end: tx.billing_period_end,
             })
             .eq("id", tx.campaign_id);
+        }
+        // Phase 7 — accrue driver earnings for this paid period
+        if (tx.campaign_id) {
+          await generateDriverEarnings(supabase, {
+            campaignId: tx.campaign_id,
+            billingTransactionId: tx.id,
+            subscriptionId: tx.subscription_id ?? null,
+            periodStart: tx.billing_period_start ?? null,
+            periodEnd: tx.billing_period_end ?? null,
+          });
         }
       }
       break;
