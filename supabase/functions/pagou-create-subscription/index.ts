@@ -168,7 +168,11 @@ Deno.serve(async (req) => {
   try {
     customerId = await ensureCustomer(admin, adv.id as string);
   } catch (e) {
-    return json({ error: (e as Error).message }, 502);
+    return json({
+      error: (e as Error).message,
+      code: "pagou_customer_error",
+      edge_status: 502,
+    });
   }
 
   const subBody = {
@@ -224,9 +228,9 @@ Deno.serve(async (req) => {
         error: friendlyPagouError(res.error, res.code),
         code: res.code ?? "pagou_subscription_error",
         status: res.status,
+        edge_status: 502,
         pagou_request_id: res.requestId,
       },
-      502,
     );
   }
 
