@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
     method: "pix",
     buyer,
     expires_in: 60 * 60 * 24, // 24h
-    metadata: {
+    metadata: JSON.stringify({
       driver_ads_env: PAGOU_ENV(),
       advertiser_id: adv.id,
       campaign_id: campaign.id,
@@ -143,8 +143,7 @@ Deno.serve(async (req) => {
       source: "driver_ads_checkout_pix",
       period_start: periodStart.toISOString(),
       period_end: periodEnd.toISOString(),
-    },
-    idempotency_key: externalRef,
+    }),
     products: [
       {
         name: `Driver Ads - ${plan.name} (Pix mensal)`,
