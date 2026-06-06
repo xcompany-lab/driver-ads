@@ -41,6 +41,16 @@ function normalizeDocument(raw: unknown, rawType: unknown) {
   return { type, number };
 }
 
+function normalizeEmail(raw: unknown) {
+  const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+
+function normalizePhone(raw: unknown) {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  return digits.length >= 10 && digits.length <= 15 ? digits : null;
+}
+
 function isValidCpf(value: string) {
   if (!/^\d{11}$/.test(value) || /^(\d)\1+$/.test(value)) return false;
   const calc = (factor: number) => {
@@ -146,11 +156,24 @@ Deno.serve(async (req) => {
   const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000);
   const externalRef = `pix_campaign_${campaign.id}_${periodStart.getTime()}`;
 
+  const buyerEmail = normalizeEmail(adv.email);
+  if (!buyerEmail) {
+    return json(
+      {
+        error:
+          "O email cadastrado no perfil do anunciante e invalido ou esta ausente. Atualize o email antes de gerar o Pix.",
+        code: "email_invalid",
+      },
+      400,
+    );
+  }
+
   const buyer: Record<string, unknown> = {
-    name: adv.company_name,
-    email: adv.email,
-    phone: adv.phone,
+    name: String(adv.company_name || buyerEmail).trim(),
+    email: buyerEmail,
   };
+  const buyerPhone = normalizePhone(adv.phone);
+  if (buyerPhone) buyer.phone = buyerPhone;
   const buyerDocument = normalizeDocument(adv.cnpj, adv.document_type);
   if (!buyerDocument) {
     return json(
@@ -171,7 +194,6 @@ Deno.serve(async (req) => {
     method: "pix",
     notify_url: PAGOU_WEBHOOK_URL(),
     buyer,
-    expires_in: 60 * 60 * 24, // 24h
     metadata: JSON.stringify({
       driver_ads_env: PAGOU_ENV(),
       advertiser_id: adv.id,
@@ -213,7 +235,12 @@ Deno.serve(async (req) => {
   if (!res.ok || !res.data?.id) {
     const rawError = res.error ?? "unknown";
     const bodyMatch = rawError.match(/body=(.+)$/s);
-    let parsedBody: { title?: string; detail?: string; requestId?: string } = {};
+    let parsedBody: {
+      title?: string;
+      detail?: string;
+      requestId?: string;
+      errors?: Array<{ field?: string; message?: string; code?: string }>;
+    } = {};
     if (bodyMatch) {
       try {
         parsedBody = JSON.parse(bodyMatch[1]);
@@ -223,6 +250,11 @@ Deno.serve(async (req) => {
     }
     const title = parsedBody.title ?? "";
     const detail = parsedBody.detail ?? "";
+    const validationErrors = Array.isArray(parsedBody.errors)
+      ? parsedBody.errors
+          .map((item) => [item.field, item.message ?? item.code].filter(Boolean).join(": "))
+          .filter(Boolean)
+      : [];
     const reqId = parsedBody.requestId ?? res.requestId ?? null;
 
     let friendly = rawError;
@@ -244,7 +276,7 @@ Deno.serve(async (req) => {
         "A Pagou exige um documento válido do pagador. Atualize o CNPJ/CPF no perfil do anunciante e tente novamente.";
       code = "document_required";
     } else if (title || detail) {
-      friendly = `Pagou recusou a cobrança: ${title}${detail ? ` — ${detail}` : ""}`;
+      friendly = `Pagou recusou a cobrança: ${title}${detail ? ` — ${detail}` : ""}${validationErrors.length ? ` - ${validationErrors.join("; ")}` : ""}`;
     }
 
     return json(

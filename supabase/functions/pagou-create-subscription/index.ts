@@ -42,6 +42,44 @@ function validate(raw: unknown): Input | null {
   };
 }
 
+function normalizeEmail(raw: unknown) {
+  const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+
+function normalizePhone(raw: unknown) {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  return digits.length === 11 ? digits : null;
+}
+
+function normalizeDocument(raw: unknown, rawType: unknown) {
+  const number = String(raw ?? "").replace(/\D/g, "");
+  if (number.length !== 11 && number.length !== 14) return null;
+  const type =
+    typeof rawType === "string" && rawType.trim()
+      ? rawType.toUpperCase()
+      : number.length === 11
+        ? "CPF"
+        : "CNPJ";
+  return { type, number };
+}
+
+function normalizeAddress(rawAddress: unknown) {
+  if (!rawAddress || typeof rawAddress !== "object") return null;
+  const raw = rawAddress as Record<string, unknown>;
+  const street = typeof raw.street === "string" ? raw.street.trim() : "";
+  const city = typeof raw.city === "string" ? raw.city.trim() : "";
+  if (!street || !city) return null;
+
+  const address: Record<string, unknown> = { street, city };
+  for (const key of ["number", "complement", "neighborhood", "state", "zipCode", "country"]) {
+    const value = raw[key];
+    if (typeof value === "string" && value.trim()) address[key] = value.trim();
+  }
+  if (!address.country) address.country = "BR";
+  return address;
+}
+
 async function ensureCustomer(
   admin: ReturnType<typeof adminClient>,
   advertiserId: string,
@@ -56,19 +94,20 @@ async function ensureCustomer(
   if (error || !adv) throw new Error("advertiser_not_found");
   if (adv.pagou_customer_id) return adv.pagou_customer_id as string;
 
-  const document_number = String(adv.cnpj ?? "").replace(/\D/g, "");
-  const document_type =
-    (adv.document_type as string | null) ??
-    (document_number.length === 11 ? "CPF" : "CNPJ");
+  const email = normalizeEmail(adv.email);
+  if (!email) throw new Error("pagou_customer_error: email do anunciante invalido ou ausente");
 
-  const body = {
-    name: adv.company_name,
-    email: adv.email,
-    phone: adv.phone,
-    document: { type: document_type, number: document_number },
+  const body: Record<string, unknown> = {
+    name: String(adv.company_name || adv.responsible || email).trim(),
+    email,
     externalRef: `advertiser_${adv.id}`,
-    address: adv.address ?? { city: adv.city, country: "BR" },
   };
+  const phone = normalizePhone(adv.phone);
+  if (phone) body.phone = phone;
+  const document = normalizeDocument(adv.cnpj, adv.document_type);
+  if (document) body.document = document;
+  const address = normalizeAddress(adv.address);
+  if (address) body.address = address;
 
   const res = await pagouRequest<{ id: string }>(
     "/v2/customers",
@@ -304,8 +343,8 @@ function friendlyPagouError(error: string | null, code?: string | null) {
     );
   }
 
-  if (details.title || details.detail) {
-    return `Pagou recusou a assinatura: ${details.title ?? "erro"}${details.detail ? ` - ${details.detail}` : ""}`;
+  if (details.title || details.detail || details.errors?.length) {
+    return `Pagou recusou a assinatura: ${details.title ?? "erro"}${details.detail ? ` - ${details.detail}` : ""}${details.errors?.length ? ` - ${details.errors.join("; ")}` : ""}`;
   }
 
   return raw;
@@ -313,11 +352,21 @@ function friendlyPagouError(error: string | null, code?: string | null) {
 
 function parsePagouBody(error: string) {
   const bodyMatch = error.match(/body=(.+)$/s);
-  if (!bodyMatch) return {} as { title?: string; detail?: string };
+  if (!bodyMatch) return {} as { title?: string; detail?: string; errors?: string[] };
   try {
-    const parsed = JSON.parse(bodyMatch[1]) as { title?: string; detail?: string; message?: string };
-    return { title: parsed.title ?? parsed.message, detail: parsed.detail };
+    const parsed = JSON.parse(bodyMatch[1]) as {
+      title?: string;
+      detail?: string;
+      message?: string;
+      errors?: Array<{ field?: string; message?: string; code?: string }>;
+    };
+    const errors = Array.isArray(parsed.errors)
+      ? parsed.errors
+          .map((item) => [item.field, item.message ?? item.code].filter(Boolean).join(": "))
+          .filter(Boolean)
+      : [];
+    return { title: parsed.title ?? parsed.message, detail: parsed.detail, errors };
   } catch {
-    return {} as { title?: string; detail?: string };
+    return {} as { title?: string; detail?: string; errors?: string[] };
   }
 }
