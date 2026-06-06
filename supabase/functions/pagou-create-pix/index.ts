@@ -151,7 +151,17 @@ Deno.serve(async (req) => {
     phone: adv.phone,
   };
   const buyerDocument = normalizeDocument(adv.cnpj, adv.document_type);
-  if (buyerDocument) buyer.document = buyerDocument;
+  if (!buyerDocument) {
+    return json(
+      {
+        error:
+          "O CNPJ/CPF cadastrado no perfil do anunciante é inválido ou está ausente. Atualize o documento no perfil antes de gerar o Pix.",
+        code: "document_invalid",
+      },
+      400,
+    );
+  }
+  buyer.document = buyerDocument;
 
   const txBody = {
     external_ref: externalRef,
