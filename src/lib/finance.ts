@@ -567,3 +567,114 @@ export async function cancelPayoutV2(payoutId: string): Promise<void> {
     .eq("payout_id", payoutId);
 }
 
+
+/* =========================
+   Phase 12 — Cancellation / Refund / Chargeback (admin)
+   ========================= */
+
+export type SubscriptionRow = Database["public"]["Tables"]["subscriptions"]["Row"];
+export type BillingTransactionRow = Database["public"]["Tables"]["billing_transactions"]["Row"];
+
+export interface SubscriptionAdminRow extends SubscriptionRow {
+  campaign: { id: string; name: string; city: string; billing_status: string | null } | null;
+  advertiser: { id: string; company_name: string; cnpj: string } | null;
+}
+
+export interface TransactionAdminRow extends BillingTransactionRow {
+  campaign: { id: string; name: string } | null;
+  advertiser: { id: string; company_name: string } | null;
+}
+
+export async function listSubscriptionsAdmin(
+  status: "all" | "active" | "trialing" | "past_due" | "canceled" | "cancel_scheduled" = "all",
+): Promise<SubscriptionAdminRow[]> {
+  let q = supabase
+    .from("subscriptions")
+    .select(`
+      *,
+      campaign:campaigns(id, name, city, billing_status),
+      advertiser:advertisers(id, company_name, cnpj)
+    `)
+    .order("created_at", { ascending: false });
+  if (status !== "all") q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as unknown as SubscriptionAdminRow[];
+}
+
+export async function cancelSubscriptionAtPagou(
+  subscriptionId: string,
+  options: { atPeriodEnd?: boolean; reason?: string } = {},
+): Promise<{ request_id: string | null }> {
+  const { data, error } = await supabase.functions.invoke("pagou-cancel-subscription", {
+    body: {
+      subscription_id: subscriptionId,
+      at_period_end: options.atPeriodEnd ?? true,
+      reason: options.reason ?? null,
+    },
+  });
+  if (error) {
+    type FnContext = { context?: { error?: string; detail?: string } };
+    const ctx = (error as unknown as FnContext).context;
+    throw new Error(ctx?.detail ?? ctx?.error ?? error.message);
+  }
+  return data as { request_id: string | null };
+}
+
+export async function listTransactionsAdmin(
+  status: "all" | "paid" | "pending" | "refunded" | "partially_refunded" | "chargedback" | "failed" = "all",
+  limit = 100,
+): Promise<TransactionAdminRow[]> {
+  let q = supabase
+    .from("billing_transactions")
+    .select(`
+      *,
+      campaign:campaigns(id, name),
+      advertiser:advertisers(id, company_name)
+    `)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (status !== "all") q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as unknown as TransactionAdminRow[];
+}
+
+export async function refundTransactionAtPagou(
+  transactionId: string,
+  options: { amountCents?: number; reason?: string } = {},
+): Promise<{ request_id: string | null; refunded_amount_cents: number }> {
+  const { data, error } = await supabase.functions.invoke("pagou-refund-transaction", {
+    body: {
+      transaction_id: transactionId,
+      amount_cents: options.amountCents,
+      reason: options.reason ?? null,
+    },
+  });
+  if (error) {
+    type FnContext = { context?: { error?: string; detail?: string } };
+    const ctx = (error as unknown as FnContext).context;
+    throw new Error(ctx?.detail ?? ctx?.error ?? error.message);
+  }
+  return data as { request_id: string | null; refunded_amount_cents: number };
+}
+
+export interface ChargebackEvent {
+  id: string;
+  pagou_event_id: string;
+  event_type: string | null;
+  pagou_resource_id: string | null;
+  received_at: string;
+  processing_status: string;
+}
+
+export async function listChargebackEvents(limit = 50): Promise<ChargebackEvent[]> {
+  const { data, error } = await supabase
+    .from("pagou_webhook_events")
+    .select("id, pagou_event_id, event_type, pagou_resource_id, received_at, processing_status")
+    .or("event_type.ilike.%chargeback%,event_type.ilike.%charged%")
+    .order("received_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as ChargebackEvent[];
+}

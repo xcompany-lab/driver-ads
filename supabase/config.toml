@@ -18,3 +18,11 @@ verify_jwt = true
 [functions.pagou-execute-payout]
 verify_jwt = true
 
+[functions.pagou-cancel-subscription]
+verify_jwt = true
+
+[functions.pagou-refund-transaction]
+verify_jwt = true
+
+
+

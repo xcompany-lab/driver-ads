@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw, KeyRound, Check, X, Send, Banknote, LayoutDashboard, AlertTriangle } from "lucide-react";
+import { Plus, FileText, Wallet, Receipt, Trash2, ExternalLink, RefreshCw, KeyRound, Check, X, Send, Banknote, LayoutDashboard, AlertTriangle, Ban, Undo2 } from "lucide-react";
 import {
   listAdvertiserPayments,
   createAdvertiserPayment,
@@ -30,7 +30,15 @@ import {
   type PixReviewWithDriver,
   type PayoutV2WithRelations,
   type PayoutV2Status,
+  listSubscriptionsAdmin,
+  cancelSubscriptionAtPagou,
+  listTransactionsAdmin,
+  refundTransactionAtPagou,
+  listChargebackEvents,
+  type SubscriptionAdminRow,
+  type TransactionAdminRow,
 } from "@/lib/finance";
+
 import {
   getFinanceOverview,
   listWebhookIssues,
@@ -90,6 +98,8 @@ function FinancePage() {
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview"><LayoutDashboard className="mr-2 h-4 w-4" />Visão geral</TabsTrigger>
           <TabsTrigger value="invoices"><FileText className="mr-2 h-4 w-4" />Faturas — Anunciantes</TabsTrigger>
+          <TabsTrigger value="subs"><Ban className="mr-2 h-4 w-4" />Assinaturas</TabsTrigger>
+          <TabsTrigger value="tx"><Undo2 className="mr-2 h-4 w-4" />Cobranças & reembolsos</TabsTrigger>
           <TabsTrigger value="payouts"><Wallet className="mr-2 h-4 w-4" />Repasses (legado)</TabsTrigger>
           <TabsTrigger value="pixout"><Banknote className="mr-2 h-4 w-4" />Pix Out</TabsTrigger>
           <TabsTrigger value="pix"><KeyRound className="mr-2 h-4 w-4" />Chaves PIX</TabsTrigger>
@@ -97,11 +107,14 @@ function FinancePage() {
         </TabsList>
         <TabsContent value="overview" className="mt-4"><OverviewTab /></TabsContent>
         <TabsContent value="invoices" className="mt-4"><InvoicesTab /></TabsContent>
+        <TabsContent value="subs" className="mt-4"><SubscriptionsTab /></TabsContent>
+        <TabsContent value="tx" className="mt-4"><TransactionsTab /></TabsContent>
         <TabsContent value="payouts" className="mt-4"><PayoutsTab /></TabsContent>
         <TabsContent value="pixout" className="mt-4"><PixOutTab /></TabsContent>
         <TabsContent value="pix" className="mt-4"><PixReviewTab /></TabsContent>
         <TabsContent value="recon" className="mt-4"><ReconciliationTab /></TabsContent>
       </Tabs>
+
 
     </div>
   );
@@ -1184,6 +1197,383 @@ function BalanceSnapshotDialog({ open, onOpenChange, onSaved }: { open: boolean;
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending}>Salvar snapshot</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ============================= SUBSCRIPTIONS (Phase 12) ============================= */
+
+const SUB_STATUSES: { value: "all" | "active" | "trialing" | "past_due" | "canceled" | "cancel_scheduled"; label: string }[] = [
+  { value: "all", label: "Todas" },
+  { value: "active", label: "Ativas" },
+  { value: "trialing", label: "Em trial" },
+  { value: "past_due", label: "Inadimplentes" },
+  { value: "cancel_scheduled", label: "Cancel. agendado" },
+  { value: "canceled", label: "Canceladas" },
+];
+
+function SubscriptionsTab() {
+  const isAdmin = useIsAdmin();
+  const qc = useQueryClient();
+  const [status, setStatus] = useState<(typeof SUB_STATUSES)[number]["value"]>("all");
+  const [cancelTarget, setCancelTarget] = useState<SubscriptionAdminRow | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "subscriptions", status],
+    queryFn: () => listSubscriptionsAdmin(status),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+          <CardTitle>Assinaturas Pagou</CardTitle>
+          <CardDescription>Cancele assinaturas no fim do período ou imediatamente.</CardDescription>
+        </div>
+        <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {SUB_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? <Skeleton className="h-24 w-full" /> : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Anunciante</TableHead>
+                <TableHead>Campanha</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Período atual</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(data ?? []).map((s) => {
+                const canceled = ["canceled", "cancelled"].includes(s.status);
+                return (
+                  <TableRow key={s.id}>
+                    <TableCell>{s.advertiser?.company_name ?? "—"}</TableCell>
+                    <TableCell>{s.campaign?.name ?? "—"}</TableCell>
+                    <TableCell>{brl((s.amount_cents ?? 0) / 100)}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={s.status} />
+                      {s.cancel_at_period_end && !canceled && (
+                        <span className="ml-2 text-xs text-amber-600">cancela ao fim do período</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {fmtDate(s.current_period_start)} → {fmtDate(s.current_period_end)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!isAdmin || canceled}
+                        onClick={() => setCancelTarget(s)}
+                      >
+                        <Ban className="mr-2 h-4 w-4" />Cancelar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {!data?.length && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Nenhuma assinatura.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+      {cancelTarget && (
+        <CancelSubscriptionDialog
+          subscription={cancelTarget}
+          onClose={() => setCancelTarget(null)}
+          onDone={() => {
+            qc.invalidateQueries({ queryKey: ["admin", "subscriptions"] });
+            setCancelTarget(null);
+          }}
+        />
+      )}
+    </Card>
+  );
+}
+
+function CancelSubscriptionDialog({
+  subscription,
+  onClose,
+  onDone,
+}: {
+  subscription: SubscriptionAdminRow;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [atPeriodEnd, setAtPeriodEnd] = useState(true);
+  const [reason, setReason] = useState("");
+  const mut = useMutation({
+    mutationFn: () =>
+      cancelSubscriptionAtPagou(subscription.id, {
+        atPeriodEnd,
+        reason: reason.trim() || undefined,
+      }),
+    onSuccess: () => {
+      toast.success(atPeriodEnd ? "Cancelamento agendado." : "Assinatura cancelada.");
+      onDone();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cancelar assinatura</DialogTitle>
+          <DialogDescription>
+            {subscription.campaign?.name ?? "Campanha"} — {subscription.advertiser?.company_name ?? ""}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="atPeriodEnd"
+              checked={atPeriodEnd}
+              onChange={(e) => setAtPeriodEnd(e.target.checked)}
+              className="mt-1"
+            />
+            <Label htmlFor="atPeriodEnd" className="leading-snug">
+              Cancelar ao fim do período (mantém o anúncio até {fmtDate(subscription.current_period_end)}).
+              <br />
+              <span className="text-xs text-muted-foreground">Desmarque para cancelamento imediato.</span>
+            </Label>
+          </div>
+          <div>
+            <Label>Motivo (opcional)</Label>
+            <Textarea
+              rows={3}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Inadimplência, pedido do anunciante, etc."
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Voltar</Button>
+          <Button variant="destructive" disabled={mut.isPending} onClick={() => mut.mutate()}>
+            {mut.isPending ? "Cancelando…" : "Confirmar cancelamento"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ============================= TRANSACTIONS / REFUNDS (Phase 12) ============================= */
+
+const TX_STATUSES: { value: "all" | "paid" | "pending" | "refunded" | "partially_refunded" | "chargedback" | "failed"; label: string }[] = [
+  { value: "all", label: "Todas" },
+  { value: "paid", label: "Pagas" },
+  { value: "pending", label: "Pendentes" },
+  { value: "partially_refunded", label: "Reemb. parcial" },
+  { value: "refunded", label: "Reembolsadas" },
+  { value: "chargedback", label: "Chargeback" },
+  { value: "failed", label: "Falhas" },
+];
+
+function TransactionsTab() {
+  const isAdmin = useIsAdmin();
+  const qc = useQueryClient();
+  const [status, setStatus] = useState<(typeof TX_STATUSES)[number]["value"]>("paid");
+  const [refundTarget, setRefundTarget] = useState<TransactionAdminRow | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "transactions", status],
+    queryFn: () => listTransactionsAdmin(status),
+  });
+
+  const { data: chargebacks } = useQuery({
+    queryKey: ["admin", "chargebacks"],
+    queryFn: () => listChargebackEvents(20),
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>Cobranças Pagou</CardTitle>
+            <CardDescription>Reembolso total ou parcial em transações pagas.</CardDescription>
+          </div>
+          <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {TX_STATUSES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? <Skeleton className="h-24 w-full" /> : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Anunciante / Campanha</TableHead>
+                  <TableHead>Método</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Reembolsado</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(data ?? []).map((t) => {
+                  const refundable = t.status === "paid" || t.status === "partially_refunded";
+                  return (
+                    <TableRow key={t.id}>
+                      <TableCell className="text-xs">{fmtDate(t.paid_at ?? t.created_at)}</TableCell>
+                      <TableCell>
+                        <div className="font-medium">{t.advertiser?.company_name ?? "—"}</div>
+                        <div className="text-xs text-muted-foreground">{t.campaign?.name ?? "—"}</div>
+                      </TableCell>
+                      <TableCell className="text-xs uppercase">{t.method}</TableCell>
+                      <TableCell>{brl((t.amount_cents ?? 0) / 100)}</TableCell>
+                      <TableCell>{brl((t.refunded_amount_cents ?? 0) / 100)}</TableCell>
+                      <TableCell><StatusBadge status={t.status} /></TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!isAdmin || !refundable}
+                          onClick={() => setRefundTarget(t)}
+                        >
+                          <Undo2 className="mr-2 h-4 w-4" />Reembolsar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!data?.length && (
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Nenhuma transação.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Chargebacks recentes</CardTitle>
+          <CardDescription>Eventos de chargeback recebidos da Pagou (últimos 20).</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Recebido em</TableHead>
+                <TableHead>Evento</TableHead>
+                <TableHead>Recurso Pagou</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(chargebacks ?? []).map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="text-xs">{new Date(c.received_at).toLocaleString("pt-BR")}</TableCell>
+                  <TableCell className="text-xs">{c.event_type ?? "—"}</TableCell>
+                  <TableCell className="font-mono text-xs">{c.pagou_resource_id ?? "—"}</TableCell>
+                  <TableCell><StatusBadge status={c.processing_status} /></TableCell>
+                </TableRow>
+              ))}
+              {!chargebacks?.length && (
+                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Sem chargebacks.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {refundTarget && (
+        <RefundDialog
+          tx={refundTarget}
+          onClose={() => setRefundTarget(null)}
+          onDone={() => {
+            qc.invalidateQueries({ queryKey: ["admin", "transactions"] });
+            setRefundTarget(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function RefundDialog({
+  tx,
+  onClose,
+  onDone,
+}: {
+  tx: TransactionAdminRow;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const maxCents = (tx.amount_cents ?? 0) - (tx.refunded_amount_cents ?? 0);
+  const [amount, setAmount] = useState<string>((maxCents / 100).toFixed(2));
+  const [reason, setReason] = useState("");
+
+  const mut = useMutation({
+    mutationFn: () => {
+      const cents = Math.round(parseFloat(amount.replace(",", ".")) * 100);
+      if (!Number.isFinite(cents) || cents <= 0 || cents > maxCents) {
+        throw new Error(`Valor inválido. Máximo: ${brl(maxCents / 100)}.`);
+      }
+      return refundTransactionAtPagou(tx.id, {
+        amountCents: cents,
+        reason: reason.trim() || undefined,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Reembolso enviado à Pagou.");
+      onDone();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reembolsar transação</DialogTitle>
+          <DialogDescription>
+            {tx.advertiser?.company_name} — {tx.campaign?.name}
+            <br />
+            Pago: {brl((tx.amount_cents ?? 0) / 100)} · Já reembolsado: {brl((tx.refunded_amount_cents ?? 0) / 100)}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Valor a reembolsar (R$) — máx {brl(maxCents / 100)}</Label>
+            <Input
+              type="number"
+              step="0.01"
+              min="0.01"
+              max={(maxCents / 100).toString()}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Motivo (opcional)</Label>
+            <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Voltar</Button>
+          <Button disabled={mut.isPending} onClick={() => mut.mutate()}>
+            {mut.isPending ? "Enviando…" : "Confirmar reembolso"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
