@@ -32,11 +32,47 @@ const brl = (cents: number) =>
 async function invokeFn<T>(name: string, body?: unknown): Promise<T> {
   const opts = body !== undefined ? { body: body as Record<string, unknown> } : {};
   const { data, error } = await supabase.functions.invoke(name, opts);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(await extractFunctionError(error));
   if (data && typeof data === "object" && "error" in data && data.error) {
     throw new Error(String((data as { error: unknown }).error));
   }
   return data as T;
+}
+
+async function extractFunctionError(error: unknown): Promise<string> {
+  const fallback = error instanceof Error ? error.message : "Falha na Edge Function";
+  const context = (error as { context?: unknown }).context;
+
+  if (context instanceof Response) {
+    try {
+      const payload = (await context.clone().json()) as Record<string, unknown>;
+      return formatFunctionError(payload, fallback);
+    } catch {
+      return fallback;
+    }
+  }
+
+  if (context && typeof context === "object") {
+    return formatFunctionError(context as Record<string, unknown>, fallback);
+  }
+
+  return fallback;
+}
+
+function formatFunctionError(payload: Record<string, unknown>, fallback: string) {
+  const message =
+    stringOrNull(payload.error) ??
+    stringOrNull(payload.detail) ??
+    stringOrNull(payload.message) ??
+    fallback;
+  const requestId = stringOrNull(payload.pagou_request_id) ?? stringOrNull(payload.request_id);
+  const status = typeof payload.status === "number" ? `HTTP ${payload.status}` : null;
+  const suffix = [status, requestId ? `request ${requestId}` : null].filter(Boolean).join(" · ");
+  return suffix ? `${message} (${suffix})` : message;
+}
+
+function stringOrNull(value: unknown) {
+  return typeof value === "string" && value.trim() ? value : null;
 }
 
 function CheckoutPage() {

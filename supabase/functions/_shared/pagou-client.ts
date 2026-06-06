@@ -1,5 +1,5 @@
 // Shared Pagou.ai HTTP client for Supabase Edge Functions (Deno runtime).
-// Reads PAGOU_API_TOKEN and PAGOU_BASE_URL from Supabase secrets.
+// Reads Pagou secrets from Supabase Edge Function environment.
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 export const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -10,11 +10,15 @@ export const SUPABASE_PUBLISHABLE_KEY =
   "";
 
 export const PAGOU_BASE_URL = () =>
-  Deno.env.get("PAGOU_BASE_URL") ?? "https://api-sandbox.pagou.ai";
-export const PAGOU_TOKEN = () => Deno.env.get("PAGOU_API_TOKEN") ?? "";
+  normalizeBaseUrl(Deno.env.get("PAGOU_BASE_URL") ?? "https://api-sandbox.pagou.ai");
+export const PAGOU_TOKEN = () =>
+  Deno.env.get("PAGOU_API_TOKEN") ?? Deno.env.get("PAGOU_SECRET_TOKEN") ?? "";
 export const PAGOU_PUBLIC_KEY = () => Deno.env.get("PAGOU_PUBLIC_KEY") ?? "";
 export const PAGOU_ENV = () =>
   (Deno.env.get("PAGOU_ENV") ?? "sandbox") as "sandbox" | "production";
+export const PAGOU_WEBHOOK_URL = () =>
+  Deno.env.get("PAGOU_WEBHOOK_URL") ??
+  `${SUPABASE_URL}/functions/v1/pagou-webhook`;
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,6 +58,7 @@ export type PagouResponse<T = unknown> = {
   data: T | null;
   requestId: string | null;
   error: string | null;
+  code: string | null;
 };
 
 export async function pagouRequest<T = unknown>(
@@ -66,10 +71,14 @@ export async function pagouRequest<T = unknown>(
   let status = 0;
   let requestId: string | null = null;
   let error: string | null = null;
+  let code: string | null = null;
   let data: T | null = null;
 
   try {
-    if (!PAGOU_TOKEN()) throw new Error("PAGOU_API_TOKEN missing");
+    if (!PAGOU_TOKEN()) {
+      code = "pagou_token_missing";
+      throw new Error("PAGOU_API_TOKEN/PAGOU_SECRET_TOKEN missing");
+    }
     const res = await fetch(url, {
       ...init,
       headers: {
@@ -94,11 +103,24 @@ export async function pagouRequest<T = unknown>(
         typeof parsed === "object" && parsed && "message" in (parsed as object)
           ? String((parsed as { message: unknown }).message)
           : null;
+      const title =
+        typeof parsed === "object" && parsed && "title" in (parsed as object)
+          ? String((parsed as { title: unknown }).title)
+          : null;
       // Include raw body (truncated) so 422 validation errors are visible in logs
       error = `HTTP ${status}${msg ? `: ${msg}` : ""} | body=${body.slice(0, 800)}`;
+      code = title || `http_${status}`;
     }
   } catch (e) {
-    error = (e as Error).message;
+    const message = (e as Error).message;
+    if (!code && isNetworkDnsError(message)) {
+      code = "pagou_network_dns";
+      error =
+        `Nao foi possivel resolver/conectar ao endpoint Pagou (${PAGOU_BASE_URL()}). ` +
+        "Confirme a secret PAGOU_BASE_URL, o ambiente sandbox/production e a conectividade da Edge Function.";
+    } else {
+      error = message;
+    }
   } finally {
     try {
       await adminClient()
@@ -118,7 +140,7 @@ export async function pagouRequest<T = unknown>(
     }
   }
 
-  return { ok: !error && status >= 200 && status < 300, status, data, requestId, error };
+  return { ok: !error && status >= 200 && status < 300, status, data, requestId, error, code };
 }
 
 function isPagouEnvelope(value: unknown): value is { requestId?: string; data: unknown } {
@@ -131,4 +153,14 @@ function safeJson(s: string): unknown {
   } catch {
     return s;
   }
+}
+
+function normalizeBaseUrl(value: string) {
+  return value.trim().replace(/\/+$/, "");
+}
+
+function isNetworkDnsError(message: string) {
+  return /dns|lookup address|name or service not known|failed to lookup|failed to connect|error sending request/i.test(
+    message,
+  );
 }

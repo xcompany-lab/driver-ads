@@ -9,6 +9,7 @@ import {
   getAuthedUser,
   json,
   PAGOU_ENV,
+  PAGOU_WEBHOOK_URL,
   pagouRequest,
 } from "../_shared/pagou-client.ts";
 
@@ -168,6 +169,7 @@ Deno.serve(async (req) => {
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
     method: "pix",
+    notify_url: PAGOU_WEBHOOK_URL(),
     buyer,
     expires_in: 60 * 60 * 24, // 24h
     metadata: JSON.stringify({
@@ -225,7 +227,15 @@ Deno.serve(async (req) => {
 
     let friendly = rawError;
     let code = "pagou_error";
-    if (title === "PAYMENT_BLOCKED" || /ticket limit exceeded/i.test(detail)) {
+    if (res.code === "pagou_network_dns") {
+      friendly =
+        "A Edge Function nao conseguiu resolver/conectar ao endpoint sandbox da Pagou.ai. Confirme no Supabase Secrets se PAGOU_BASE_URL esta como https://api-sandbox.pagou.ai e se a funcao foi redeployada apos configurar as secrets.";
+      code = "pagou_network_dns";
+    } else if (res.code === "pagou_token_missing") {
+      friendly =
+        "A secret do token da Pagou nao esta disponivel para esta Edge Function. Configure PAGOU_API_TOKEN ou PAGOU_SECRET_TOKEN no Supabase e redeploye a funcao.";
+      code = "pagou_token_missing";
+    } else if (title === "PAYMENT_BLOCKED" || /ticket limit exceeded/i.test(detail)) {
       friendly =
         "A Pagou bloqueou esta cobrança porque o valor excede o limite de ticket configurado na conta recebedora da DRIVER ADS. Solicite à Pagou o aumento do limite (payment policy) para esta conta ou ajuste o plano para um valor permitido.";
       code = "payment_blocked_ticket_limit";

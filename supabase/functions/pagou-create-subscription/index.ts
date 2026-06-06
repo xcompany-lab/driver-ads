@@ -76,7 +76,7 @@ async function ensureCustomer(
     { entity_type: "advertiser", entity_id: adv.id as string },
   );
   if (!res.ok || !res.data?.id) {
-    throw new Error(`pagou_customer_error: ${res.error ?? "unknown"}`);
+    throw new Error(`pagou_customer_error: ${friendlyPagouError(res.error, res.code)}`);
   }
 
   await admin
@@ -219,7 +219,15 @@ Deno.serve(async (req) => {
   );
 
   if (!res.ok || !res.data?.id) {
-    return json({ error: `pagou_subscription_error: ${res.error ?? "unknown"}` }, 502);
+    return json(
+      {
+        error: friendlyPagouError(res.error, res.code),
+        code: res.code ?? "pagou_subscription_error",
+        status: res.status,
+        pagou_request_id: res.requestId,
+      },
+      502,
+    );
   }
 
   const { data: insRow, error: insErr } = await admin
@@ -273,3 +281,39 @@ Deno.serve(async (req) => {
     next_action: res.data.next_action ?? null,
   });
 });
+
+function friendlyPagouError(error: string | null, code?: string | null) {
+  const raw = error ?? "unknown";
+  const details = parsePagouBody(raw);
+
+  if (code === "pagou_network_dns") {
+    return (
+      "A Edge Function nao conseguiu resolver/conectar ao endpoint sandbox da Pagou.ai. " +
+      "Confirme no Supabase Secrets se PAGOU_BASE_URL esta como https://api-sandbox.pagou.ai e se a funcao foi redeployada apos configurar as secrets."
+    );
+  }
+
+  if (code === "pagou_token_missing") {
+    return (
+      "A secret do token da Pagou nao esta disponivel para esta Edge Function. " +
+      "Configure PAGOU_API_TOKEN ou PAGOU_SECRET_TOKEN no Supabase e redeploye a funcao."
+    );
+  }
+
+  if (details.title || details.detail) {
+    return `Pagou recusou a assinatura: ${details.title ?? "erro"}${details.detail ? ` - ${details.detail}` : ""}`;
+  }
+
+  return raw;
+}
+
+function parsePagouBody(error: string) {
+  const bodyMatch = error.match(/body=(.+)$/s);
+  if (!bodyMatch) return {} as { title?: string; detail?: string };
+  try {
+    const parsed = JSON.parse(bodyMatch[1]) as { title?: string; detail?: string; message?: string };
+    return { title: parsed.title ?? parsed.message, detail: parsed.detail };
+  } catch {
+    return {} as { title?: string; detail?: string };
+  }
+}
