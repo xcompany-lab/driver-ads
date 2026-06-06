@@ -94,11 +94,21 @@ function CheckoutPage() {
       invokeFn<{
         campaign: { billing_status?: string; operational_status?: string } | null;
         subscription: { id: string; status: string; card_brand?: string; card_last4?: string } | null;
+        pix_transaction: {
+          id: string;
+          pagou_transaction_id?: string | null;
+          status: string;
+          amount_cents?: number | null;
+          pix_qr_code: string | null;
+          pix_qr_code_image: string | null;
+          expires_at: string | null;
+          paid_at?: string | null;
+        } | null;
       }>("pagou-billing-state", { campaign_id: id }),
     refetchInterval: (q) => {
       const state = q.state.data as { campaign?: { billing_status?: string } } | undefined;
       const status = state?.campaign?.billing_status;
-      if (status === "active" || status === "trialing") return false;
+      if (status === "active" || status === "trialing" || status === "paid") return false;
       return 4000;
     },
     enabled: !!campaign,
@@ -106,7 +116,8 @@ function CheckoutPage() {
 
   const confirmedActive =
     billing?.campaign?.billing_status === "active" ||
-    billing?.campaign?.billing_status === "trialing";
+    billing?.campaign?.billing_status === "trialing" ||
+    billing?.campaign?.billing_status === "paid";
 
   useEffect(() => {
     if (confirmedActive) {
