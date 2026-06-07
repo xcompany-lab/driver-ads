@@ -42,6 +42,9 @@ export const Route = createFileRoute("/anunciantes")({
     ],
     links: [
       { rel: "preload", as: "image", href: logoFull.url, fetchpriority: "high" },
+      { rel: "preconnect", href: "https://play.tynk.ai" },
+      { rel: "dns-prefetch", href: "https://play.tynk.ai" },
+      { rel: "prerender", href: "https://play.tynk.ai/p/32b8ca0d-d12e-460d-8a7c-ff56ca479139" },
     ],
   }),
   component: AdvertiserLanding,
@@ -106,6 +109,21 @@ function AdvertiserLanding() {
               <span className="text-gradient-brand-flow">cidade inteira</span>, todos <br />
               os <span className="text-gradient-brand-flow">dias</span>.
             </motion.h1>
+
+            <motion.div
+              variants={fadeUp}
+              custom={2}
+              className="max-w-3xl mx-auto mb-9 rounded-xl overflow-hidden ring-1 ring-white/10 shadow-[0_20px_60px_-20px_rgba(22,120,255,0.45)]"
+            >
+              <iframe
+                src="https://play.tynk.ai/p/32b8ca0d-d12e-460d-8a7c-ff56ca479139"
+                title="Driver Ads — vídeo para anunciantes"
+                style={{ width: "100%", aspectRatio: "16 / 9", border: 0, display: "block" }}
+                scrolling="no"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </motion.div>
 
             <motion.p
               variants={fadeUp}
