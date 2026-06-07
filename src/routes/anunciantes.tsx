@@ -42,6 +42,9 @@ export const Route = createFileRoute("/anunciantes")({
     ],
     links: [
       { rel: "preload", as: "image", href: logoFull.url, fetchpriority: "high" },
+      { rel: "preconnect", href: "https://play.tynk.ai" },
+      { rel: "dns-prefetch", href: "https://play.tynk.ai" },
+      { rel: "prerender", href: "https://play.tynk.ai/p/32b8ca0d-d12e-460d-8a7c-ff56ca479139" },
     ],
   }),
   component: AdvertiserLanding,
