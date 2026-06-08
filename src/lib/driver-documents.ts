@@ -67,7 +67,7 @@ export async function uploadDriverDoc(opts: {
 export async function updateDriverDoc(driverId: string, key: DriverDocKey, path: string) {
   const { error } = await supabase
     .from("drivers")
-    .update({ [key]: path } as never)
+    .update({ [key]: path, [DRIVER_DOC_STATUS_KEY[key]]: "pending" } as never)
     .eq("id", driverId);
   if (error) throw error;
 }
@@ -75,7 +75,7 @@ export async function updateDriverDoc(driverId: string, key: DriverDocKey, path:
 export async function updateVehicleCrlv(vehicleId: string, path: string) {
   const { error } = await supabase
     .from("vehicles")
-    .update({ crlv_url: path } as never)
+    .update({ crlv_url: path, crlv_status: "pending" } as never)
     .eq("id", vehicleId);
   if (error) throw error;
 }

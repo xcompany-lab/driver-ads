@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, CheckCircle2, Camera, X, FileText } from "lucide-react";
+import { Car, UserCircle, Megaphone, Wallet, AlertTriangle, Camera, FileText } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyDriver, listMyVehicles } from "@/lib/driver";
 import { listMyAssignments } from "@/lib/proofs";
@@ -18,35 +17,28 @@ export const Route = createFileRoute("/_authenticated/motorista/")({
 
 type DriverStatus = Database["public"]["Enums"]["driver_status"];
 
-function StatusPanel({ status, dismissible, onDismiss }: { status: DriverStatus; dismissible?: boolean; onDismiss?: () => void }) {
-  const map: Record<DriverStatus, { title: string; desc: string; tone: "warning" | "success" | "destructive" | "muted" }> = {
-    pending_review: { title: "Cadastro em análise", desc: "Nosso time está revisando seus dados. Avisaremos por e-mail quando estiver aprovado.", tone: "warning" },
-    approved: { title: "Cadastro aprovado", desc: "Você já pode receber convites de campanhas compatíveis com seu perfil.", tone: "success" },
+function StatusPanel({ status }: { status: DriverStatus }) {
+  const map: Partial<Record<DriverStatus, { title: string; desc: string; tone: "warning" | "destructive" | "muted" }>> = {
+    pending_review: { title: "Cadastro em analise", desc: "Nosso time esta revisando seus dados. Avisaremos por e-mail quando estiver aprovado.", tone: "warning" },
     rejected: { title: "Cadastro rejeitado", desc: "Revise seus dados ou entre em contato com o suporte.", tone: "destructive" },
     suspended: { title: "Conta suspensa", desc: "Entre em contato com o suporte para regularizar.", tone: "destructive" },
     inactive: { title: "Conta inativa", desc: "Reative seu cadastro para voltar a receber convites.", tone: "muted" },
   };
   const s = map[status];
-  const Icon = s.tone === "success" ? CheckCircle2 : AlertTriangle;
+  if (!s) return null;
   const cls =
-    s.tone === "success" ? "border-green-500/40 bg-green-500/5" :
     s.tone === "destructive" ? "border-destructive/40 bg-destructive/5" :
     s.tone === "warning" ? "border-amber-500/40 bg-amber-500/5" :
     "border-border bg-muted/30";
   return (
     <Card className={cls}>
       <CardHeader className="flex-row items-start gap-3 space-y-0">
-        <Icon className="h-5 w-5 mt-0.5" />
+        <AlertTriangle className="h-5 w-5 mt-0.5" />
         <div className="flex-1">
           <CardTitle className="text-base">{s.title}</CardTitle>
           <CardDescription>{s.desc}</CardDescription>
         </div>
         <StatusBadge status={status} />
-        {dismissible && (
-          <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2 -mt-1" onClick={onDismiss} aria-label="Fechar aviso">
-            <X className="h-4 w-4" />
-          </Button>
-        )}
       </CardHeader>
     </Card>
   );
@@ -86,13 +78,6 @@ function DriverHome() {
   const invites = (assignments ?? []).filter((a) => a.status === "invited").length;
   const active = (assignments ?? []).filter((a) => ["accepted", "awaiting_installation", "active"].includes(a.status)).length;
 
-  const approvedDismissKey = driver ? `driver-approved-dismissed:${driver.id}` : "";
-  const [approvedDismissed, setApprovedDismissed] = useState(true);
-  useEffect(() => {
-    if (!driver || driver.status !== "approved") return;
-    setApprovedDismissed(sessionStorage.getItem(approvedDismissKey) === "1");
-  }, [driver, approvedDismissKey]);
-
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
 
   if (!driver) {
@@ -102,7 +87,7 @@ function DriverHome() {
           <CardHeader>
             <CardTitle>Bem-vindo ao Portal do Motorista</CardTitle>
             <CardDescription>
-              Para começar a receber convites de campanhas, complete seu cadastro com seus dados pessoais, cidade de atuação e chave PIX.
+              Para comecar a receber convites de campanhas, complete seu cadastro com seus dados pessoais e cidade de atuacao.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -118,27 +103,14 @@ function DriverHome() {
   const canAct = driver.status === "approved";
   const hasVehicle = (vehicles?.length ?? 0) > 0;
 
-  const dismissApproved = () => {
-    sessionStorage.setItem(approvedDismissKey, "1");
-    setApprovedDismissed(true);
-  };
-
-  const showStatusPanel = driver.status !== "approved" || !approvedDismissed;
-
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Olá, {driver.full_name.split(" ")[0]}</h1>
-        <p className="mt-1 text-muted-foreground">Gerencie seus dados, veículos e campanhas.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Ola, {driver.full_name.split(" ")[0]}</h1>
+        <p className="mt-1 text-muted-foreground">Gerencie seus dados, veiculos e campanhas.</p>
       </div>
 
-      {showStatusPanel && (
-        <StatusPanel
-          status={driver.status}
-          dismissible={driver.status === "approved"}
-          onDismiss={dismissApproved}
-        />
-      )}
+      {driver.status !== "approved" && <StatusPanel status={driver.status} />}
 
       {(() => {
         const d = driver as unknown as Record<DriverDocKey, string | null>;
@@ -164,10 +136,10 @@ function DriverHome() {
                   </CardDescription>
                   <ul className="mt-2 space-y-1 text-sm">
                     {missingDriverDocs.map((k) => (
-                      <li key={k} className="text-foreground">• {DRIVER_DOC_LABELS[k]}</li>
+                      <li key={k} className="text-foreground">- {DRIVER_DOC_LABELS[k]}</li>
                     ))}
                     {missingCrlv.map((v) => (
-                      <li key={v.id} className="text-foreground">• CRLV do veículo {v.plate}</li>
+                      <li key={v.id} className="text-foreground">- CRLV do veiculo {v.plate}</li>
                     ))}
                   </ul>
                 </div>
@@ -187,9 +159,9 @@ function DriverHome() {
               <CardHeader className="flex-row items-start gap-3 space-y-0">
                 <FileText className="h-5 w-5 mt-0.5 text-amber-700" />
                 <div className="flex-1">
-                  <CardTitle className="text-base">Documentos em análise</CardTitle>
+                  <CardTitle className="text-base">Documentos em analise</CardTitle>
                   <CardDescription>
-                    Recebemos todos os seus documentos. Nosso time está validando — você será avisado assim que o cadastro for aprovado.
+                    Recebemos todos os seus documentos. Nosso time esta validando e voce sera avisado assim que o cadastro for aprovado.
                   </CardDescription>
                 </div>
                 <Button asChild size="sm" variant="outline">
@@ -208,8 +180,8 @@ function DriverHome() {
           <CardHeader className="flex-row items-start gap-3 space-y-0">
             <AlertTriangle className="h-5 w-5 mt-0.5" />
             <div>
-              <CardTitle className="text-base">Cadastre seu veículo</CardTitle>
-              <CardDescription>Você precisa cadastrar pelo menos um veículo para receber convites.</CardDescription>
+              <CardTitle className="text-base">Cadastre seu veiculo</CardTitle>
+              <CardDescription>Voce precisa cadastrar pelo menos um veiculo para receber convites.</CardDescription>
             </div>
           </CardHeader>
         </Card>
@@ -220,7 +192,7 @@ function DriverHome() {
           <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
             <div className="flex items-center gap-2">
               <Badge>{invites}</Badge>
-              <CardTitle className="text-base">Você tem novos convites de campanha</CardTitle>
+              <CardTitle className="text-base">Voce tem novos convites de campanha</CardTitle>
             </div>
             <Button asChild size="sm" variant="hero">
               <Link to="/motorista/campanhas">Ver convites</Link>
@@ -231,10 +203,10 @@ function DriverHome() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashCard to="/motorista/campanhas" icon={Megaphone} title="Campanhas" desc={`${active} ativa(s) · ${invites} convite(s)`} disabled={!canAct} />
-        <DashCard to="/motorista/auditoria" icon={Camera} title="Auditoria" desc="Documentos e fotos de instalação" disabled={!canAct} />
+        <DashCard to="/motorista/auditoria" icon={Camera} title="Auditoria" desc="Documentos e fotos de instalacao" disabled={!canAct} />
         <DashCard to="/motorista/ganhos" icon={Wallet} title="Ganhos" desc="Repasses previstos" disabled={!canAct} />
-        <DashCard to="/motorista/veiculos" icon={Car} title="Veículos" desc={`${vehicles?.length ?? 0} cadastrado(s)`} />
-        <DashCard to="/motorista/perfil" icon={UserCircle} title="Meu perfil" desc="Dados pessoais e PIX." />
+        <DashCard to="/motorista/veiculos" icon={Car} title="Veiculos" desc={`${vehicles?.length ?? 0} cadastrado(s)`} />
+        <DashCard to="/motorista/perfil" icon={UserCircle} title="Meu perfil" desc="Dados pessoais." />
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ export type Assignment = Database["public"]["Tables"]["campaign_driver_assignmen
 export type Proof = Database["public"]["Tables"]["installation_proofs"]["Row"];
 
 export interface AssignmentWithRelations extends Assignment {
-  campaign: { id: string; name: string; city: string; period_start: string; period_end: string } | null;
+  campaign: { id: string; name: string; city: string; period_start: string; period_end: string; art_url: string | null } | null;
   vehicle: { id: string; plate: string; model: string } | null;
 }
 
@@ -30,7 +30,7 @@ export async function listMyAssignments(driverId: string): Promise<AssignmentWit
     .from("campaign_driver_assignments")
     .select(`
       *,
-      campaign:campaigns(id, name, city, period_start, period_end),
+      campaign:campaigns(id, name, city, period_start, period_end, art_url),
       vehicle:vehicles(id, plate, model)
     `)
     .eq("driver_id", driverId)

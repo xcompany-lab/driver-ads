@@ -1,18 +1,27 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/useSession";
 import { createMyDriver, getMyDriver, updateMyDriver } from "@/lib/driver";
+import { getMyProfile, updateMyAvatar, uploadAvatar } from "@/lib/profile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { DocumentUploadField } from "@/components/brand/DocumentUploadField";
-import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, uploadDriverDoc, updateDriverDoc, type DriverDocKey } from "@/lib/driver-documents";
+import { AvatarUploadField } from "@/components/brand/AvatarUploadField";
+import {
+  DRIVER_DOC_LABELS,
+  DRIVER_DOC_ORDER,
+  DRIVER_DOC_STATUS_KEY,
+  uploadDriverDoc,
+  updateDriverDoc,
+  type DriverDocKey,
+  type DriverDocStatusKey,
+} from "@/lib/driver-documents";
 
 export const Route = createFileRoute("/_authenticated/motorista/perfil")({
   component: DriverProfilePage,
@@ -25,13 +34,15 @@ interface FormState {
   email: string;
   phone: string;
   city: string;
-  pix_key_type: string;
-  pix_key: string;
 }
 
 const empty: FormState = {
-  full_name: "", cpf: "", birth_date: "", email: "", phone: "",
-  city: "", pix_key_type: "cpf", pix_key: "",
+  full_name: "",
+  cpf: "",
+  birth_date: "",
+  email: "",
+  phone: "",
+  city: "",
 };
 
 function DriverProfilePage() {
@@ -46,6 +57,12 @@ function DriverProfilePage() {
     enabled: !!user,
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile", user?.id],
+    queryFn: () => getMyProfile(user!.id),
+    enabled: !!user,
+  });
+
   useEffect(() => {
     if (driver) {
       setForm({
@@ -55,8 +72,6 @@ function DriverProfilePage() {
         email: driver.email ?? "",
         phone: driver.phone ?? "",
         city: driver.city ?? "",
-        pix_key_type: driver.pix_key_type ?? "cpf",
-        pix_key: driver.pix_key ?? "",
       });
     } else if (user) {
       setForm((f) => ({ ...f, email: user.email ?? "" }));
@@ -72,8 +87,6 @@ function DriverProfilePage() {
         email: form.email,
         phone: form.phone,
         city: form.city,
-        pix_key_type: form.pix_key_type,
-        pix_key: form.pix_key,
       };
       if (driver) {
         return updateMyDriver(driver.id, payload);
@@ -85,11 +98,23 @@ function DriverProfilePage() {
       });
     },
     onSuccess: () => {
-      toast.success(driver ? "Dados atualizados" : "Cadastro enviado para análise");
+      toast.success(driver ? "Dados atualizados" : "Cadastro enviado para analise");
       qc.invalidateQueries({ queryKey: ["my-driver"] });
       navigate({ to: "/motorista" });
     },
     onError: (err: Error) => toast.error(err.message || "Erro ao salvar"),
+  });
+
+  const avatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!user) throw new Error("Sessao expirada");
+      const avatarUrl = await uploadAvatar(user.id, file);
+      await updateMyAvatar(user.id, avatarUrl);
+      return avatarUrl;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-profile", user?.id] });
+    },
   });
 
   function set<K extends keyof FormState>(k: K, v: string) {
@@ -97,6 +122,9 @@ function DriverProfilePage() {
   }
 
   if (isLoading) return <p className="text-muted-foreground">Carregando...</p>;
+
+  const driverDocRecord = driver as unknown as Record<DriverDocKey | DriverDocStatusKey, string | null> | undefined;
+  const allDriverDocsApproved = Boolean(driver && DRIVER_DOC_ORDER.every((key) => driverDocRecord?.[DRIVER_DOC_STATUS_KEY[key]] === "approved"));
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
@@ -112,13 +140,22 @@ function DriverProfilePage() {
               <CardDescription>
                 {driver
                   ? "Mantenha seus dados sempre atualizados."
-                  : "Estes dados são necessários para a análise do seu cadastro."}
+                  : "Estes dados sao necessarios para a analise do seu cadastro."}
               </CardDescription>
             </div>
             {driver && <StatusBadge status={driver.status} />}
           </div>
         </CardHeader>
         <CardContent>
+          <div className="mb-6">
+            <AvatarUploadField
+              currentUrl={profile?.avatar_url}
+              fallback={form.full_name || user?.email || "Motorista"}
+              label="Foto do motorista"
+              onUpload={(file) => avatarMutation.mutateAsync(file)}
+            />
+          </div>
+
           <form
             className="space-y-4"
             onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }}
@@ -132,27 +169,11 @@ function DriverProfilePage() {
               <Field id="email" type="email" label="E-mail" value={form.email} onChange={(v) => set("email", v)} required />
               <Field id="phone" label="Telefone / WhatsApp" value={form.phone} onChange={(v) => set("phone", v)} required />
             </div>
-            <Field id="city" label="Cidade de atuação" value={form.city} onChange={(v) => set("city", v)} required />
-
-            <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
-              <div className="space-y-2">
-                <Label htmlFor="pix_key_type">Tipo da chave PIX</Label>
-                <Select value={form.pix_key_type} onValueChange={(v) => set("pix_key_type", v)}>
-                  <SelectTrigger id="pix_key_type"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cpf">CPF</SelectItem>
-                    <SelectItem value="email">E-mail</SelectItem>
-                    <SelectItem value="phone">Telefone</SelectItem>
-                    <SelectItem value="random">Aleatória</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Field id="pix_key" label="Chave PIX" value={form.pix_key} onChange={(v) => set("pix_key", v)} required />
-            </div>
+            <Field id="city" label="Cidade de atuacao" value={form.city} onChange={(v) => set("city", v)} required />
 
             <Button type="submit" variant="hero" disabled={mutation.isPending} className="w-full sm:w-auto">
               {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {driver ? "Salvar alterações" : "Enviar para análise"}
+              {driver ? "Salvar alteracoes" : "Enviar para analise"}
             </Button>
           </form>
         </CardContent>
@@ -163,25 +184,41 @@ function DriverProfilePage() {
           <CardHeader>
             <CardTitle>Documentos para auditoria</CardTitle>
             <CardDescription>
-              Envie os documentos abaixo para validarmos seu cadastro. O perfil só é aprovado após a verificação manual do nosso time.
+              {allDriverDocsApproved
+                ? "Seus documentos pessoais ja foram validados pelo nosso time."
+                : "Envie os documentos abaixo para validarmos seu cadastro. O perfil so e aprovado apos a verificacao manual do nosso time."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            {DRIVER_DOC_ORDER.map((key) => (
-              <DocumentUploadField
-                key={key}
-                label={DRIVER_DOC_LABELS[key]}
-                currentPath={(driver as unknown as Record<DriverDocKey, string | null>)[key]}
-                onUpload={async (file) => {
-                  const path = await uploadDriverDoc({ userId: user!.id, driverId: driver.id, key, file });
-                  await updateDriverDoc(driver.id, key, path);
-                  qc.setQueryData(["my-driver", user!.id], (current: typeof driver) => (
-                    current ? ({ ...current, [key]: path } as typeof current) : current
-                  ));
-                  await qc.invalidateQueries({ queryKey: ["my-driver", user!.id] });
-                }}
-              />
-            ))}
+          <CardContent>
+            {allDriverDocsApproved ? (
+              <div className="flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/5 p-4 text-sm">
+                <ShieldCheck className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium">Documentos aprovados</p>
+                  <p className="text-muted-foreground">Nao ha nenhuma acao pendente para seus documentos pessoais.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {DRIVER_DOC_ORDER.map((key) => (
+                  <DocumentUploadField
+                    key={key}
+                    label={DRIVER_DOC_LABELS[key]}
+                    currentPath={driverDocRecord?.[key]}
+                    status={driverDocRecord?.[DRIVER_DOC_STATUS_KEY[key]] as "pending" | "approved" | "rejected" | null}
+                    hideUploadWhenApproved
+                    onUpload={async (file) => {
+                      const path = await uploadDriverDoc({ userId: user!.id, driverId: driver.id, key, file });
+                      await updateDriverDoc(driver.id, key, path);
+                      qc.setQueryData(["my-driver", user!.id], (current: typeof driver) => (
+                        current ? ({ ...current, [key]: path, [DRIVER_DOC_STATUS_KEY[key]]: "pending" } as typeof current) : current
+                      ));
+                      await qc.invalidateQueries({ queryKey: ["my-driver", user!.id] });
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

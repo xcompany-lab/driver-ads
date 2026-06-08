@@ -18,10 +18,12 @@ import {
 import {
   DRIVER_DOC_LABELS,
   DRIVER_DOC_ORDER,
+  DRIVER_DOC_STATUS_KEY,
   uploadDriverDoc,
   updateDriverDoc,
   updateVehicleCrlv,
   type DriverDocKey,
+  type DriverDocStatusKey,
 } from "@/lib/driver-documents";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,9 @@ function AuditoriaPage() {
   });
 
   if (!user) return null;
+
+  const driverDocRecord = driver as unknown as Record<DriverDocKey | DriverDocStatusKey, string | null> | undefined;
+  const allDriverDocsApproved = Boolean(driver && DRIVER_DOC_ORDER.every((key) => driverDocRecord?.[DRIVER_DOC_STATUS_KEY[key]] === "approved"));
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -100,19 +105,31 @@ function AuditoriaPage() {
             </div>
           ) : (
             <>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {DRIVER_DOC_ORDER.map((key) => (
-                  <DocumentUploadField
-                    key={key}
-                    label={DRIVER_DOC_LABELS[key]}
-                    currentPath={(driver as unknown as Record<DriverDocKey, string | null>)[key]}
-                    onUpload={async (file) => {
-                      const path = await uploadDriverDoc({ userId: user.id, driverId: driver.id, key, file });
-                      await updateDriverDoc(driver.id, key, path);
-                    }}
-                  />
-                ))}
-              </div>
+              {allDriverDocsApproved ? (
+                <div className="flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/5 p-4 text-sm">
+                  <ShieldCheck className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium">Verificacao de identidade aprovada</p>
+                    <p className="text-muted-foreground">Seus documentos pessoais ja foram validados pelo nosso time.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {DRIVER_DOC_ORDER.map((key) => (
+                    <DocumentUploadField
+                      key={key}
+                      label={DRIVER_DOC_LABELS[key]}
+                      currentPath={driverDocRecord?.[key]}
+                      status={driverDocRecord?.[DRIVER_DOC_STATUS_KEY[key]] as "pending" | "approved" | "rejected" | null}
+                      hideUploadWhenApproved
+                      onUpload={async (file) => {
+                        const path = await uploadDriverDoc({ userId: user.id, driverId: driver.id, key, file });
+                        await updateDriverDoc(driver.id, key, path);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CRLV dos veículos</p>
@@ -128,6 +145,8 @@ function AuditoriaPage() {
                         key={v.id}
                         label={`CRLV — ${v.plate}`}
                         currentPath={(v as unknown as { crlv_url?: string | null }).crlv_url ?? null}
+                        status={(v as unknown as { crlv_status?: "pending" | "approved" | "rejected" | null }).crlv_status ?? null}
+                        hideUploadWhenApproved
                         onUpload={async (file) => {
                           const path = await uploadDriverDoc({
                             userId: user.id,

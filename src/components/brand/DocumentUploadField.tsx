@@ -10,14 +10,36 @@ interface Props {
   currentPath: string | null | undefined;
   onUpload: (file: File) => Promise<void>;
   accept?: string;
+  status?: "pending" | "approved" | "rejected" | null;
+  hideUploadWhenApproved?: boolean;
 }
 
-export function DocumentUploadField({ label, currentPath, onUpload, accept = "image/*,application/pdf" }: Props) {
+export function DocumentUploadField({
+  label,
+  currentPath,
+  onUpload,
+  accept = "image/*,application/pdf",
+  status,
+  hideUploadWhenApproved = false,
+}: Props) {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const hasUploaded = Boolean(currentPath) || sent;
   const isPdf = isPdfPath(currentPath);
+  const effectiveStatus = sent ? "pending" : status;
+  const isApproved = effectiveStatus === "approved";
+  const canUpload = !(hideUploadWhenApproved && isApproved);
+  const statusText =
+    isApproved ? "Aprovado" :
+    effectiveStatus === "rejected" ? "Reprovado" :
+    hasUploaded ? "Em analise" :
+    "Pendente";
+  const statusClass =
+    isApproved ? "text-green-600" :
+    effectiveStatus === "rejected" ? "text-destructive" :
+    hasUploaded ? "text-amber-600" :
+    "text-muted-foreground";
 
   useEffect(() => {
     if (currentPath) setSent(false);
@@ -27,7 +49,7 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Arquivo deve ter no máximo 10MB");
+      toast.error("Arquivo deve ter no maximo 10MB");
       return;
     }
     setBusy(true);
@@ -49,7 +71,7 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
     <div className="rounded-lg border border-border bg-card/50 p-3 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          {hasUploaded ? (
+          {isApproved ? (
             <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
           ) : isPdf ? (
             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -73,14 +95,16 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
       </div>
       <div className="flex items-center gap-2">
         <input id={inputId} type="file" accept={accept} className="hidden" onChange={handleFile} disabled={busy} />
-        <Button asChild type="button" size="sm" variant={hasUploaded ? "outline" : "default"} disabled={busy}>
-          <label htmlFor={inputId} className="cursor-pointer">
-            {busy ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Upload className="mr-2 h-3 w-3" />}
-            {hasUploaded ? "Reenviar" : "Enviar arquivo"}
-          </label>
-        </Button>
-        <span className={`text-xs font-medium ${hasUploaded ? "text-amber-600" : "text-muted-foreground"}`}>
-          {hasUploaded ? "Em análise" : "Pendente"}
+        {canUpload && (
+          <Button asChild type="button" size="sm" variant={hasUploaded ? "outline" : "default"} disabled={busy}>
+            <label htmlFor={inputId} className="cursor-pointer">
+              {busy ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Upload className="mr-2 h-3 w-3" />}
+              {hasUploaded ? "Reenviar" : "Enviar arquivo"}
+            </label>
+          </Button>
+        )}
+        <span className={`text-xs font-medium ${statusClass}`}>
+          {statusText}
         </span>
         <span className="ml-auto text-[10px] text-muted-foreground hidden sm:inline">JPG, PNG ou PDF</span>
       </div>
@@ -94,4 +118,3 @@ export function DocumentUploadField({ label, currentPath, onUpload, accept = "im
     </div>
   );
 }
-

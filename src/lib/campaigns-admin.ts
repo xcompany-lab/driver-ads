@@ -6,6 +6,10 @@ export type CampaignStatus = Database["public"]["Enums"]["campaign_status"];
 export type Assignment = Database["public"]["Tables"]["campaign_driver_assignments"]["Row"];
 export type AssignmentStatus = Database["public"]["Enums"]["assignment_status"];
 
+type SupabaseWithRpc = typeof supabase & {
+  rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }>;
+};
+
 export interface CampaignWithAdvertiser extends Campaign {
   advertiser?: { company_name: string; city: string } | null;
 }
@@ -74,18 +78,9 @@ export async function listAssignmentsForCampaign(campaignId: string): Promise<As
 }
 
 export async function listEligibleDriversForCampaign(campaignId: string) {
-  const { data: campaign } = await supabase
-    .from("campaigns")
-    .select("city, regions")
-    .eq("id", campaignId)
-    .single();
-  let q = supabase
-    .from("drivers")
-    .select("id, full_name, city, regions, phone, vehicles:vehicles(id, plate, model, brand, status, crlv_status)")
-    .eq("status", "approved")
-    .order("full_name");
-  if (campaign?.city) q = q.eq("city", campaign.city);
-  const { data, error } = await q;
+  const { data, error } = await (supabase as SupabaseWithRpc).rpc("list_eligible_drivers_for_campaign", {
+    _campaign_id: campaignId,
+  });
   if (error) throw error;
   type Row = {
     id: string;
@@ -102,14 +97,7 @@ export async function listEligibleDriversForCampaign(campaignId: string) {
       crlv_status: string | null;
     }[];
   };
-  return ((data ?? []) as Row[])
-    .map((d) => ({
-      ...d,
-      vehicles: d.vehicles.filter(
-        (v) => v.status === "approved" || v.crlv_status === "approved",
-      ),
-    }))
-    .filter((d) => d.vehicles.length > 0);
+  return ((data ?? []) as Row[]).filter((d) => d.vehicles.length > 0);
 }
 
 export async function createAssignment(input: {

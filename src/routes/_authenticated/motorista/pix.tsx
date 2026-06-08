@@ -10,6 +10,7 @@ import {
   upsertMyPayoutMethod,
   validatePixKey,
   maskPixKey,
+  fromDbPixKeyType,
   type PixKeyType,
 } from "@/lib/driver-payout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +58,7 @@ function PixSettingsPage() {
   // Hydrate form whenever the saved method changes.
   useEffect(() => {
     if (method) {
-      setKeyType((method.pix_key_type as PixKeyType) ?? "cpf");
+      setKeyType(fromDbPixKeyType(method.pix_key_type));
       setKeyValue(method.pix_key_value ?? "");
       setLegalName(method.legal_name ?? "");
     } else if (driver) {

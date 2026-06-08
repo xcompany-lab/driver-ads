@@ -4,8 +4,40 @@ import type { Database } from "@/integrations/supabase/types";
 export type DriverPayoutMethod =
   Database["public"]["Tables"]["driver_payout_methods"]["Row"];
 export type PixKeyType = "cpf" | "cnpj" | "email" | "phone" | "random";
+type DbPixKeyType = "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "EVP";
 
 const onlyDigits = (s: string) => s.replace(/\D+/g, "");
+
+const DB_PIX_KEY_TYPES: Record<PixKeyType, DbPixKeyType> = {
+  cpf: "CPF",
+  cnpj: "CNPJ",
+  email: "EMAIL",
+  phone: "PHONE",
+  random: "EVP",
+};
+
+export function fromDbPixKeyType(value: string | null | undefined): PixKeyType {
+  switch ((value ?? "").toUpperCase()) {
+    case "CPF":
+      return "cpf";
+    case "CNPJ":
+      return "cnpj";
+    case "EMAIL":
+      return "email";
+    case "PHONE":
+      return "phone";
+    case "EVP":
+      return "random";
+    default:
+      return "cpf";
+  }
+}
+
+function toDbDocumentType(value: "cpf" | "cnpj" | null | undefined): "CPF" | "CNPJ" | null {
+  if (value === "cpf") return "CPF";
+  if (value === "cnpj") return "CNPJ";
+  return null;
+}
 
 /** Lightweight mask for showing to the driver/admin without leaking the full key. */
 export function maskPixKey(type: PixKeyType, value: string): string {
@@ -99,11 +131,11 @@ export async function upsertMyPayoutMethod(input: UpsertPayoutMethodInput) {
 
   const patch = {
     driver_id: input.driver_id,
-    pix_key_type: input.pix_key_type,
+    pix_key_type: DB_PIX_KEY_TYPES[input.pix_key_type],
     pix_key_value: normalized,
     pix_key_value_masked: masked,
     legal_name: input.legal_name?.trim() || null,
-    document_type: input.document_type ?? null,
+    document_type: toDbDocumentType(input.document_type),
     document_number: input.document_number
       ? onlyDigits(input.document_number)
       : null,
