@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AnunciantesRouteImport } from './routes/anunciantes'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as QCodeRouteImport } from './routes/q.$code'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthMotoristaRouteImport } from './routes/auth/motorista'
 import { Route as AuthConfirmRouteImport } from './routes/auth/confirm'
@@ -78,6 +79,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QCodeRoute = QCodeRouteImport.update({
+  id: '/q/$code',
+  path: '/q/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
@@ -298,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/q/$code': typeof QCodeRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/q/$code': typeof QCodeRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/q/$code': typeof QCodeRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
@@ -425,6 +434,7 @@ export interface FileRouteTypes {
     | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
+    | '/q/$code'
     | '/admin/anunciantes'
     | '/admin/auditoria'
     | '/admin/comprovacoes'
@@ -464,6 +474,7 @@ export interface FileRouteTypes {
     | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
+    | '/q/$code'
     | '/admin/anunciantes'
     | '/admin/auditoria'
     | '/admin/comprovacoes'
@@ -507,6 +518,7 @@ export interface FileRouteTypes {
     | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
+    | '/q/$code'
     | '/_authenticated/admin/anunciantes'
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/comprovacoes'
@@ -547,6 +559,7 @@ export interface RootRouteChildren {
   AuthConfirmRoute: typeof AuthConfirmRoute
   AuthMotoristaRoute: typeof AuthMotoristaRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  QCodeRoute: typeof QCodeRoute
   ApiPublicAuthEmailHookRoute: typeof ApiPublicAuthEmailHookRoute
   ApiPublicPasswordRecoveryRoute: typeof ApiPublicPasswordRecoveryRoute
   ApiPublicProcessEmailOutboxRoute: typeof ApiPublicProcessEmailOutboxRoute
@@ -594,6 +607,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/q/$code': {
+      id: '/q/$code'
+      path: '/q/$code'
+      fullPath: '/q/$code'
+      preLoaderRoute: typeof QCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/reset-password': {
@@ -963,6 +983,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthConfirmRoute: AuthConfirmRoute,
   AuthMotoristaRoute: AuthMotoristaRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
+  QCodeRoute: QCodeRoute,
   ApiPublicAuthEmailHookRoute: ApiPublicAuthEmailHookRoute,
   ApiPublicPasswordRecoveryRoute: ApiPublicPasswordRecoveryRoute,
   ApiPublicProcessEmailOutboxRoute: ApiPublicProcessEmailOutboxRoute,
@@ -970,3 +991,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

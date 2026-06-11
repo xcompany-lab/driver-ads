@@ -326,6 +326,136 @@ export type Database = {
           },
         ]
       }
+      campaign_qr_codes: {
+        Row: {
+          advertiser_id: string
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          destination_type: Database["public"]["Enums"]["qr_destination_type"]
+          destination_url: string
+          final_image_url: string | null
+          final_pdf_url: string | null
+          generated_at: string | null
+          id: string
+          is_active: boolean
+          landing_page_url: string | null
+          qr_position: Json
+          short_code: string
+          updated_at: string
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          campaign_id: string
+          created_at?: string
+          created_by?: string | null
+          destination_type: Database["public"]["Enums"]["qr_destination_type"]
+          destination_url: string
+          final_image_url?: string | null
+          final_pdf_url?: string | null
+          generated_at?: string | null
+          id?: string
+          is_active?: boolean
+          landing_page_url?: string | null
+          qr_position?: Json
+          short_code?: string
+          updated_at?: string
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          campaign_id?: string
+          created_at?: string
+          created_by?: string | null
+          destination_type?: Database["public"]["Enums"]["qr_destination_type"]
+          destination_url?: string
+          final_image_url?: string | null
+          final_pdf_url?: string | null
+          generated_at?: string | null
+          id?: string
+          is_active?: boolean
+          landing_page_url?: string | null
+          qr_position?: Json
+          short_code?: string
+          updated_at?: string
+          whatsapp_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_qr_codes_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_qr_scans: {
+        Row: {
+          advertiser_id: string
+          campaign_id: string
+          id: string
+          ip_hash: string | null
+          metadata: Json
+          qr_code_id: string
+          referrer: string | null
+          scanned_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          campaign_id: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          qr_code_id: string
+          referrer?: string | null
+          scanned_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          campaign_id?: string
+          id?: string
+          ip_hash?: string | null
+          metadata?: Json
+          qr_code_id?: string
+          referrer?: string | null
+          scanned_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_qr_scans_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_scans_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_scans_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_driver_assignments: {
         Row: {
           assigned_by: string | null
@@ -1824,6 +1954,7 @@ export type Database = {
         | "paused"
         | "completed"
         | "cancelled"
+      qr_destination_type: "whatsapp" | "landing_page"
       doc_review_status: "pending" | "approved" | "rejected"
       driver_payout_method_status:
         | "incomplete"
@@ -2069,6 +2200,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      qr_destination_type: ["whatsapp", "landing_page"],
       doc_review_status: ["pending", "approved", "rejected"],
       driver_payout_method_status: [
         "incomplete",

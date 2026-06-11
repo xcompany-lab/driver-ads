@@ -2,18 +2,28 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, MapPin, FileText, Upload, Loader2, CreditCard } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, FileText, Upload, Loader2, CreditCard, QrCode } from "lucide-react";
 import {
   getMyCampaign,
   getCampaignArtUrl,
   uploadCampaignArt,
   updateMyCampaign,
 } from "@/lib/campaigns";
+import {
+  getCampaignQrCode,
+  getCampaignQrScanCount,
+  getPublicQrUrl,
+  upsertCampaignQrCode,
+  type QrDestinationType,
+} from "@/lib/trackable-qr";
+import { QrArtExporter } from "@/components/campaigns/QrArtExporter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/brand/StatusBadge";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/anunciante/campanhas/$id/")({
   component: AdvertiserCampaignDetail,
@@ -29,10 +39,31 @@ function AdvertiserCampaignDetail() {
   const qc = useQueryClient();
   const [art, setArt] = useState<File | null>(null);
   const [artPreview, setArtPreview] = useState<string | null>(null);
+  const [qrForm, setQrForm] = useState<{
+    destinationType: QrDestinationType;
+    whatsappPhone: string;
+    landingPageUrl: string;
+  }>({
+    destinationType: "whatsapp",
+    whatsappPhone: "",
+    landingPageUrl: "",
+  });
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["my-campaign", id],
     queryFn: () => getMyCampaign(id),
+  });
+
+  const { data: qrCode } = useQuery({
+    queryKey: ["campaign-qr", id],
+    queryFn: () => getCampaignQrCode(id),
+    enabled: !!campaign,
+  });
+
+  const { data: scanCount } = useQuery({
+    queryKey: ["campaign-qr", id, "scan-count"],
+    queryFn: () => getCampaignQrScanCount(id),
+    enabled: !!qrCode,
   });
 
   useEffect(() => {
@@ -48,6 +79,15 @@ function AdvertiserCampaignDetail() {
       cancelled = true;
     };
   }, [campaign?.art_url]);
+
+  useEffect(() => {
+    if (!qrCode) return;
+    setQrForm({
+      destinationType: qrCode.destination_type,
+      whatsappPhone: qrCode.whatsapp_phone ?? "",
+      landingPageUrl: qrCode.landing_page_url ?? "",
+    });
+  }, [qrCode]);
 
   const upload = useMutation({
     mutationFn: async () => {
@@ -69,6 +109,24 @@ function AdvertiserCampaignDetail() {
       toast.success("Campanha cancelada");
       qc.invalidateQueries({ queryKey: ["my-campaign", id] });
       qc.invalidateQueries({ queryKey: ["my-campaigns"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveQr = useMutation({
+    mutationFn: async () => {
+      if (!campaign) throw new Error("Campanha nao encontrada");
+      return upsertCampaignQrCode({
+        campaignId: campaign.id,
+        advertiserId: campaign.advertiser_id,
+        destinationType: qrForm.destinationType,
+        whatsappPhone: qrForm.whatsappPhone,
+        landingPageUrl: qrForm.landingPageUrl,
+      });
+    },
+    onSuccess: () => {
+      toast.success("QR Code atualizado");
+      qc.invalidateQueries({ queryKey: ["campaign-qr", id] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -200,6 +258,92 @@ function AdvertiserCampaignDetail() {
               Enviar arte
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="inline-flex items-center gap-2 text-base">
+            <QrCode className="h-4 w-4 text-primary" /> QR Code rastreavel
+          </CardTitle>
+          <CardDescription>
+            Configure o destino do QR e exporte a arte final com rastreamento de scans.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Destino</Label>
+              <Select
+                value={qrForm.destinationType}
+                onValueChange={(value) =>
+                  setQrForm({ ...qrForm, destinationType: value as QrDestinationType })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="landing_page">Landing page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {qrForm.destinationType === "whatsapp" ? (
+              <div className="space-y-2">
+                <Label htmlFor="qr_whatsapp_phone">WhatsApp</Label>
+                <Input
+                  id="qr_whatsapp_phone"
+                  value={qrForm.whatsappPhone}
+                  onChange={(e) => setQrForm({ ...qrForm, whatsappPhone: e.target.value })}
+                  placeholder="Ex.: 48999999999"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="qr_landing_page_url">URL da landing page</Label>
+                <Input
+                  id="qr_landing_page_url"
+                  value={qrForm.landingPageUrl}
+                  onChange={(e) => setQrForm({ ...qrForm, landingPageUrl: e.target.value })}
+                  placeholder="https://suaempresa.com/promocao"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={() => saveQr.mutate()} disabled={saveQr.isPending}>
+              {saveQr.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar destino do QR
+            </Button>
+            {qrCode && (
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{scanCount ?? 0}</span> scans registrados
+              </div>
+            )}
+          </div>
+
+          {qrCode ? (
+            <>
+              <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
+                Link publico impresso no QR:{" "}
+                <span className="break-all font-medium text-foreground">
+                  {getPublicQrUrl(qrCode.short_code)}
+                </span>
+              </div>
+              <QrArtExporter
+                campaign={campaign}
+                qrCode={qrCode}
+                artUrl={artPreview}
+                onGenerated={() => qc.invalidateQueries({ queryKey: ["campaign-qr", id] })}
+              />
+            </>
+          ) : (
+            <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+              Salve o destino para criar o QR rastreavel desta campanha.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -6,11 +6,13 @@ import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyAdvertiser } from "@/lib/advertiser";
 import { createMyCampaign, uploadCampaignArt, updateMyCampaign } from "@/lib/campaigns";
+import { upsertCampaignQrCode, type QrDestinationType } from "@/lib/trackable-qr";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/anunciante/campanhas/nova")({
   component: NewCampaignPage,
@@ -25,6 +27,9 @@ interface FormState {
   period_start: string;
   period_end: string;
   plan_value: string;
+  qr_destination_type: QrDestinationType;
+  qr_whatsapp_phone: string;
+  qr_landing_page_url: string;
   observations: string;
 }
 
@@ -37,6 +42,9 @@ const empty: FormState = {
   period_start: "",
   period_end: "",
   plan_value: "",
+  qr_destination_type: "whatsapp",
+  qr_whatsapp_phone: "",
+  qr_landing_page_url: "",
   observations: "",
 };
 
@@ -80,6 +88,14 @@ function NewCampaignPage() {
           toast.warning("Campanha criada, mas a arte não pôde ser enviada. Tente novamente nos detalhes.");
         }
       }
+      await upsertCampaignQrCode({
+        campaignId: created.id,
+        advertiserId: advertiser.id,
+        destinationType: form.qr_destination_type,
+        whatsappPhone: form.qr_whatsapp_phone,
+        landingPageUrl: form.qr_landing_page_url,
+        createdBy: user?.id ?? null,
+      });
       return created;
     },
     onSuccess: (c) => {
@@ -114,7 +130,10 @@ function NewCampaignPage() {
     form.period_end &&
     Number(form.vehicles_qty) > 0 &&
     Number(form.plan_value) >= 0 &&
-    new Date(form.period_end) >= new Date(form.period_start);
+    new Date(form.period_end) >= new Date(form.period_start) &&
+    (form.qr_destination_type === "whatsapp"
+      ? form.qr_whatsapp_phone.replace(/\D/g, "").length >= 10
+      : form.qr_landing_page_url.trim().length > 4);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -239,6 +258,55 @@ function NewCampaignPage() {
             <p className="text-xs text-muted-foreground">
               Você poderá enviar ou atualizar a arte depois nos detalhes da campanha.
             </p>
+          </div>
+
+          <div className="rounded-lg border p-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold">QR Code rastreavel</p>
+              <p className="text-xs text-muted-foreground">
+                Escolha para onde o QR impresso na arte deve levar quando for escaneado.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Destino do QR *</Label>
+                <Select
+                  value={form.qr_destination_type}
+                  onValueChange={(value) =>
+                    setForm({ ...form, qr_destination_type: value as QrDestinationType })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    <SelectItem value="landing_page">Landing page</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.qr_destination_type === "whatsapp" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="qr_whatsapp_phone">WhatsApp *</Label>
+                  <Input
+                    id="qr_whatsapp_phone"
+                    value={form.qr_whatsapp_phone}
+                    onChange={(e) => setForm({ ...form, qr_whatsapp_phone: e.target.value })}
+                    placeholder="Ex.: 48999999999"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="qr_landing_page_url">URL da landing page *</Label>
+                  <Input
+                    id="qr_landing_page_url"
+                    value={form.qr_landing_page_url}
+                    onChange={(e) => setForm({ ...form, qr_landing_page_url: e.target.value })}
+                    placeholder="https://suaempresa.com/promocao"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
