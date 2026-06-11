@@ -1904,6 +1904,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      track_campaign_qr_scan: {
+        Args: {
+          _metadata?: Json
+          _referrer?: string | null
+          _short_code: string
+          _user_agent?: string | null
+        }
+        Returns: {
+          destination_url: string
+        }[]
+      }
       user_owns_advertiser: {
         Args: { _advertiser_id: string; _user_id: string }
         Returns: boolean
