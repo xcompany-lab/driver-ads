@@ -329,56 +329,71 @@ export type Database = {
       campaign_qr_codes: {
         Row: {
           advertiser_id: string
+          assignment_id: string | null
           campaign_id: string
           created_at: string
           created_by: string | null
           destination_type: Database["public"]["Enums"]["qr_destination_type"]
           destination_url: string
+          driver_id: string | null
           final_image_url: string | null
           final_pdf_url: string | null
           generated_at: string | null
           id: string
           is_active: boolean
+          kit_label: string | null
           landing_page_url: string | null
           qr_position: Json
+          qr_scope: string
           short_code: string
           updated_at: string
+          vehicle_id: string | null
           whatsapp_phone: string | null
         }
         Insert: {
           advertiser_id: string
+          assignment_id?: string | null
           campaign_id: string
           created_at?: string
           created_by?: string | null
           destination_type: Database["public"]["Enums"]["qr_destination_type"]
           destination_url: string
+          driver_id?: string | null
           final_image_url?: string | null
           final_pdf_url?: string | null
           generated_at?: string | null
           id?: string
           is_active?: boolean
+          kit_label?: string | null
           landing_page_url?: string | null
           qr_position?: Json
+          qr_scope?: string
           short_code?: string
           updated_at?: string
+          vehicle_id?: string | null
           whatsapp_phone?: string | null
         }
         Update: {
           advertiser_id?: string
+          assignment_id?: string | null
           campaign_id?: string
           created_at?: string
           created_by?: string | null
           destination_type?: Database["public"]["Enums"]["qr_destination_type"]
           destination_url?: string
+          driver_id?: string | null
           final_image_url?: string | null
           final_pdf_url?: string | null
           generated_at?: string | null
           id?: string
           is_active?: boolean
+          kit_label?: string | null
           landing_page_url?: string | null
           qr_position?: Json
+          qr_scope?: string
           short_code?: string
           updated_at?: string
+          vehicle_id?: string | null
           whatsapp_phone?: string | null
         }
         Relationships: [
@@ -392,8 +407,29 @@ export type Database = {
           {
             foreignKeyName: "campaign_qr_codes_campaign_id_fkey"
             columns: ["campaign_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "campaign_driver_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -401,36 +437,102 @@ export type Database = {
       campaign_qr_scans: {
         Row: {
           advertiser_id: string
+          approx_confidence: number | null
+          approx_latitude: number | null
+          approx_longitude: number | null
+          approx_radius_m: number | null
+          approx_source: string | null
+          assignment_id: string | null
+          browser_name: string | null
           campaign_id: string
+          city: string | null
+          country: string | null
+          destination_url: string | null
+          device_type: string | null
+          driver_id: string | null
+          geo_source: string | null
           id: string
           ip_hash: string | null
+          latitude: number | null
+          location_candidate_count: number
+          location_processed_at: string | null
+          longitude: number | null
           metadata: Json
+          os_name: string | null
+          processed_at: string
           qr_code_id: string
           referrer: string | null
+          region: string | null
           scanned_at: string
+          scan_key: string | null
           user_agent: string | null
+          vehicle_id: string | null
         }
         Insert: {
           advertiser_id: string
+          approx_confidence?: number | null
+          approx_latitude?: number | null
+          approx_longitude?: number | null
+          approx_radius_m?: number | null
+          approx_source?: string | null
+          assignment_id?: string | null
+          browser_name?: string | null
           campaign_id: string
+          city?: string | null
+          country?: string | null
+          destination_url?: string | null
+          device_type?: string | null
+          driver_id?: string | null
+          geo_source?: string | null
           id?: string
           ip_hash?: string | null
+          latitude?: number | null
+          location_candidate_count?: number
+          location_processed_at?: string | null
+          longitude?: number | null
           metadata?: Json
+          os_name?: string | null
+          processed_at?: string
           qr_code_id: string
           referrer?: string | null
+          region?: string | null
           scanned_at?: string
+          scan_key?: string | null
           user_agent?: string | null
+          vehicle_id?: string | null
         }
         Update: {
           advertiser_id?: string
+          approx_confidence?: number | null
+          approx_latitude?: number | null
+          approx_longitude?: number | null
+          approx_radius_m?: number | null
+          approx_source?: string | null
+          assignment_id?: string | null
+          browser_name?: string | null
           campaign_id?: string
+          city?: string | null
+          country?: string | null
+          destination_url?: string | null
+          device_type?: string | null
+          driver_id?: string | null
+          geo_source?: string | null
           id?: string
           ip_hash?: string | null
+          latitude?: number | null
+          location_candidate_count?: number
+          location_processed_at?: string | null
+          longitude?: number | null
           metadata?: Json
+          os_name?: string | null
+          processed_at?: string
           qr_code_id?: string
           referrer?: string | null
+          region?: string | null
           scanned_at?: string
+          scan_key?: string | null
           user_agent?: string | null
+          vehicle_id?: string | null
         }
         Relationships: [
           {

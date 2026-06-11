@@ -67,9 +67,31 @@ export async function getCampaignQrCode(campaignId: string): Promise<CampaignQrC
     .from("campaign_qr_codes")
     .select("*")
     .eq("campaign_id", campaignId)
+    .is("assignment_id", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
   return data ?? null;
+}
+
+export async function listAssignmentQrCodes(campaignId: string): Promise<CampaignQrCode[]> {
+  const { data, error } = await supabase
+    .from("campaign_qr_codes")
+    .select("*")
+    .eq("campaign_id", campaignId)
+    .not("assignment_id", "is", null)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function ensureAssignmentQrCode(assignmentId: string): Promise<CampaignQrCode> {
+  const { data, error } = await (supabase.rpc as any)("ensure_assignment_qr_code", {
+    _assignment_id: assignmentId,
+  });
+  if (error) throw error;
+  return data as CampaignQrCode;
 }
 
 export async function upsertCampaignQrCode(input: {
@@ -97,11 +119,22 @@ export async function upsertCampaignQrCode(input: {
     created_by: input.createdBy ?? null,
   };
 
-  const { data, error } = await supabase
-    .from("campaign_qr_codes")
-    .upsert(payload, { onConflict: "campaign_id" })
-    .select()
-    .single();
+  const existing = await getCampaignQrCode(input.campaignId);
+
+  const query = existing
+    ? supabase
+        .from("campaign_qr_codes")
+        .update(payload)
+        .eq("id", existing.id)
+        .select()
+        .single()
+    : supabase
+        .from("campaign_qr_codes")
+        .insert(payload)
+        .select()
+        .single();
+
+  const { data, error } = await query;
   if (error) throw error;
   return data;
 }
@@ -149,6 +182,7 @@ function extFromType(contentType: string) {
 export async function uploadGeneratedQrAsset(input: {
   advertiserId: string;
   campaignId: string;
+  assignmentId?: string | null;
   blob: Blob;
   contentType: string;
 }) {
@@ -156,7 +190,8 @@ export async function uploadGeneratedQrAsset(input: {
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID()
       : `${Date.now()}`;
-  const path = `${input.advertiserId}/generated/${input.campaignId}/${unique}.${extFromType(input.contentType)}`;
+  const scope = input.assignmentId ? `assignments/${input.assignmentId}` : "campaign";
+  const path = `${input.advertiserId}/generated/${input.campaignId}/${scope}/${unique}.${extFromType(input.contentType)}`;
   const { error } = await supabase.storage.from(GENERATED_ART_BUCKET).upload(path, input.blob, {
     upsert: true,
     contentType: input.contentType,

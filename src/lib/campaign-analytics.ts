@@ -19,7 +19,25 @@ export interface QrAnalytics {
     browser_name: string;
     os_name: string;
     referrer: string | null;
+    approx_source?: string | null;
+    approx_radius_m?: number | null;
+    approx_confidence?: number | null;
+    vehicle_label?: string | null;
+    driver_name?: string | null;
   }>;
+  approx_locations: QrApproxLocation[];
+}
+
+export interface QrApproxLocation {
+  scanned_at: string;
+  lat: number;
+  lng: number;
+  radius_m: number;
+  confidence: number | null;
+  source: "driver_track_crossref" | "geoip_fallback" | "unavailable" | string;
+  device_type: string;
+  vehicle_label: string | null;
+  driver_name: string | null;
 }
 
 export interface DriverTrackingAnalytics {
@@ -82,6 +100,21 @@ function normalizeQrAnalytics(value: any): QrAnalytics {
     by_city: Array.isArray(value?.by_city) ? value.by_city : [],
     by_device: Array.isArray(value?.by_device) ? value.by_device : [],
     latest_scans: Array.isArray(value?.latest_scans) ? value.latest_scans : [],
+    approx_locations: Array.isArray(value?.approx_locations)
+      ? value.approx_locations
+          .map((item: any) => ({
+            scanned_at: String(item?.scanned_at ?? ""),
+            lat: Number(item?.lat),
+            lng: Number(item?.lng),
+            radius_m: Number(item?.radius_m ?? 0),
+            confidence: item?.confidence === null || item?.confidence === undefined ? null : Number(item.confidence),
+            source: String(item?.source ?? "unavailable"),
+            device_type: String(item?.device_type ?? "Desconhecido"),
+            vehicle_label: item?.vehicle_label ?? null,
+            driver_name: item?.driver_name ?? null,
+          }))
+          .filter((item: QrApproxLocation) => Number.isFinite(item.lat) && Number.isFinite(item.lng))
+      : [],
   };
 }
 

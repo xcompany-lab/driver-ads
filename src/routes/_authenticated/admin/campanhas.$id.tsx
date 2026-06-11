@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Check, X, Pause, Play, UserPlus, Trash2, Ban } from "lucide-react";
+import { ArrowLeft, Check, X, Pause, Play, UserPlus, Trash2, Ban, QrCode } from "lucide-react";
 import {
   getCampaignAdmin,
   listAssignmentsForCampaign,
@@ -31,6 +31,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { QrArtExporter } from "@/components/campaigns/QrArtExporter";
+import {
+  ensureAssignmentQrCode,
+  getCampaignQrCode,
+  listAssignmentQrCodes,
+  type CampaignQrCode,
+} from "@/lib/trackable-qr";
 
 export const Route = createFileRoute("/_authenticated/admin/campanhas/$id")({
   component: CampaignDetailAdmin,
@@ -52,6 +59,16 @@ function CampaignDetailAdmin() {
   const { data: assignments } = useQuery({
     queryKey: ["admin", "campaign", id, "assignments"],
     queryFn: () => listAssignmentsForCampaign(id),
+  });
+
+  const { data: baseQr } = useQuery({
+    queryKey: ["admin", "campaign", id, "base-qr"],
+    queryFn: () => getCampaignQrCode(id),
+  });
+
+  const { data: assignmentQrs } = useQuery({
+    queryKey: ["admin", "campaign", id, "assignment-qrs"],
+    queryFn: () => listAssignmentQrCodes(id),
   });
 
   const statusMut = useMutation({
@@ -233,6 +250,43 @@ function CampaignDetailAdmin() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="inline-flex items-center gap-2 text-base">
+            <QrCode className="h-4 w-4 text-primary" /> Kits de impressao com QR
+          </CardTitle>
+          <CardDescription>
+            Gere a arte final individual de cada motorista/veiculo vinculado a esta campanha.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!baseQr ? (
+            <p className="text-sm text-muted-foreground">
+              Configure o destino do QR no cadastro da campanha do anunciante antes de gerar kits por motorista.
+            </p>
+          ) : activeAssignments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Vincule ao menos um motorista para gerar os kits.</p>
+          ) : (
+            <div className="space-y-4">
+              {activeAssignments.map((assignment) => {
+                const qr = (assignmentQrs ?? []).find(
+                  (item) =>
+                    (item as CampaignQrCode & { assignment_id?: string | null }).assignment_id === assignment.id,
+                );
+                return (
+                  <AssignmentQrKit
+                    key={assignment.id}
+                    campaign={campaign}
+                    assignment={assignment}
+                    qrCode={qr ?? null}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -242,6 +296,56 @@ function Info({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-0.5">{value}</p>
+    </div>
+  );
+}
+
+function AssignmentQrKit({
+  campaign,
+  assignment,
+  qrCode,
+}: {
+  campaign: NonNullable<Awaited<ReturnType<typeof getCampaignAdmin>>>;
+  assignment: Awaited<ReturnType<typeof listAssignmentsForCampaign>>[number];
+  qrCode: CampaignQrCode | null;
+}) {
+  const qc = useQueryClient();
+  const ensure = useMutation({
+    mutationFn: () => ensureAssignmentQrCode(assignment.id),
+    onSuccess: () => {
+      toast.success("QR individual gerado");
+      qc.invalidateQueries({ queryKey: ["admin", "campaign", campaign.id, "assignment-qrs"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{assignment.driver?.full_name ?? "Motorista"}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {assignment.vehicle?.brand ?? ""} {assignment.vehicle?.model} · {assignment.vehicle?.plate}
+          </p>
+        </div>
+        {!qrCode && (
+          <Button size="sm" onClick={() => ensure.mutate()} disabled={ensure.isPending}>
+            {ensure.isPending ? "Gerando..." : "Gerar QR do kit"}
+          </Button>
+        )}
+      </div>
+      {qrCode ? (
+        <QrArtExporter
+          campaign={campaign}
+          qrCode={qrCode}
+          artUrl={campaign.art_url}
+          onGenerated={() => qc.invalidateQueries({ queryKey: ["admin", "campaign", campaign.id, "assignment-qrs"] })}
+        />
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Este vinculo ainda nao tem QR individual. Gere antes de enviar a arte para impressao.
+        </p>
+      )}
     </div>
   );
 }

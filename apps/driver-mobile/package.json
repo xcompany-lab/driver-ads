@@ -1,0 +1,27 @@
+{
+  "name": "driver-ads-driver-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@supabase/supabase-js": "^2.108.1",
+    "expo": "56.0.11",
+    "expo-location": "56.0.17",
+    "expo-status-bar": "~3.0.9",
+    "expo-task-manager": "56.0.18",
+    "react": "19.2.0",
+    "react-native": "0.82.1",
+    "react-native-url-polyfill": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.0",
+    "typescript": "^5.8.3"
+  }
+}

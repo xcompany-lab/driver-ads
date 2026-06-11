@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
   const { data: qr, error: qrError } = await supabase
     .from("campaign_qr_codes")
-    .select("id,campaign_id,advertiser_id,destination_url,is_active")
+    .select("id,campaign_id,advertiser_id,assignment_id,driver_id,vehicle_id,destination_url,is_active")
     .eq("short_code", shortCode)
     .eq("is_active", true)
     .maybeSingle();
@@ -76,10 +76,13 @@ Deno.serve(async (req) => {
   const parsedUa = parseUserAgent(userAgent);
   const geo = await resolveGeo(ip);
 
-  const { error: insertError } = await supabase.from("campaign_qr_scans").insert({
+  const { data: scan, error: insertError } = await supabase.from("campaign_qr_scans").insert({
     qr_code_id: qr.id,
     campaign_id: qr.campaign_id,
     advertiser_id: qr.advertiser_id,
+    assignment_id: qr.assignment_id,
+    driver_id: qr.driver_id,
+    vehicle_id: qr.vehicle_id,
     user_agent: userAgent || null,
     referrer: referrer || null,
     ip_hash: ipHash,
@@ -102,11 +105,19 @@ Deno.serve(async (req) => {
       geo_provider: geo.provider,
       geo_source: geo.source,
     },
-  });
+  }).select("id").single();
 
   if (insertError) {
     console.error("[track-qr-scan] Scan insert failed", insertError);
     return json({ error: "scan_insert_failed" }, 500);
+  }
+
+  if (scan?.id) {
+    runAfterResponse(
+      supabase.rpc("process_qr_scan_location", { _scan_id: scan.id }).then(({ error }) => {
+        if (error) console.error("[track-qr-scan] Location cross-reference failed", error);
+      }),
+    );
   }
 
   return json({ destination_url: qr.destination_url });
@@ -298,6 +309,19 @@ async function resolveGeoViaIpApi(ip: string): Promise<GeoInfo> {
 
 function unavailableGeo(source: string, provider: string | null): GeoInfo {
   return { city: null, region: null, country: null, latitude: null, longitude: null, source, provider };
+}
+
+function runAfterResponse(promise: Promise<unknown>) {
+  const runtime = globalThis as typeof globalThis & {
+    EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void };
+  };
+
+  if (typeof runtime.EdgeRuntime?.waitUntil === "function") {
+    runtime.EdgeRuntime.waitUntil(promise);
+    return;
+  }
+
+  promise.catch((error) => console.error("[track-qr-scan] Background task failed", error));
 }
 
 function isPrivateIp(ip: string) {

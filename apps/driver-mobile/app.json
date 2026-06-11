@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Driver Ads Motorista",
+    "slug": "driver-ads-motorista",
+    "scheme": "driveradsdriver",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "br.com.driverads.motorista",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "br.com.driverads.motorista",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "locationWhenInUsePermission": "Permita que a Driver Ads acesse sua localizacao durante o uso para medir a circulacao das campanhas.",
+          "locationAlwaysAndWhenInUsePermission": "Permita que a Driver Ads acesse sua localizacao em segundo plano enquanto voce estiver rodando campanhas ativas."
+        }
+      ]
+    ]
+  }
+}

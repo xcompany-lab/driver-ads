@@ -129,6 +129,9 @@ export function QrArtExporter({ campaign, qrCode, artUrl, onGenerated }: Props) 
   const [busy, setBusy] = useState<"png" | "pdf" | null>(null);
   const qrUrl = useMemo(() => getPublicQrUrl(qrCode.short_code), [qrCode.short_code]);
   const isPdfSource = Boolean(artUrl?.match(/\.pdf($|\?)/i));
+  const assignmentId = (qrCode as CampaignQrCode & { assignment_id?: string | null }).assignment_id ?? null;
+  const kitLabel = (qrCode as CampaignQrCode & { kit_label?: string | null }).kit_label;
+  const filenameBase = `${campaign.name}${kitLabel ? `-${kitLabel}` : ""}`.replace(/[^\w.-]+/g, "-");
 
   async function exportPng() {
     if (!artUrl || isPdfSource) return;
@@ -143,6 +146,7 @@ export function QrArtExporter({ campaign, qrCode, artUrl, onGenerated }: Props) 
       const path = await uploadGeneratedQrAsset({
         advertiserId: campaign.advertiser_id,
         campaignId: campaign.id,
+        assignmentId,
         blob,
         contentType: "image/png",
       });
@@ -150,7 +154,7 @@ export function QrArtExporter({ campaign, qrCode, artUrl, onGenerated }: Props) 
         final_image_url: path,
         generated_at: new Date().toISOString(),
       });
-      downloadBlob(blob, `${campaign.name}-qr.png`);
+      downloadBlob(blob, `${filenameBase}-qr.png`);
       toast.success("Arte com QR gerada em PNG");
       onGenerated?.();
     } catch (err) {
@@ -182,6 +186,7 @@ export function QrArtExporter({ campaign, qrCode, artUrl, onGenerated }: Props) 
       const path = await uploadGeneratedQrAsset({
         advertiserId: campaign.advertiser_id,
         campaignId: campaign.id,
+        assignmentId,
         blob,
         contentType: "application/pdf",
       });
@@ -189,7 +194,7 @@ export function QrArtExporter({ campaign, qrCode, artUrl, onGenerated }: Props) 
         final_pdf_url: path,
         generated_at: new Date().toISOString(),
       });
-      downloadBlob(blob, `${campaign.name}-qr.pdf`);
+      downloadBlob(blob, `${filenameBase}-qr.pdf`);
       toast.success("PDF com QR gerado");
       onGenerated?.();
     } catch (err) {
@@ -206,6 +211,7 @@ export function QrArtExporter({ campaign, qrCode, artUrl, onGenerated }: Props) 
           <p className="inline-flex items-center gap-2 text-sm font-semibold">
             <QrCode className="h-4 w-4 text-primary" /> Arte final com QR rastreavel
           </p>
+          {kitLabel && <p className="text-xs font-medium text-muted-foreground">{kitLabel}</p>}
           <p className="break-all text-xs text-muted-foreground">{qrUrl}</p>
         </div>
         <div className="flex flex-wrap gap-2">

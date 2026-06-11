@@ -11,6 +11,7 @@ import {
 } from "@/lib/campaign-analytics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ApproxLocationMap } from "@/components/campaigns/ApproxLocationMap";
 
 export function CampaignAnalyticsPanel({ campaignId }: { campaignId: string }) {
   const { data: qr, isLoading: loadingQr } = useQuery({
@@ -56,6 +57,7 @@ export function CampaignAnalyticsPanel({ campaignId }: { campaignId: string }) {
 
 function QrBlock({ data }: { data?: QrAnalytics }) {
   const total = data?.summary.total_scans ?? 0;
+  const locations = data?.approx_locations ?? [];
   return (
     <section className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -67,6 +69,19 @@ function QrBlock({ data }: { data?: QrAnalytics }) {
           value={data?.summary.last_scan_at ? shortDate(data.summary.last_scan_at) : "-"}
         />
         <Metric icon={Smartphone} label="Dispositivos" value={`${data?.by_device.length ?? 0} tipos`} />
+      </div>
+
+      <div className="space-y-2 rounded-md border p-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold">Mapa aproximado dos scans</p>
+            <p className="text-xs text-muted-foreground">
+              Os circulos representam area provavel, cruzada com GPS do veiculo quando disponivel.
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">{locations.length} scan(s) com area no mapa</p>
+        </div>
+        <ApproxLocationMap locations={locations} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

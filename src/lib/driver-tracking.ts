@@ -81,7 +81,7 @@ export function shouldSendPoint(
   if (!last) return true;
   const elapsed = now - last.sentAt;
   const distance = haversineMeters(last.lat, last.lng, next.lat, next.lng);
-  return elapsed >= 30_000 || distance >= 50;
+  return elapsed >= 300_000 || distance >= 150;
 }
 
 export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
