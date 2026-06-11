@@ -23,6 +23,7 @@ type GeoInfo = {
   latitude: number | null;
   longitude: number | null;
   source: string;
+  provider: string | null;
 };
 
 const json = (body: unknown, status = 200) =>
@@ -95,8 +96,11 @@ Deno.serve(async (req) => {
     destination_url: qr.destination_url,
     metadata: {
       ...(input?.metadata ?? {}),
+      client_source: typeof input?.metadata?.source === "string" ? input.metadata.source : null,
       source: "track_qr_scan_edge",
       has_ip: Boolean(ip),
+      geo_provider: geo.provider,
+      geo_source: geo.source,
     },
   });
 
@@ -129,7 +133,27 @@ function getClientIp(req: Request) {
     forwarded,
   ];
   const ip = candidates.find((value) => value && value.trim());
-  return ip?.trim().replace(/^"|"$/g, "") ?? null;
+  return normalizeClientIp(ip);
+}
+
+function normalizeClientIp(value: string | null | undefined) {
+  if (!value) return null;
+
+  let ip = value.trim().replace(/^"|"$/g, "");
+  if (!ip) return null;
+
+  if (ip.startsWith("[") && ip.includes("]")) {
+    return ip.slice(1, ip.indexOf("]"));
+  }
+
+  const ipv4WithPort = ip.match(/^(\d{1,3}(?:\.\d{1,3}){3})(?::\d+)?$/);
+  if (ipv4WithPort) return ipv4WithPort[1];
+
+  if (ip.startsWith("::ffff:")) {
+    return ip.slice("::ffff:".length);
+  }
+
+  return ip;
 }
 
 async function sha256(value: string) {
@@ -167,39 +191,113 @@ function parseUserAgent(userAgent: string) {
 
 async function resolveGeo(ip: string | null): Promise<GeoInfo> {
   if (!ip || isPrivateIp(ip)) {
-    return unavailableGeo("unavailable");
+    return unavailableGeo("unavailable", null);
   }
 
   const provider = (Deno.env.get("QR_GEOIP_PROVIDER") ?? "ipinfo").toLowerCase();
   const token = Deno.env.get("QR_GEOIP_TOKEN") ?? "";
 
   if (provider === "ipinfo" && token) {
-    try {
-      const res = await fetch(`https://ipinfo.io/${encodeURIComponent(ip)}/json?token=${encodeURIComponent(token)}`, {
-        headers: { Accept: "application/json" },
-      });
-      if (!res.ok) return unavailableGeo("ipinfo_error");
-      const data = await res.json() as { city?: string; region?: string; country?: string; loc?: string };
-      const [latRaw, lngRaw] = String(data.loc ?? "").split(",");
-      return {
-        city: data.city ?? null,
-        region: data.region ?? null,
-        country: data.country ?? null,
-        latitude: Number.isFinite(Number(latRaw)) ? Number(latRaw) : null,
-        longitude: Number.isFinite(Number(lngRaw)) ? Number(lngRaw) : null,
-        source: "ipinfo",
-      };
-    } catch (error) {
-      console.warn("[track-qr-scan] GeoIP lookup failed", error);
-      return unavailableGeo("ipinfo_exception");
+    const geo = await resolveGeoViaIpInfo(ip, token);
+    if (geo.source === "ipinfo") return geo;
+  }
+
+  const fallbackProviders = provider === "ipapi" ? ["ipapi", "ipwhois"] : ["ipwhois", "ipapi"];
+  for (const fallbackProvider of fallbackProviders) {
+    const geo = fallbackProvider === "ipwhois" ? await resolveGeoViaIpWhoIs(ip) : await resolveGeoViaIpApi(ip);
+    if (geo.city || geo.region || geo.country || geo.latitude || geo.longitude) {
+      return geo;
     }
   }
 
-  return unavailableGeo("unavailable");
+  return unavailableGeo("unavailable", provider);
 }
 
-function unavailableGeo(source: string): GeoInfo {
-  return { city: null, region: null, country: null, latitude: null, longitude: null, source };
+async function resolveGeoViaIpInfo(ip: string, token: string): Promise<GeoInfo> {
+  try {
+    const res = await fetch(`https://ipinfo.io/${encodeURIComponent(ip)}/json?token=${encodeURIComponent(token)}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return unavailableGeo("ipinfo_error", "ipinfo");
+    const data = await res.json() as { city?: string; region?: string; country?: string; loc?: string };
+    const [latRaw, lngRaw] = String(data.loc ?? "").split(",");
+    return {
+      city: data.city ?? null,
+      region: data.region ?? null,
+      country: data.country ?? null,
+      latitude: Number.isFinite(Number(latRaw)) ? Number(latRaw) : null,
+      longitude: Number.isFinite(Number(lngRaw)) ? Number(lngRaw) : null,
+      source: "ipinfo",
+      provider: "ipinfo",
+    };
+  } catch (error) {
+    console.warn("[track-qr-scan] ipinfo lookup failed", error);
+    return unavailableGeo("ipinfo_exception", "ipinfo");
+  }
+}
+
+async function resolveGeoViaIpWhoIs(ip: string): Promise<GeoInfo> {
+  try {
+    const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return unavailableGeo("ipwhois_error", "ipwhois");
+    const data = await res.json() as {
+      success?: boolean;
+      city?: string;
+      region?: string;
+      country_code?: string;
+      latitude?: number;
+      longitude?: number;
+    };
+    if (data.success === false) return unavailableGeo("ipwhois_not_found", "ipwhois");
+    return {
+      city: data.city ?? null,
+      region: data.region ?? null,
+      country: data.country_code ?? null,
+      latitude: Number.isFinite(Number(data.latitude)) ? Number(data.latitude) : null,
+      longitude: Number.isFinite(Number(data.longitude)) ? Number(data.longitude) : null,
+      source: "ipwhois",
+      provider: "ipwhois",
+    };
+  } catch (error) {
+    console.warn("[track-qr-scan] ipwhois lookup failed", error);
+    return unavailableGeo("ipwhois_exception", "ipwhois");
+  }
+}
+
+async function resolveGeoViaIpApi(ip: string): Promise<GeoInfo> {
+  try {
+    const res = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return unavailableGeo("ipapi_error", "ipapi");
+    const data = await res.json() as {
+      error?: boolean;
+      city?: string;
+      region?: string;
+      country_code?: string;
+      latitude?: number;
+      longitude?: number;
+    };
+    if (data.error) return unavailableGeo("ipapi_not_found", "ipapi");
+    return {
+      city: data.city ?? null,
+      region: data.region ?? null,
+      country: data.country_code ?? null,
+      latitude: Number.isFinite(Number(data.latitude)) ? Number(data.latitude) : null,
+      longitude: Number.isFinite(Number(data.longitude)) ? Number(data.longitude) : null,
+      source: "ipapi",
+      provider: "ipapi",
+    };
+  } catch (error) {
+    console.warn("[track-qr-scan] ipapi lookup failed", error);
+    return unavailableGeo("ipapi_exception", "ipapi");
+  }
+}
+
+function unavailableGeo(source: string, provider: string | null): GeoInfo {
+  return { city: null, region: null, country: null, latitude: null, longitude: null, source, provider };
 }
 
 function isPrivateIp(ip: string) {
