@@ -6,19 +6,24 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "br.com.driverads.motorista",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location"
+        ],
+        "NSPhotoLibraryUsageDescription": "A Driver Ads usa suas fotos para enviar documentos, CRLV, avatar e comprovantes de instalacao.",
+        "NSCameraUsageDescription": "A Driver Ads usa a camera para registrar documentos e comprovantes de instalacao quando voce escolher tirar uma foto."
+      }
     },
     "android": {
       "package": "br.com.driverads.motorista",
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -31,7 +36,15 @@
           "locationWhenInUsePermission": "Permita que a Driver Ads acesse sua localizacao durante o uso para medir a circulacao das campanhas.",
           "locationAlwaysAndWhenInUsePermission": "Permita que a Driver Ads acesse sua localizacao em segundo plano enquanto voce estiver rodando campanhas ativas."
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "A Driver Ads usa suas fotos para enviar documentos, CRLV, avatar e comprovantes de instalacao.",
+          "cameraPermission": "A Driver Ads usa a camera para registrar documentos e comprovantes de instalacao quando voce escolher tirar uma foto."
+        }
+      ],
+      "expo-status-bar"
     ]
   }
 }
