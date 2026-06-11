@@ -31,85 +31,48 @@ export interface SignUpDriverInput {
   city: string;
 }
 
-async function baseSignUp(
-  email: string,
-  password: string,
-  metadata: Record<string, unknown>,
-) {
-  const PUBLIC_SITE_URL = "https://driverads.com.br";
-  const origin =
-    typeof window !== "undefined" && !/localhost|127\.0\.0\.1|lovable\.app/i.test(window.location.origin)
-      ? window.location.origin
-      : PUBLIC_SITE_URL;
-  const redirectTo = `${origin}/login`;
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: redirectTo,
-      data: metadata,
-    },
-  });
-  if (error) throw error;
-  return { user: data.user, session: data.session };
-}
+type PublicSignUpResult = {
+  error?: string;
+  message?: string;
+};
 
-async function assignRole(role: AppRole) {
-  const { error } = await supabase.rpc("assign_self_role", { _role: role });
-  if (error) throw error;
+async function publicSignUp(
+  role: AppRole,
+  input: SignUpAdvertiserInput | SignUpDriverInput,
+) {
+  const { data, error } = await supabase.functions.invoke<PublicSignUpResult>("public-signup", {
+    body: { role, ...input },
+  });
+
+  if (error) {
+    const payload = await readFunctionError(error);
+    throw new Error(payload?.message || data?.message || error.message || "Nao foi possivel criar a conta.");
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: input.email,
+    password: input.password,
+  });
+  if (signInError) throw signInError;
 }
 
 export async function signUpAdvertiser(input: SignUpAdvertiserInput) {
-  const res = await baseSignUp(input.email, input.password, {
-    account_type: "advertiser",
-    full_name: input.full_name,
-    phone: input.phone,
-    company_name: input.company_name,
-    cnpj: input.cnpj,
-    city: input.city,
-    segment: input.segment ?? "",
-  });
-  if (!res.session) {
-    // Email confirmation required — DB trigger finalizes role + advertiser row on confirm
-    return { needsEmailConfirmation: true as const };
-  }
-  await assignRole("advertiser");
-  const { error } = await supabase.from("advertisers").insert({
-    user_id: res.user!.id,
-    company_name: input.company_name,
-    cnpj: input.cnpj,
-    responsible: input.full_name,
-    email: input.email,
-    phone: input.phone,
-    city: input.city,
-    segment: input.segment ?? null,
-  });
-  if (error && error.code !== "23505") throw error;
+  await publicSignUp("advertiser", input);
   return { needsEmailConfirmation: false as const };
 }
 
 export async function signUpDriver(input: SignUpDriverInput) {
-  const res = await baseSignUp(input.email, input.password, {
-    account_type: "driver",
-    full_name: input.full_name,
-    phone: input.phone,
-    cpf: input.cpf,
-    city: input.city,
-  });
-  if (!res.session) {
-    // Email confirmation required — DB trigger finalizes role + driver row on confirm
-    return { needsEmailConfirmation: true as const };
-  }
-  await assignRole("driver");
-  const { error } = await supabase.from("drivers").insert({
-    user_id: res.user!.id,
-    full_name: input.full_name,
-    cpf: input.cpf,
-    email: input.email,
-    phone: input.phone,
-    city: input.city,
-    regions: [],
-  });
-  if (error && error.code !== "23505") throw error;
+  await publicSignUp("driver", input);
   return { needsEmailConfirmation: false as const };
+}
+
+async function readFunctionError(error: unknown): Promise<PublicSignUpResult | null> {
+  const response = (error as { context?: Response })?.context;
+  if (!response || typeof response.json !== "function") return null;
+
+  try {
+    return (await response.json()) as PublicSignUpResult;
+  } catch {
+    return null;
+  }
 }

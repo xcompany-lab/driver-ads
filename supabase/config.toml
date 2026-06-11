@@ -24,5 +24,7 @@ verify_jwt = true
 [functions.pagou-refund-transaction]
 verify_jwt = true
 
+[functions.public-signup]
+verify_jwt = false
 
 
