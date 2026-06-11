@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, ArrowRight, Calendar, MapPin } from "lucide-react";
+import { Search, ArrowRight, Calendar, MapPin, Plus } from "lucide-react";
 import { listCampaignsAdmin, type CampaignStatus } from "@/lib/campaigns-admin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin/campanhas/")({
   component: CampaignsAdmin,
@@ -40,9 +41,16 @@ function CampaignsAdmin() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
         <h1 className="text-3xl font-bold tracking-tight">Campanhas</h1>
         <p className="mt-1 text-muted-foreground">Aprove, monitore e vincule motoristas às campanhas.</p>
+        </div>
+        <Button asChild variant="hero">
+          <Link to="/admin/campanhas/nova">
+            <Plus className="mr-2 h-4 w-4" /> Nova campanha
+          </Link>
+        </Button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">

@@ -19,6 +19,17 @@ export interface AssignmentDetailed extends Assignment {
   vehicle?: { id: string; plate: string; model: string; brand: string | null } | null;
 }
 
+export async function createCampaignAdmin(payload: Database["public"]["Tables"]["campaigns"]["Insert"]) {
+  const { data: userData } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("campaigns")
+    .insert({ ...payload, created_by: userData.user?.id ?? null })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function listCampaignsAdmin(opts: { search?: string; status?: CampaignStatus | "all" } = {}) {
   let q = supabase
     .from("campaigns")
