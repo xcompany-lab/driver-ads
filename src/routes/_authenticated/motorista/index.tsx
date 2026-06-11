@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { DriverTrackingCard } from "@/components/driver/DriverTrackingCard";
 import { DRIVER_DOC_LABELS, DRIVER_DOC_ORDER, type DriverDocKey } from "@/lib/driver-documents";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -200,6 +201,8 @@ function DriverHome() {
           </CardHeader>
         </Card>
       )}
+
+      {canAct && <DriverTrackingCard assignments={assignments ?? []} />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashCard to="/motorista/campanhas" icon={Megaphone} title="Campanhas" desc={`${active} ativa(s) · ${invites} convite(s)`} disabled={!canAct} />

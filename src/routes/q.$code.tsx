@@ -24,13 +24,15 @@ function TrackableQrRedirect() {
         return;
       }
 
-      const { data, error } = await supabase.rpc("track_campaign_qr_scan", {
-        _short_code: cleanCode,
-        _user_agent: navigator.userAgent,
-        _referrer: document.referrer || null,
-        _metadata: {
-          source: "public_qr_redirect",
-          scanned_at_client: new Date().toISOString(),
+      const { data, error } = await supabase.functions.invoke("track-qr-scan", {
+        body: {
+          short_code: cleanCode,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer || null,
+          metadata: {
+            source: "public_qr_redirect",
+            scanned_at_client: new Date().toISOString(),
+          },
         },
       });
 
@@ -42,7 +44,10 @@ function TrackableQrRedirect() {
         return;
       }
 
-      const nextUrl = Array.isArray(data) ? data[0]?.destination_url : null;
+      const nextUrl =
+        data && typeof data === "object" && "destination_url" in data
+          ? String((data as { destination_url?: string }).destination_url ?? "")
+          : "";
       if (!nextUrl) {
         setErrorMessage("QR Code nao encontrado ou inativo.");
         return;

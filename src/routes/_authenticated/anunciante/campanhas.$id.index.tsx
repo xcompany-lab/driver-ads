@@ -17,6 +17,7 @@ import {
   type QrDestinationType,
 } from "@/lib/trackable-qr";
 import { QrArtExporter } from "@/components/campaigns/QrArtExporter";
+import { CampaignAnalyticsPanel } from "@/components/campaigns/CampaignAnalyticsPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -346,6 +347,8 @@ function AdvertiserCampaignDetail() {
           )}
         </CardContent>
       </Card>
+
+      <CampaignAnalyticsPanel campaignId={campaign.id} />
     </div>
   );
 }

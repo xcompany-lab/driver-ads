@@ -45,6 +45,7 @@ import { Route as AuthenticatedAdminFinanceiroRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminComprovacoesRouteImport } from './routes/_authenticated/admin/comprovacoes'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin/auditoria'
 import { Route as AuthenticatedAdminAnunciantesRouteImport } from './routes/_authenticated/admin/anunciantes'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin/analytics'
 import { Route as AuthenticatedAnuncianteCampanhasIndexRouteImport } from './routes/_authenticated/anunciante/campanhas.index'
 import { Route as AuthenticatedAdminCampanhasIndexRouteImport } from './routes/_authenticated/admin/campanhas.index'
 import { Route as AuthenticatedAnuncianteCampanhasNovaRouteImport } from './routes/_authenticated/anunciante/campanhas.nova'
@@ -252,6 +253,12 @@ const AuthenticatedAdminAnunciantesRoute =
     path: '/anunciantes',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAnuncianteCampanhasIndexRoute =
   AuthenticatedAnuncianteCampanhasIndexRouteImport.update({
     id: '/campanhas/',
@@ -305,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/q/$code': typeof QCodeRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
@@ -345,6 +353,7 @@ export interface FileRoutesByTo {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/q/$code': typeof QCodeRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
@@ -390,6 +399,7 @@ export interface FileRoutesById {
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/q/$code': typeof QCodeRoute
+  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/comprovacoes': typeof AuthenticatedAdminComprovacoesRoute
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/reset-password'
     | '/q/$code'
+    | '/admin/analytics'
     | '/admin/anunciantes'
     | '/admin/auditoria'
     | '/admin/comprovacoes'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/reset-password'
     | '/q/$code'
+    | '/admin/analytics'
     | '/admin/anunciantes'
     | '/admin/auditoria'
     | '/admin/comprovacoes'
@@ -519,6 +531,7 @@ export interface FileRouteTypes {
     | '/auth/motorista'
     | '/auth/reset-password'
     | '/q/$code'
+    | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/anunciantes'
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/comprovacoes'
@@ -819,6 +832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAnunciantesRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/analytics': {
+      id: '/_authenticated/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/anunciante/campanhas/': {
       id: '/_authenticated/anunciante/campanhas/'
       path: '/campanhas'
@@ -865,6 +885,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminAnunciantesRoute: typeof AuthenticatedAdminAnunciantesRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminComprovacoesRoute: typeof AuthenticatedAdminComprovacoesRoute
@@ -878,6 +899,7 @@ interface AuthenticatedAdminRouteRouteChildren {
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
+    AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
     AuthenticatedAdminAnunciantesRoute: AuthenticatedAdminAnunciantesRoute,
     AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
     AuthenticatedAdminComprovacoesRoute: AuthenticatedAdminComprovacoesRoute,
@@ -991,3 +1013,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
