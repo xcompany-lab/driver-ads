@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Upload } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Upload } from "lucide-react";
 import { useSession } from "@/hooks/useSession";
 import { getMyAdvertiser } from "@/lib/advertiser";
 import { createMyCampaign, uploadCampaignArt, updateMyCampaign } from "@/lib/campaigns";
+import { formatPlanPrice, listActiveCampaignPlans } from "@/lib/campaign-plans";
 import { upsertCampaignQrCode, type QrDestinationType } from "@/lib/trackable-qr";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ interface FormState {
   vehicles_qty: string;
   period_start: string;
   period_end: string;
-  plan_value: string;
+  plan_id: string;
   qr_destination_type: QrDestinationType;
   qr_whatsapp_phone: string;
   qr_landing_page_url: string;
@@ -41,7 +42,7 @@ const empty: FormState = {
   vehicles_qty: "1",
   period_start: "",
   period_end: "",
-  plan_value: "",
+  plan_id: "",
   qr_destination_type: "whatsapp",
   qr_whatsapp_phone: "",
   qr_landing_page_url: "",
@@ -60,9 +61,26 @@ function NewCampaignPage() {
     enabled: !!user,
   });
 
+  const { data: plans = [], isLoading: isLoadingPlans } = useQuery({
+    queryKey: ["active-campaign-plans"],
+    queryFn: listActiveCampaignPlans,
+  });
+
+  useEffect(() => {
+    if (!form.plan_id && plans[0]?.id) {
+      setForm((current) => ({ ...current, plan_id: plans[0].id }));
+    }
+  }, [form.plan_id, plans]);
+
+  const selectedPlan = useMemo(
+    () => plans.find((plan) => plan.id === form.plan_id) ?? null,
+    [form.plan_id, plans],
+  );
+
   const create = useMutation({
     mutationFn: async () => {
       if (!advertiser) throw new Error("Cadastro de empresa não encontrado");
+      if (!selectedPlan) throw new Error("Selecione um plano para a campanha.");
       const regions = form.regions
         .split(",")
         .map((s) => s.trim())
@@ -76,7 +94,8 @@ function NewCampaignPage() {
         vehicles_qty: Number(form.vehicles_qty || 1),
         period_start: form.period_start,
         period_end: form.period_end,
-        plan_value: Number(form.plan_value || 0),
+        plan_id: selectedPlan.id,
+        plan_value: selectedPlan.monthly_price_cents / 100,
         observations: form.observations.trim() || null,
       });
       if (art) {
@@ -129,7 +148,7 @@ function NewCampaignPage() {
     form.period_start &&
     form.period_end &&
     Number(form.vehicles_qty) > 0 &&
-    Number(form.plan_value) >= 0 &&
+    !!selectedPlan &&
     new Date(form.period_end) >= new Date(form.period_start) &&
     (form.qr_destination_type === "whatsapp"
       ? form.qr_whatsapp_phone.replace(/\D/g, "").length >= 10
@@ -231,17 +250,62 @@ function NewCampaignPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="plan_value">Valor do plano (R$) *</Label>
-            <Input
-              id="plan_value"
-              type="number"
-              min={0}
-              step={0.01}
-              value={form.plan_value}
-              onChange={(e) => setForm({ ...form, plan_value: e.target.value })}
-              placeholder="0.00"
-            />
+          <div className="space-y-3">
+            <div>
+              <Label>Plano da campanha *</Label>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Escolha o plano comercial que sera usado na cobranca da assinatura.
+              </p>
+            </div>
+            {isLoadingPlans ? (
+              <div className="rounded-lg border p-4 text-sm text-muted-foreground">Carregando planos...</div>
+            ) : plans.length === 0 ? (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                Nenhum plano ativo esta disponivel no momento. Entre em contato com a equipe Driver Ads.
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {plans.map((plan) => {
+                  const active = form.plan_id === plan.id;
+                  return (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => setForm({ ...form, plan_id: plan.id })}
+                      className={[
+                        "rounded-lg border p-4 text-left transition",
+                        active
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border bg-background hover:border-primary/60",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-foreground">{plan.name}</p>
+                          {plan.description && (
+                            <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+                          )}
+                        </div>
+                        {active && <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />}
+                      </div>
+                      <div className="mt-4 flex items-end justify-between gap-3">
+                        <p className="font-display text-2xl font-bold">{formatPlanPrice(plan)}</p>
+                        <p className="text-xs text-muted-foreground">/ mes</p>
+                      </div>
+                      {plan.driver_payout_cents > 0 && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Repasse previsto ao motorista:{" "}
+                          {(plan.driver_payout_cents / 100).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: plan.currency || "BRL",
+                          })}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
