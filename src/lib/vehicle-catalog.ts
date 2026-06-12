@@ -77,17 +77,16 @@ export function scoreMatch(nBrand: string, nModel: string, entry: VehicleModelIm
  * Resolve a melhor imagem do catálogo para uma marca/modelo.
  * Retorna o image_path da entrada vencedora ou o default (silhueta única).
  */
-export function resolveVehicleImagePath(
+/** Resolve a melhor entrada do catálogo (não-default) para uma marca/modelo, ou null. */
+export function resolveCatalogEntry(
   brand: string | null | undefined,
   model: string | null | undefined,
   catalog: VehicleModelImage[],
-): string | null {
-  const fallback = catalog.find((c) => c.is_default)?.image_path ?? null;
-  if (!catalog.length) return fallback;
-
+): VehicleModelImage | null {
+  if (!catalog.length) return null;
   const nBrand = normalizeVehicleText(brand);
   const nModel = normalizeVehicleText(model);
-  if (!nModel) return fallback;
+  if (!nModel) return null;
 
   let bestScore = -1;
   let bestEntry: VehicleModelImage | null = null;
@@ -99,8 +98,25 @@ export function resolveVehicleImagePath(
       bestEntry = entry;
     }
   }
-  if (bestEntry && bestScore >= MATCH_THRESHOLD) return bestEntry.image_path;
-  return fallback;
+  return bestEntry && bestScore >= MATCH_THRESHOLD ? bestEntry : null;
+}
+
+export function resolveVehicleImagePath(
+  brand: string | null | undefined,
+  model: string | null | undefined,
+  catalog: VehicleModelImage[],
+): string | null {
+  const fallback = catalog.find((c) => c.is_default)?.image_path ?? null;
+  return resolveCatalogEntry(brand, model, catalog)?.image_path ?? fallback;
+}
+
+/** Categoria (tier) do veículo conforme o modelo casado no catálogo. Default: 'standard'. */
+export function resolveVehicleTier(
+  brand: string | null | undefined,
+  model: string | null | undefined,
+  catalog: VehicleModelImage[],
+): string {
+  return resolveCatalogEntry(brand, model, catalog)?.tier ?? "standard";
 }
 
 /** Constrói a URL pública de um image_path do bucket de veículos. */

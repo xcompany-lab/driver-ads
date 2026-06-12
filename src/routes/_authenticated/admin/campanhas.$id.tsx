@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Check, X, Pause, Play, UserPlus, Trash2, Ban, QrCode } from "lucide-react";
@@ -40,6 +40,9 @@ import {
   listAssignmentQrCodes,
   type CampaignQrCode,
 } from "@/lib/trackable-qr";
+import { getCampaignPlanById, planVehicleTier } from "@/lib/campaign-plans";
+import { useVehicleCatalog } from "@/hooks/useVehicleCatalog";
+import { resolveVehicleTier } from "@/lib/vehicle-catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/campanhas/$id")({
   component: CampaignDetailAdmin,
@@ -61,6 +64,12 @@ function CampaignDetailAdmin() {
   const { data: assignments } = useQuery({
     queryKey: ["admin", "campaign", id, "assignments"],
     queryFn: () => listAssignmentsForCampaign(id),
+  });
+
+  const { data: plan } = useQuery({
+    queryKey: ["admin", "campaign", id, "plan", campaign?.plan_id],
+    queryFn: () => getCampaignPlanById(campaign!.plan_id!),
+    enabled: !!campaign?.plan_id,
   });
 
   const { data: baseQr } = useQuery({
@@ -212,7 +221,12 @@ function CampaignDetailAdmin() {
                 {activeAssignments.length} de {campaign.vehicles_qty} vagas preenchidas
               </CardDescription>
             </div>
-            <NewAssignmentDialog campaignId={id} campaignCity={campaign.city} />
+            <NewAssignmentDialog
+              campaignId={id}
+              campaignCity={campaign.city}
+              planPayoutCents={plan?.driver_payout_cents ?? 0}
+              planTier={planVehicleTier(plan)}
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -361,7 +375,17 @@ function AssignmentQrKit({
   );
 }
 
-function NewAssignmentDialog({ campaignId, campaignCity }: { campaignId: string; campaignCity: string }) {
+function NewAssignmentDialog({
+  campaignId,
+  campaignCity,
+  planPayoutCents,
+  planTier,
+}: {
+  campaignId: string;
+  campaignCity: string;
+  planPayoutCents: number;
+  planTier: string;
+}) {
   const [open, setOpen] = useState(false);
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
@@ -374,9 +398,24 @@ function NewAssignmentDialog({ campaignId, campaignCity }: { campaignId: string;
     queryFn: () => listEligibleDriversForCampaign(campaignId),
     enabled: open,
   });
+  const { data: catalog = [] } = useVehicleCatalog();
 
-  const selectedDriver = drivers?.find((d) => d.id === driverId);
-  const selectedVehicle = selectedDriver?.vehicles.find((v) => v.id === vehicleId);
+  // Plano Black só aceita veículos de modelos cadastrados como Black.
+  const requireBlack = planTier === "black";
+  const vehicleEligible = (v: { brand: string | null; model: string }) =>
+    !requireBlack || resolveVehicleTier(v.brand, v.model, catalog) === "black";
+  const eligibleDrivers = (drivers ?? []).filter((d) => d.vehicles.some(vehicleEligible));
+
+  const selectedDriver = eligibleDrivers.find((d) => d.id === driverId);
+  const selectedDriverVehicles = (selectedDriver?.vehicles ?? []).filter(vehicleEligible);
+  const selectedVehicle = selectedDriverVehicles.find((v) => v.id === vehicleId);
+
+  // Pré-preenche o repasse com o valor do plano (editável) ao abrir.
+  useEffect(() => {
+    if (open && planPayoutCents > 0) {
+      setPayout((planPayoutCents / 100).toFixed(2));
+    }
+  }, [open, planPayoutCents]);
 
   const create = useMutation({
     mutationFn: () =>
@@ -404,7 +443,10 @@ function NewAssignmentDialog({ campaignId, campaignCity }: { campaignId: string;
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Vincular motorista</DialogTitle>
-          <DialogDescription>Apenas motoristas aprovados de {campaignCity}, com veículo aprovado, aparecem aqui.</DialogDescription>
+          <DialogDescription>
+            Apenas motoristas aprovados de {campaignCity}, com veículo aprovado, aparecem aqui.
+            {requireBlack && " Esta é uma campanha Black: só veículos de modelos Black são aceitos."}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -412,16 +454,19 @@ function NewAssignmentDialog({ campaignId, campaignCity }: { campaignId: string;
             <Select value={driverId} onValueChange={(v) => { setDriverId(v); setVehicleId(""); }}>
               <SelectTrigger><SelectValue placeholder={isLoading ? "Carregando…" : "Selecione"} /></SelectTrigger>
               <SelectContent>
-                {(drivers ?? []).map((d) => (
+                {eligibleDrivers.map((d) => (
                   <SelectItem key={d.id} value={d.id}>{d.full_name} · {d.city}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {drivers && drivers.length === 0 && (
+            {drivers && eligibleDrivers.length === 0 && (
               <p className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
                 Não há motorista disponível para esta localização ({campaignCity}). Para aparecer aqui, o motorista
                 precisa estar <strong>aprovado</strong>, ter <strong>veículo aprovado</strong> e estar cadastrado na
-                <strong> mesma cidade</strong> da campanha.
+                <strong> mesma cidade</strong> da campanha
+                {requireBlack && (
+                  <> — e, por ser campanha <strong>Black</strong>, ter um <strong>veículo de modelo Black</strong></>
+                )}.
               </p>
             )}
           </div>
@@ -430,7 +475,7 @@ function NewAssignmentDialog({ campaignId, campaignCity }: { campaignId: string;
             <Select value={vehicleId} onValueChange={setVehicleId} disabled={!selectedDriver}>
               <SelectTrigger><SelectValue placeholder={selectedDriver ? "Selecione" : "Selecione um motorista"} /></SelectTrigger>
               <SelectContent>
-                {(selectedDriver?.vehicles ?? []).map((v) => (
+                {selectedDriverVehicles.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
                     <span className="flex items-center gap-2">
                       <VehicleImage brand={v.brand} model={v.model} size={28} />
