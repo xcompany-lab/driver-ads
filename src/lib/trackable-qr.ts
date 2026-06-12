@@ -139,6 +139,23 @@ export async function upsertCampaignQrCode(input: {
   return data;
 }
 
+export interface QrPosition {
+  x: number;
+  y: number;
+  size: number;
+}
+
+export async function updateCampaignQrPosition(id: string, position: QrPosition) {
+  const { data, error } = await supabase
+    .from("campaign_qr_codes")
+    .update({ qr_position: position as unknown as CampaignQrCodeUpdate["qr_position"] })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function updateCampaignQrGeneratedAssets(
   id: string,
   patch: Pick<CampaignQrCodeUpdate, "final_image_url" | "final_pdf_url" | "generated_at">,
