@@ -13,6 +13,8 @@ import {
   type AvailableDriverCampaign,
 } from "@/lib/driver-campaign-marketplace";
 import { getCampaignArtUrl } from "@/lib/campaigns";
+import { useVehicleCatalog } from "@/hooks/useVehicleCatalog";
+import { resolveVehicleTier } from "@/lib/vehicle-catalog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
@@ -48,7 +50,10 @@ function CampaignsPage() {
     enabled: !!driver && driver.status === "approved",
   });
 
-  const eligibleVehicle = (vehicles ?? []).find((v) => v.status === "approved" || v.crlv_status === "approved");
+  const { data: catalog = [] } = useVehicleCatalog();
+  const approvedVehicles = (vehicles ?? []).filter((v) => v.status === "approved" || v.crlv_status === "approved");
+  const eligibleVehicle = approvedVehicles[0];
+  const blackVehicle = approvedVehicles.find((v) => resolveVehicleTier(v.brand, v.model, catalog) === "black");
   const current = (assignments ?? []).filter((a) => ["invited", "accepted", "awaiting_installation", "active", "paused"].includes(a.status));
   const history = (assignments ?? []).filter((a) => ["declined", "completed", "cancelled"].includes(a.status));
 
@@ -74,14 +79,18 @@ function CampaignsPage() {
           <EmptyState text="Nenhuma campanha disponivel no momento." />
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {available.map((campaign) => (
-              <AvailableCampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                driverId={driver!.id}
-                vehicleId={eligibleVehicle?.id}
-              />
-            ))}
+            {available.map((campaign) => {
+              const requiresBlack = campaign.vehicle_tier === "black";
+              return (
+                <AvailableCampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  driverId={driver!.id}
+                  vehicleId={requiresBlack ? blackVehicle?.id : eligibleVehicle?.id}
+                  requiresBlack={requiresBlack}
+                />
+              );
+            })}
           </div>
         )}
       </section>
@@ -158,11 +167,17 @@ function CampaignArt({ path, name }: { path: string | null | undefined; name: st
   );
 }
 
-function AvailableCampaignCard({ campaign, driverId, vehicleId }: { campaign: AvailableDriverCampaign; driverId: string; vehicleId?: string }) {
+function AvailableCampaignCard({ campaign, driverId, vehicleId, requiresBlack }: { campaign: AvailableDriverCampaign; driverId: string; vehicleId?: string; requiresBlack?: boolean }) {
   const qc = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => {
-      if (!vehicleId) throw new Error("Cadastre e aprove um veiculo antes de se candidatar.");
+      if (!vehicleId) {
+        throw new Error(
+          requiresBlack
+            ? "Esta campanha Black exige um veiculo de modelo Black aprovado."
+            : "Cadastre e aprove um veiculo antes de se candidatar.",
+        );
+      }
       return applyToAvailableCampaign({ campaignId: campaign.id, driverId, vehicleId });
     },
     onSuccess: () => {
@@ -185,9 +200,14 @@ function AvailableCampaignCard({ campaign, driverId, vehicleId }: { campaign: Av
               <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{fmt(campaign.period_start)} a {fmt(campaign.period_end)}</span>
             </CardDescription>
           </div>
-          <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-            {campaign.available_slots} vaga(s)
-          </span>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {requiresBlack && (
+              <span className="rounded-full bg-foreground px-2 py-1 text-xs font-semibold text-background">Black</span>
+            )}
+            <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+              {campaign.available_slots} vaga(s)
+            </span>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -196,6 +216,11 @@ function AvailableCampaignCard({ campaign, driverId, vehicleId }: { campaign: Av
           <span className="text-muted-foreground">Repasse mensal previsto</span>
           <span className="font-semibold">{money(campaign.monthly_payout)}</span>
         </div>
+        {requiresBlack && !vehicleId && (
+          <p className="rounded-md border border-dashed bg-muted/30 p-2 text-xs text-muted-foreground">
+            Campanha <strong>Black</strong>: requer um veículo de <strong>modelo Black</strong> aprovado no seu cadastro.
+          </p>
+        )}
         <Button
           variant="hero"
           className="w-full"

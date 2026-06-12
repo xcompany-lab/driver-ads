@@ -11,6 +11,7 @@ export interface AvailableDriverCampaign {
   plan_value: number;
   monthly_payout: number;
   available_slots: number;
+  vehicle_tier: string;
 }
 
 type SupabaseWithRpc = typeof supabase & {
