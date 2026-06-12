@@ -8,7 +8,9 @@ import {
   getCampaignArtUrl,
   uploadCampaignArt,
   updateMyCampaign,
+  listCampaignAssignedVehicles,
 } from "@/lib/campaigns";
+import { VehicleImage } from "@/components/VehicleImage";
 import {
   getCampaignQrCode,
   getCampaignQrScanCount,
@@ -65,6 +67,12 @@ function AdvertiserCampaignDetail() {
     queryKey: ["campaign-qr", id, "scan-count"],
     queryFn: () => getCampaignQrScanCount(id),
     enabled: !!qrCode,
+  });
+
+  const { data: assignedVehicles = [] } = useQuery({
+    queryKey: ["my-campaign", id, "vehicles"],
+    queryFn: () => listCampaignAssignedVehicles(id),
+    enabled: !!campaign,
   });
 
   useEffect(() => {
@@ -212,6 +220,36 @@ function AdvertiserCampaignDetail() {
               </Button>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Veículos rodando sua campanha</CardTitle>
+          <CardDescription>
+            {assignedVehicles.length} de {campaign.vehicles_qty} veículo(s) vinculado(s).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {assignedVehicles.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Ainda não há veículos vinculados. Nossa equipe vincula os motoristas após a aprovação.
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {assignedVehicles.map((v) => (
+                <div key={v.vehicle_id} className="flex items-center gap-3 rounded-lg border bg-muted/20 p-3">
+                  <VehicleImage brand={v.brand} model={v.model} size={64} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{v.brand ? `${v.brand} ` : ""}{v.model}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{v.plate}</p>
+                    <p className="text-xs text-muted-foreground">Motorista: {v.driver_first_name || "—"}</p>
+                  </div>
+                  <StatusBadge status={v.status} />
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

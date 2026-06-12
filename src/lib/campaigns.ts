@@ -8,6 +8,31 @@ export type CampaignStatus = Database["public"]["Enums"]["campaign_status"];
 
 const ART_BUCKET = "campaign-arts";
 
+type SupabaseWithRpc = typeof supabase & {
+  rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }>;
+};
+
+export interface CampaignAssignedVehicle {
+  vehicle_id: string;
+  brand: string | null;
+  model: string;
+  plate: string;
+  status: Database["public"]["Enums"]["assignment_status"];
+  driver_first_name: string;
+}
+
+/**
+ * Veiculos vinculados a campanha, visiveis ao dono (anunciante) ou staff.
+ * Info minima — sem dados pessoais sensiveis do motorista.
+ */
+export async function listCampaignAssignedVehicles(campaignId: string): Promise<CampaignAssignedVehicle[]> {
+  const { data, error } = await (supabase as SupabaseWithRpc).rpc("list_campaign_assigned_vehicles", {
+    _campaign_id: campaignId,
+  });
+  if (error) throw error;
+  return (data ?? []) as CampaignAssignedVehicle[];
+}
+
 function ext(file: File) {
   const m = file.name.match(/\.([^.]+)$/);
   return m ? m[1].toLowerCase() : "bin";
