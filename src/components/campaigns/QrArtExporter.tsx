@@ -25,8 +25,13 @@ interface QrPosition {
   size: number;
 }
 
+// Default alinhado ao template "kit-traseiro-sua-marca": o QR encaixa no quadro
+// branco do painel azul à direita. x/y = canto superior-esquerdo (fração de
+// largura/altura); size = lado do QR sobre a menor dimensão da arte.
+const DEFAULT_QR_POSITION: QrPosition = { x: 0.71, y: 0.39, size: 0.33 };
+
 function asPosition(value: unknown): QrPosition {
-  const fallback = { x: 0.76, y: 0.68, size: 0.18 };
+  const fallback = DEFAULT_QR_POSITION;
   if (!value || typeof value !== "object") return fallback;
   const raw = value as Record<string, unknown>;
   const x = Number(raw.x);
