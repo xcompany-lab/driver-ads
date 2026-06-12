@@ -91,7 +91,8 @@ export function PagouCardElement({
           origin: window.location.origin,
         });
         elementsRef.current = elements;
-        const card = elements.create("card", { theme: "night", locale: "pt-BR" });
+        // Tema claro para combinar com o checkout branco e a identidade Driver Ads
+        const card = elements.create("card", { theme: "day", locale: "pt-BR" });
         cardRef.current = card;
         card.on("ready", () => {
           console.log("[Pagou] card ready");
