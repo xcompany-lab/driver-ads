@@ -205,7 +205,7 @@ function CampaignDetailAdmin() {
                 {activeAssignments.length} de {campaign.vehicles_qty} vagas preenchidas
               </CardDescription>
             </div>
-            <NewAssignmentDialog campaignId={id} />
+            <NewAssignmentDialog campaignId={id} campaignCity={campaign.city} />
           </div>
         </CardHeader>
         <CardContent>
@@ -351,7 +351,7 @@ function AssignmentQrKit({
   );
 }
 
-function NewAssignmentDialog({ campaignId }: { campaignId: string }) {
+function NewAssignmentDialog({ campaignId, campaignCity }: { campaignId: string; campaignCity: string }) {
   const [open, setOpen] = useState(false);
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
@@ -394,7 +394,7 @@ function NewAssignmentDialog({ campaignId }: { campaignId: string }) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Vincular motorista</DialogTitle>
-          <DialogDescription>Apenas motoristas aprovados da cidade da campanha aparecem aqui.</DialogDescription>
+          <DialogDescription>Apenas motoristas aprovados de {campaignCity}, com veículo aprovado, aparecem aqui.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -408,7 +408,11 @@ function NewAssignmentDialog({ campaignId }: { campaignId: string }) {
               </SelectContent>
             </Select>
             {drivers && drivers.length === 0 && (
-              <p className="text-xs text-muted-foreground">Nenhum motorista aprovado nessa cidade.</p>
+              <p className="rounded-md border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+                Não há motorista disponível para esta localização ({campaignCity}). Para aparecer aqui, o motorista
+                precisa estar <strong>aprovado</strong>, ter <strong>veículo aprovado</strong> e estar cadastrado na
+                <strong> mesma cidade</strong> da campanha.
+              </p>
             )}
           </div>
           <div className="space-y-2">
