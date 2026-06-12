@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, CheckCircle2, CreditCard, QrCode } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, CreditCard, QrCode, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -163,6 +163,19 @@ function CheckoutPage() {
     billing?.campaign?.billing_status === "trialing" ||
     billing?.campaign?.billing_status === "paid";
 
+  const FAILED_CARD_STATUSES = [
+    "refused", "failed", "declined", "denied", "not_authorized",
+    "error", "canceled", "cancelled", "voided", "chargedback", "blocked",
+  ];
+  const cardStatus = String(billing?.card_transaction?.status ?? "").toLowerCase();
+  const cardFailed =
+    billing?.campaign?.billing_status === "payment_failed" ||
+    FAILED_CARD_STATUSES.includes(cardStatus);
+  const cardPending =
+    !cardFailed &&
+    !!(billing?.subscription || billing?.card_transaction) &&
+    billing?.campaign?.billing_status === "pending";
+
   useEffect(() => {
     if (confirmedActive) {
       toast.success("Assinatura confirmada!");
@@ -234,9 +247,16 @@ function CheckoutPage() {
           exp_year: tokenData.exp_year ?? null,
         },
       );
-      toast.message("Pagamento em processamento", {
-        description: "A campanha será ativada após a confirmação da Pagou.ai.",
-      });
+      const txStatus = String((transaction as { status?: string })?.status ?? "").toLowerCase();
+      if (FAILED_CARD_STATUSES.includes(txStatus)) {
+        toast.error("Pagamento recusado", {
+          description: "O emissor recusou o cartão. Confira os dados ou tente outro cartão.",
+        });
+      } else {
+        toast.message("Pagamento em processamento", {
+          description: "A campanha será ativada após a confirmação da Pagou.ai.",
+        });
+      }
       refetchBilling();
       return transaction;
     } catch (e) {
@@ -306,9 +326,19 @@ function CheckoutPage() {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="card" className="pt-4">
-                  {(billing?.subscription || billing?.card_transaction) &&
-                  billing.campaign?.billing_status === "pending" ? (
+                <TabsContent value="card" className="space-y-3 pt-4">
+                  {cardFailed && (
+                    <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+                      <XCircle className="mt-0.5 h-5 w-5 text-destructive" />
+                      <div className="text-sm">
+                        <p className="font-medium text-destructive">Pagamento recusado</p>
+                        <p className="text-muted-foreground">
+                          O emissor recusou o cartão. Confira os dados ou tente outro cartão abaixo.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {cardPending ? (
                     <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />
                       <div className="text-sm">

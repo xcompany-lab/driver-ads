@@ -103,6 +103,22 @@ function isPaidStatus(status: unknown) {
   return ["paid", "succeeded", "approved"].includes(String(status ?? "").toLowerCase());
 }
 
+function isFailedStatus(status: unknown) {
+  return [
+    "refused",
+    "failed",
+    "declined",
+    "denied",
+    "not_authorized",
+    "error",
+    "canceled",
+    "cancelled",
+    "voided",
+    "chargedback",
+    "blocked",
+  ].includes(String(status ?? "").toLowerCase());
+}
+
 async function ensureCustomer(
   admin: ReturnType<typeof adminClient>,
   advertiserId: string,
@@ -369,6 +385,12 @@ Deno.serve(async (req) => {
       periodStart: periodStart.toISOString(),
       periodEnd: periodEnd.toISOString(),
     });
+  } else if (isFailedStatus(res.data.status)) {
+    // Recusa sincrona da Pagou: marca como falha para o front sair do "aguardando".
+    await admin
+      .from("campaigns")
+      .update({ plan_id: plan.id, billing_status: "payment_failed" })
+      .eq("id", campaign.id);
   } else {
     await admin
       .from("campaigns")
