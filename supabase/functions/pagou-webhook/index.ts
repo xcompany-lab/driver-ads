@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { handleSubscriptionEvent } from "./_lib/handlers/subscription.ts";
 import { handleTransactionEvent } from "./_lib/handlers/transaction.ts";
 import { handlePayoutEvent } from "./_lib/handlers/payout.ts";
+import { pagouRequest } from "../_shared/pagou-client.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -51,14 +52,11 @@ Deno.serve(async (req) => {
   }
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  // Validate secret if configured
-  if (WEBHOOK_SECRET) {
-    const provided = extractSecret(req);
-    if (!provided || provided !== WEBHOOK_SECRET) {
-      console.warn("[pagou-webhook] invalid secret");
-      return json({ error: "unauthorized" }, 401);
-    }
-  }
+  // A Pagou v2 nao assina o webhook (nao envia header de assinatura/segredo).
+  // Em vez de rejeitar por um segredo que nunca chega (causava 401), registramos
+  // o evento e validamos a autenticidade reconsultando o recurso na API da Pagou
+  // antes de mutar a cobranca. Se um segredo estiver configurado e bater, e' fast-path.
+  const trustedBySecret = WEBHOOK_SECRET ? extractSecret(req) === WEBHOOK_SECRET : false;
 
   let payload: any;
   try {
@@ -108,18 +106,39 @@ Deno.serve(async (req) => {
   (async () => {
     try {
       let status: "processed" | "ignored" | "unhandled" | "failed" = "unhandled";
-      const data = payload?.data ?? payload;
-      if (family === "subscription" || /^subscription\./.test(eventType ?? "")) {
+      let data = payload?.data ?? payload;
+
+      const isSub = family === "subscription" || /^subscription\./.test(eventType ?? "");
+      const isTx = family === "transaction" || /^transaction\./.test(eventType ?? "");
+      const isPayout =
+        family === "payout" || family === "transfer" || /^(payout|transfer)\./.test(eventType ?? "");
+
+      // Anti-forja: para eventos de TRANSACAO (confirmacao de pagamento), quando
+      // nao veio de fonte confiavel (segredo), confirma o estado real direto na
+      // API da Pagou (GET /v2/transactions/{id}) antes de marcar como pago.
+      if (!trustedBySecret && isTx && resourceId) {
+        const verified = await pagouRequest(`/v2/transactions/${resourceId}`, { method: "GET" });
+        if (!verified.ok || !verified.data) {
+          await supabase
+            .from("pagou_webhook_events")
+            .update({
+              processing_status: "ignored",
+              error_message: "unverified_against_pagou",
+              processed_at: new Date().toISOString(),
+            })
+            .eq("id", inserted.id);
+          return;
+        }
+        data = verified.data as typeof data;
+      }
+
+      if (isSub) {
         await handleSubscriptionEvent(supabase, data, eventType);
         status = "processed";
-      } else if (family === "transaction" || /^transaction\./.test(eventType ?? "")) {
+      } else if (isTx) {
         await handleTransactionEvent(supabase, data, eventType);
         status = "processed";
-      } else if (
-        family === "payout" ||
-        family === "transfer" ||
-        /^(payout|transfer)\./.test(eventType ?? "")
-      ) {
+      } else if (isPayout) {
         await handlePayoutEvent(supabase, data, eventType);
         status = "processed";
       }

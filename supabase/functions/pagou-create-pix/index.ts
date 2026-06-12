@@ -209,7 +209,6 @@ Deno.serve(async (req) => {
     amount: plan.monthly_price_cents,
     currency: plan.currency ?? "BRL",
     method: "pix",
-    description: "Driver Ads Publicidade",
     notify_url: PAGOU_WEBHOOK_URL(),
     buyer,
     metadata: JSON.stringify({
