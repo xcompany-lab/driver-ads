@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import QRCode from "qrcode";
 import { Loader2, QrCode, Copy, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,28 @@ export function PixCheckout({ campaignId, planId, amountCents, existingPix }: Pr
 
   const isPaid = tx?.status === "paid" || !!tx?.paid_at;
 
+  // Gera o QR a partir do copia-e-cola quando a Pagou nao devolve a imagem.
+  const [generatedQr, setGeneratedQr] = useState<string | null>(null);
+  useEffect(() => {
+    if (tx?.pix_qr_code_image || !tx?.pix_qr_code) {
+      setGeneratedQr(null);
+      return;
+    }
+    let active = true;
+    QRCode.toDataURL(tx.pix_qr_code, { errorCorrectionLevel: "M", margin: 1, width: 320 })
+      .then((url) => active && setGeneratedQr(url))
+      .catch(() => active && setGeneratedQr(null));
+    return () => {
+      active = false;
+    };
+  }, [tx?.pix_qr_code, tx?.pix_qr_code_image]);
+
+  const qrSrc = tx?.pix_qr_code_image
+    ? tx.pix_qr_code_image.startsWith("data:")
+      ? tx.pix_qr_code_image
+      : `data:image/png;base64,${tx.pix_qr_code_image}`
+    : generatedQr;
+
   const create = useMutation({
     mutationFn: () =>
       invokeFn<PixTx>("pagou-create-pix", { campaign_id: campaignId, plan_id: planId }),
@@ -182,19 +205,15 @@ export function PixCheckout({ campaignId, planId, amountCents, existingPix }: Pr
   return (
     <div className="space-y-4">
       <div className="rounded-lg border bg-muted/30 p-4 text-center">
-        {tx.pix_qr_code_image ? (
+        {qrSrc ? (
           <img
-            src={
-              tx.pix_qr_code_image.startsWith("data:")
-                ? tx.pix_qr_code_image
-                : `data:image/png;base64,${tx.pix_qr_code_image}`
-            }
+            src={qrSrc}
             alt="QR Code Pix"
             className="mx-auto h-56 w-56 rounded bg-white p-2"
           />
         ) : (
           <div className="mx-auto flex h-56 w-56 items-center justify-center rounded bg-muted">
-            <QrCode className="h-10 w-10 text-muted-foreground" />
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         )}
         <p className="mt-3 text-sm text-muted-foreground">
