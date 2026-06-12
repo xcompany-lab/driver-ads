@@ -85,6 +85,13 @@ function NewCampaignPage() {
     [form.plan_id, plans],
   );
 
+  // O plano e por veiculo: o total mensal = preco do plano x quantidade de veiculos (1..40).
+  const MAX_VEHICLES = 40;
+  const vehiclesQty = Math.min(Math.max(Number(form.vehicles_qty || 1), 1), MAX_VEHICLES);
+  const totalMonthlyCents = selectedPlan ? selectedPlan.monthly_price_cents * vehiclesQty : 0;
+  const brl = (cents: number) =>
+    (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: selectedPlan?.currency || "BRL" });
+
   const create = useMutation({
     mutationFn: async () => {
       if (!advertiser) throw new Error("Cadastro de empresa não encontrado");
@@ -99,11 +106,11 @@ function NewCampaignPage() {
         description: form.description.trim() || null,
         city: form.city.trim(),
         regions,
-        vehicles_qty: Number(form.vehicles_qty || 1),
+        vehicles_qty: vehiclesQty,
         period_start: form.period_start,
         period_end: form.period_end,
         plan_id: selectedPlan.id,
-        plan_value: selectedPlan.monthly_price_cents / 100,
+        plan_value: totalMonthlyCents / 100,
         observations: form.observations.trim() || null,
       });
       if (art) {
@@ -243,10 +250,12 @@ function NewCampaignPage() {
                 id="vehicles_qty"
                 type="number"
                 min={1}
+                max={MAX_VEHICLES}
                 step={1}
                 value={form.vehicles_qty}
                 onChange={(e) => setForm({ ...form, vehicles_qty: e.target.value })}
               />
+              <p className="text-xs text-muted-foreground">Até {MAX_VEHICLES}. Cada veículo multiplica o valor do plano.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="period_start">Início *</Label>
@@ -308,11 +317,23 @@ function NewCampaignPage() {
                       </div>
                       <div className="mt-4 flex items-end justify-between gap-3">
                         <p className="font-display text-2xl font-bold">{formatPlanPrice(plan)}</p>
-                        <p className="text-xs text-muted-foreground">/ mes</p>
+                        <p className="text-xs text-muted-foreground">/ veículo · mês</p>
                       </div>
                     </button>
                   );
                 })}
+              </div>
+            )}
+
+            {selectedPlan && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total mensal</p>
+                  <p className="text-xs text-muted-foreground">
+                    {vehiclesQty} veículo{vehiclesQty > 1 ? "s" : ""} × {brl(selectedPlan.monthly_price_cents)}
+                  </p>
+                </div>
+                <p className="font-display text-2xl font-bold text-primary">{brl(totalMonthlyCents)} <span className="text-sm font-normal text-muted-foreground">/ mês</span></p>
               </div>
             )}
           </div>

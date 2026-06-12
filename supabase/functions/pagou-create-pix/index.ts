@@ -113,10 +113,13 @@ Deno.serve(async (req) => {
 
   const { data: campaign } = await admin
     .from("campaigns")
-    .select("id, advertiser_id, billing_status")
+    .select("id, advertiser_id, billing_status, vehicles_qty")
     .eq("id", data.campaign_id)
     .single();
   if (!campaign) return json({ error: "campaign_not_found" }, 404);
+
+  // O plano e por veiculo: total = preco do plano x quantidade de veiculos (1..40).
+  const vehiclesQty = Math.min(Math.max(Number(campaign.vehicles_qty ?? 1), 1), 40);
 
   const { data: adv } = await admin
     .from("advertisers")
@@ -139,6 +142,8 @@ Deno.serve(async (req) => {
     .eq("id", data.plan_id)
     .single();
   if (!plan) return json({ error: "plan_not_found" }, 404);
+
+  const amountCents = plan.monthly_price_cents * vehiclesQty;
 
   // Idempotência: se há um Pix pendente ainda válido, devolve ele
   const { data: existingTx } = await admin
@@ -206,7 +211,7 @@ Deno.serve(async (req) => {
 
   const txBody: Record<string, unknown> = {
     external_ref: externalRef,
-    amount: plan.monthly_price_cents,
+    amount: amountCents,
     currency: plan.currency ?? "BRL",
     method: "pix",
     notify_url: PAGOU_WEBHOOK_URL(),
@@ -222,8 +227,8 @@ Deno.serve(async (req) => {
     }),
     products: [
       {
-        name: `Driver Ads - ${plan.name} (Pix mensal)`,
-        price: plan.monthly_price_cents,
+        name: `Driver Ads - ${plan.name} (Pix mensal) - ${vehiclesQty} veiculo(s)`,
+        price: amountCents,
         quantity: 1,
         tangible: false,
         sku: `DRIVER_ADS_PIX_${plan.id}`,
@@ -324,7 +329,7 @@ Deno.serve(async (req) => {
       request_id: res.requestId,
       method: "pix",
       status: res.data.status ?? "pending",
-      amount_cents: plan.monthly_price_cents,
+      amount_cents: amountCents,
       currency: plan.currency ?? "BRL",
       billing_period_start: periodStart.toISOString(),
       billing_period_end: periodEnd.toISOString(),
@@ -347,7 +352,7 @@ Deno.serve(async (req) => {
     action: "pagou.pix.created",
     entity_type: "billing_transaction",
     entity_id: insRow.id,
-    after_data: { pagou_transaction_id: res.data.id, amount_cents: plan.monthly_price_cents },
+    after_data: { pagou_transaction_id: res.data.id, amount_cents: amountCents },
     metadata: { request_id: res.requestId, campaign_id: campaign.id },
   });
 
@@ -357,7 +362,7 @@ Deno.serve(async (req) => {
     pix_qr_code: qrCode,
     pix_qr_code_image: qrImage,
     expires_at: expiresAt,
-    amount_cents: plan.monthly_price_cents,
+    amount_cents: amountCents,
     status: res.data.status ?? "pending",
   });
 });

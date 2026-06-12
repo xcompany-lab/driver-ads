@@ -96,7 +96,7 @@ function CheckoutPage() {
       const { data, error } = await supabase
         .from("campaigns")
         .select(
-          "id, name, city, period_start, period_end, billing_status, status, plan_id, plan:campaign_plans(id, name, monthly_price_cents, currency)",
+          "id, name, city, period_start, period_end, billing_status, status, plan_id, vehicles_qty, plan:campaign_plans(id, name, monthly_price_cents, currency)",
         )
         .eq("id", id)
         .single();
@@ -122,6 +122,8 @@ function CheckoutPage() {
   });
 
   const plan = campaign?.plan ?? defaultPlan;
+  const vehiclesQty = Math.min(Math.max(Number(campaign?.vehicles_qty ?? 1), 1), 40);
+  const totalCents = plan ? plan.monthly_price_cents * vehiclesQty : 0;
 
   // Poll billing state after submit
   const { data: billing, refetch: refetchBilling } = useQuery({
@@ -352,7 +354,7 @@ function CheckoutPage() {
                     <PagouCardElement
                       publicKey={keyData?.public_key ?? ""}
                       environment={(keyData?.environment ?? "sandbox") as "sandbox" | "production"}
-                      buttonLabel={`Assinar ${brl(plan.monthly_price_cents)} / mês`}
+                      buttonLabel={`Assinar ${brl(totalCents)} / mês`}
                       onTokenize={handleTokenize}
                     />
                   )}
@@ -362,7 +364,7 @@ function CheckoutPage() {
                   <PixCheckout
                     campaignId={id}
                     planId={plan.id}
-                    amountCents={plan.monthly_price_cents}
+                    amountCents={totalCents}
                     existingPix={billing?.pix_transaction ?? null}
                   />
                 </TabsContent>
@@ -382,8 +384,12 @@ function CheckoutPage() {
                 <span className="font-medium">{plan.name}</span>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Veículos</span>
+                <span className="font-medium">{vehiclesQty} × {brl(plan.monthly_price_cents)}</span>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Valor mensal</span>
-                <span className="font-semibold">{brl(plan.monthly_price_cents)}</span>
+                <span className="font-semibold">{brl(totalCents)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Cobrança</span>

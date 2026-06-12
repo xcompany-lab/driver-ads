@@ -196,10 +196,13 @@ Deno.serve(async (req) => {
   // Load campaign + ownership
   const { data: campaign, error: ce } = await admin
     .from("campaigns")
-    .select("id, advertiser_id, name, billing_status")
+    .select("id, advertiser_id, name, billing_status, vehicles_qty")
     .eq("id", data.campaign_id)
     .single();
   if (ce || !campaign) return json({ error: "campaign_not_found" }, 404);
+
+  // O plano e por veiculo: total = preco do plano x quantidade de veiculos (1..40).
+  const vehiclesQty = Math.min(Math.max(Number(campaign.vehicles_qty ?? 1), 1), 40);
 
   const { data: adv, error: ae } = await admin
     .from("advertisers")
@@ -224,6 +227,8 @@ Deno.serve(async (req) => {
     .eq("id", data.plan_id)
     .single();
   if (pe || !plan) return json({ error: "plan_not_found" }, 404);
+
+  const amountCents = plan.monthly_price_cents * vehiclesQty;
 
   const periodStart = new Date();
   const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -259,7 +264,7 @@ Deno.serve(async (req) => {
 
   const txBody: Record<string, unknown> = {
     external_ref: externalRef,
-    amount: plan.monthly_price_cents,
+    amount: amountCents,
     currency: plan.currency ?? "BRL",
     method: "credit_card",
     token: data.token,
@@ -279,7 +284,7 @@ Deno.serve(async (req) => {
     products: [
       {
         name: `Driver Ads - ${plan.name}`,
-        price: plan.monthly_price_cents,
+        price: amountCents,
         quantity: 1,
         tangible: false,
         sku: `DRIVER_ADS_${plan.id}`,
@@ -330,12 +335,12 @@ Deno.serve(async (req) => {
       request_id: res.requestId,
       method: "credit_card",
       status: res.data.status ?? "pending",
-      amount_cents: plan.monthly_price_cents,
+      amount_cents: amountCents,
       currency: plan.currency ?? "BRL",
       billing_period_start: periodStart.toISOString(),
       billing_period_end: periodEnd.toISOString(),
       paid_at: paidAt,
-      paid_amount_cents: paid ? (res.data.paid_amount ?? plan.monthly_price_cents) : 0,
+      paid_amount_cents: paid ? (res.data.paid_amount ?? amountCents) : 0,
       raw_payload: {
         ...res.data,
         card_brand: res.data.card_brand ?? data.card_brand ?? null,
@@ -369,7 +374,7 @@ Deno.serve(async (req) => {
       await admin.from("ledger_entries").insert({
         entry_type: "advertiser_payment",
         direction: "credit",
-        amount_cents: plan.monthly_price_cents,
+        amount_cents: amountCents,
         advertiser_id: adv.id,
         campaign_id: campaign.id,
         billing_transaction_id: insRow.id,
