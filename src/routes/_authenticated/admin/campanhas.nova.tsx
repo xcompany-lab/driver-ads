@@ -12,7 +12,7 @@ import { upsertCampaignQrCode, type QrDestinationType } from "@/lib/trackable-qr
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CitySuggestions, CITY_DATALIST_ID } from "@/components/CitySuggestions";
+import { listAvailableCities } from "@/lib/cities";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -67,6 +67,11 @@ function NewAdminCampaignPage() {
   const { data: plans = [], isLoading: loadingPlans } = useQuery({
     queryKey: ["active-campaign-plans"],
     queryFn: listActiveCampaignPlans,
+  });
+
+  const { data: cities = [], isLoading: loadingCities } = useQuery({
+    queryKey: ["available-cities"],
+    queryFn: listAvailableCities,
   });
 
   useEffect(() => {
@@ -229,14 +234,24 @@ function NewAdminCampaignPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="city">Cidade *</Label>
-              <Input
-                id="city"
-                list={CITY_DATALIST_ID}
-                value={form.city}
-                onChange={(event) => setForm({ ...form, city: event.target.value })}
-                placeholder="Ex.: Florianopolis"
-              />
-              <CitySuggestions />
+              <Select value={form.city} onValueChange={(value) => setForm({ ...form, city: value })}>
+                <SelectTrigger id="city">
+                  <SelectValue placeholder={loadingCities ? "Carregando cidades…" : "Selecione a cidade"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((c) => (
+                    <SelectItem key={c.city_key} value={c.display_name}>
+                      {c.display_name}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {c.drivers > 0 ? `${c.drivers} motorista${c.drivers > 1 ? "s" : ""}` : "sem motorista ainda"}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!loadingCities && cities.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nenhuma cidade disponível no momento.</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="regions">Regioes</Label>
