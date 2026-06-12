@@ -793,6 +793,36 @@ export type Database = {
           },
         ]
       }
+      cities: {
+        Row: {
+          aliases: string[]
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          name_key: string
+          uf: string | null
+        }
+        Insert: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_key: string
+          uf?: string | null
+        }
+        Update: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_key?: string
+          uf?: string | null
+        }
+        Relationships: []
+      }
       driver_earnings: {
         Row: {
           amount_cents: number
@@ -2488,6 +2518,14 @@ export type Database = {
           vehicles: Json
         }[]
       }
+      list_service_cities: {
+        Args: never
+        Returns: {
+          city_key: string
+          display_name: string
+          drivers: number
+        }[]
+      }
       log_email_diagnostic: {
         Args: {
           _error_message?: string
@@ -2516,7 +2554,10 @@ export type Database = {
       }
       process_qr_scan_location: { Args: { _scan_id: string }; Returns: Json }
       purge_old_driver_location_points: { Args: never; Returns: number }
+      resolve_city_key: { Args: { _raw: string }; Returns: string }
       revoke_driver_location_consent: { Args: never; Returns: Json }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       start_driver_tracking_session: {
         Args: { _assignment_id: string; _terms_version?: string }
         Returns: string

@@ -9,6 +9,7 @@ import { getMyProfile, updateMyAvatar, uploadAvatar } from "@/lib/profile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CitySuggestions, CITY_DATALIST_ID } from "@/components/CitySuggestions";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { DocumentUploadField } from "@/components/brand/DocumentUploadField";
@@ -169,7 +170,8 @@ function DriverProfilePage() {
               <Field id="email" type="email" label="E-mail" value={form.email} onChange={(v) => set("email", v)} required />
               <Field id="phone" label="Telefone / WhatsApp" value={form.phone} onChange={(v) => set("phone", v)} required />
             </div>
-            <Field id="city" label="Cidade de atuacao" value={form.city} onChange={(v) => set("city", v)} required />
+            <Field id="city" label="Cidade de atuacao" value={form.city} onChange={(v) => set("city", v)} required list={CITY_DATALIST_ID} />
+            <CitySuggestions />
 
             <Button type="submit" variant="hero" disabled={mutation.isPending} className="w-full sm:w-auto">
               {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -226,11 +228,11 @@ function DriverProfilePage() {
   );
 }
 
-function Field({ id, label, value, onChange, type = "text", required }: { id: string; label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
+function Field({ id, label, value, onChange, type = "text", required, list }: { id: string; label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; list?: string }) {
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} />
+      <Input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} list={list} />
     </div>
   );
 }

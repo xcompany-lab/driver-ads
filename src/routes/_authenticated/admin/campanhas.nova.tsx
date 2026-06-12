@@ -12,6 +12,7 @@ import { upsertCampaignQrCode, type QrDestinationType } from "@/lib/trackable-qr
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CitySuggestions, CITY_DATALIST_ID } from "@/components/CitySuggestions";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -230,10 +231,12 @@ function NewAdminCampaignPage() {
               <Label htmlFor="city">Cidade *</Label>
               <Input
                 id="city"
+                list={CITY_DATALIST_ID}
                 value={form.city}
                 onChange={(event) => setForm({ ...form, city: event.target.value })}
                 placeholder="Ex.: Florianopolis"
               />
+              <CitySuggestions />
             </div>
             <div className="space-y-2">
               <Label htmlFor="regions">Regioes</Label>
