@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/brand/StatusBadge";
 import { DocumentUploadField } from "@/components/brand/DocumentUploadField";
 import { uploadDriverDoc, updateVehicleCrlv } from "@/lib/driver-documents";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { VehicleImage } from "@/components/VehicleImage";
 
 export const Route = createFileRoute("/_authenticated/motorista/veiculos")({
   component: DriverVehiclesPage,
@@ -161,13 +162,16 @@ function DriverVehiclesPage() {
           {vehicles.map((v) => (
             <Card key={v.id}>
               <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
-                <div>
-                  <CardTitle className="text-base">
-                    {v.brand ? `${v.brand} ` : ""}{v.model} <span className="font-mono text-sm text-muted-foreground">· {v.plate}</span>
-                  </CardTitle>
-                  <CardDescription>
-                    {[v.vehicle_type, v.year, v.color].filter(Boolean).join(" · ") || "—"}
-                  </CardDescription>
+                <div className="flex items-center gap-3">
+                  <VehicleImage brand={v.brand} model={v.model} size={56} />
+                  <div>
+                    <CardTitle className="text-base">
+                      {v.brand ? `${v.brand} ` : ""}{v.model} <span className="font-mono text-sm text-muted-foreground">· {v.plate}</span>
+                    </CardTitle>
+                    <CardDescription>
+                      {[v.vehicle_type, v.year, v.color].filter(Boolean).join(" · ") || "—"}
+                    </CardDescription>
+                  </div>
                 </div>
                 <StatusBadge status={v.status} />
               </CardHeader>

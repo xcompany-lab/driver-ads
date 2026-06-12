@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/brand/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VehicleImage } from "@/components/VehicleImage";
 
 export const Route = createFileRoute("/_authenticated/admin/veiculos")({
   component: VehiclesAdmin,
@@ -53,12 +54,15 @@ function VehiclesAdmin() {
             <Card key={v.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">{v.plate} · {v.model}</CardTitle>
-                    <CardDescription>
-                      {v.brand ?? "—"}{v.year ? ` · ${v.year}` : ""}{v.color ? ` · ${v.color}` : ""}{v.vehicle_type ? ` · ${v.vehicle_type}` : ""}
-                      {v.driver ? ` — Motorista: ${v.driver.full_name} (${v.driver.city})` : ""}
-                    </CardDescription>
+                  <div className="flex items-start gap-3">
+                    <VehicleImage brand={v.brand} model={v.model} size={56} />
+                    <div>
+                      <CardTitle className="text-base">{v.plate} · {v.model}</CardTitle>
+                      <CardDescription>
+                        {v.brand ?? "—"}{v.year ? ` · ${v.year}` : ""}{v.color ? ` · ${v.color}` : ""}{v.vehicle_type ? ` · ${v.vehicle_type}` : ""}
+                        {v.driver ? ` — Motorista: ${v.driver.full_name} (${v.driver.city})` : ""}
+                      </CardDescription>
+                    </div>
                   </div>
                   <StatusBadge status={v.status} />
                 </div>

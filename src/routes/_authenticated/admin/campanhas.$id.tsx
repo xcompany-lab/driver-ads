@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { QrArtExporter } from "@/components/campaigns/QrArtExporter";
+import { VehicleImage } from "@/components/VehicleImage";
 import {
   ensureAssignmentQrCode,
   getCampaignQrCode,
@@ -365,6 +366,7 @@ function NewAssignmentDialog({ campaignId }: { campaignId: string }) {
   });
 
   const selectedDriver = drivers?.find((d) => d.id === driverId);
+  const selectedVehicle = selectedDriver?.vehicles.find((v) => v.id === vehicleId);
 
   const create = useMutation({
     mutationFn: () =>
@@ -415,10 +417,24 @@ function NewAssignmentDialog({ campaignId }: { campaignId: string }) {
               <SelectTrigger><SelectValue placeholder={selectedDriver ? "Selecione" : "Selecione um motorista"} /></SelectTrigger>
               <SelectContent>
                 {(selectedDriver?.vehicles ?? []).map((v) => (
-                  <SelectItem key={v.id} value={v.id}>{v.brand} {v.model} · {v.plate}</SelectItem>
+                  <SelectItem key={v.id} value={v.id}>
+                    <span className="flex items-center gap-2">
+                      <VehicleImage brand={v.brand} model={v.model} size={28} />
+                      {v.brand} {v.model} · {v.plate}
+                    </span>
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {selectedVehicle && (
+              <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+                <VehicleImage brand={selectedVehicle.brand} model={selectedVehicle.model} size={64} />
+                <div className="text-sm">
+                  <p className="font-medium">{selectedVehicle.brand} {selectedVehicle.model}</p>
+                  <p className="font-mono text-muted-foreground">{selectedVehicle.plate}</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="payout">Repasse mensal (R$)</Label>

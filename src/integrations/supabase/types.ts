@@ -326,238 +326,6 @@ export type Database = {
           },
         ]
       }
-      campaign_qr_codes: {
-        Row: {
-          advertiser_id: string
-          assignment_id: string | null
-          campaign_id: string
-          created_at: string
-          created_by: string | null
-          destination_type: Database["public"]["Enums"]["qr_destination_type"]
-          destination_url: string
-          driver_id: string | null
-          final_image_url: string | null
-          final_pdf_url: string | null
-          generated_at: string | null
-          id: string
-          is_active: boolean
-          kit_label: string | null
-          landing_page_url: string | null
-          qr_position: Json
-          qr_scope: string
-          short_code: string
-          updated_at: string
-          vehicle_id: string | null
-          whatsapp_phone: string | null
-        }
-        Insert: {
-          advertiser_id: string
-          assignment_id?: string | null
-          campaign_id: string
-          created_at?: string
-          created_by?: string | null
-          destination_type: Database["public"]["Enums"]["qr_destination_type"]
-          destination_url: string
-          driver_id?: string | null
-          final_image_url?: string | null
-          final_pdf_url?: string | null
-          generated_at?: string | null
-          id?: string
-          is_active?: boolean
-          kit_label?: string | null
-          landing_page_url?: string | null
-          qr_position?: Json
-          qr_scope?: string
-          short_code?: string
-          updated_at?: string
-          vehicle_id?: string | null
-          whatsapp_phone?: string | null
-        }
-        Update: {
-          advertiser_id?: string
-          assignment_id?: string | null
-          campaign_id?: string
-          created_at?: string
-          created_by?: string | null
-          destination_type?: Database["public"]["Enums"]["qr_destination_type"]
-          destination_url?: string
-          driver_id?: string | null
-          final_image_url?: string | null
-          final_pdf_url?: string | null
-          generated_at?: string | null
-          id?: string
-          is_active?: boolean
-          kit_label?: string | null
-          landing_page_url?: string | null
-          qr_position?: Json
-          qr_scope?: string
-          short_code?: string
-          updated_at?: string
-          vehicle_id?: string | null
-          whatsapp_phone?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_qr_codes_advertiser_id_fkey"
-            columns: ["advertiser_id"]
-            isOneToOne: false
-            referencedRelation: "advertisers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_qr_codes_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_qr_codes_assignment_id_fkey"
-            columns: ["assignment_id"]
-            isOneToOne: true
-            referencedRelation: "campaign_driver_assignments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_qr_codes_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_qr_codes_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      campaign_qr_scans: {
-        Row: {
-          advertiser_id: string
-          approx_confidence: number | null
-          approx_latitude: number | null
-          approx_longitude: number | null
-          approx_radius_m: number | null
-          approx_source: string | null
-          assignment_id: string | null
-          browser_name: string | null
-          campaign_id: string
-          city: string | null
-          country: string | null
-          destination_url: string | null
-          device_type: string | null
-          driver_id: string | null
-          geo_source: string | null
-          id: string
-          ip_hash: string | null
-          latitude: number | null
-          location_candidate_count: number
-          location_processed_at: string | null
-          longitude: number | null
-          metadata: Json
-          os_name: string | null
-          processed_at: string
-          qr_code_id: string
-          referrer: string | null
-          region: string | null
-          scanned_at: string
-          scan_key: string | null
-          user_agent: string | null
-          vehicle_id: string | null
-        }
-        Insert: {
-          advertiser_id: string
-          approx_confidence?: number | null
-          approx_latitude?: number | null
-          approx_longitude?: number | null
-          approx_radius_m?: number | null
-          approx_source?: string | null
-          assignment_id?: string | null
-          browser_name?: string | null
-          campaign_id: string
-          city?: string | null
-          country?: string | null
-          destination_url?: string | null
-          device_type?: string | null
-          driver_id?: string | null
-          geo_source?: string | null
-          id?: string
-          ip_hash?: string | null
-          latitude?: number | null
-          location_candidate_count?: number
-          location_processed_at?: string | null
-          longitude?: number | null
-          metadata?: Json
-          os_name?: string | null
-          processed_at?: string
-          qr_code_id: string
-          referrer?: string | null
-          region?: string | null
-          scanned_at?: string
-          scan_key?: string | null
-          user_agent?: string | null
-          vehicle_id?: string | null
-        }
-        Update: {
-          advertiser_id?: string
-          approx_confidence?: number | null
-          approx_latitude?: number | null
-          approx_longitude?: number | null
-          approx_radius_m?: number | null
-          approx_source?: string | null
-          assignment_id?: string | null
-          browser_name?: string | null
-          campaign_id?: string
-          city?: string | null
-          country?: string | null
-          destination_url?: string | null
-          device_type?: string | null
-          driver_id?: string | null
-          geo_source?: string | null
-          id?: string
-          ip_hash?: string | null
-          latitude?: number | null
-          location_candidate_count?: number
-          location_processed_at?: string | null
-          longitude?: number | null
-          metadata?: Json
-          os_name?: string | null
-          processed_at?: string
-          qr_code_id?: string
-          referrer?: string | null
-          region?: string | null
-          scanned_at?: string
-          scan_key?: string | null
-          user_agent?: string | null
-          vehicle_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_qr_scans_advertiser_id_fkey"
-            columns: ["advertiser_id"]
-            isOneToOne: false
-            referencedRelation: "advertisers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_qr_scans_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "campaign_qr_scans_qr_code_id_fkey"
-            columns: ["qr_code_id"]
-            isOneToOne: false
-            referencedRelation: "campaign_qr_codes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       campaign_driver_assignments: {
         Row: {
           assigned_by: string | null
@@ -666,6 +434,259 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      campaign_qr_codes: {
+        Row: {
+          advertiser_id: string
+          assignment_id: string | null
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          destination_type: Database["public"]["Enums"]["qr_destination_type"]
+          destination_url: string
+          driver_id: string | null
+          final_image_url: string | null
+          final_pdf_url: string | null
+          generated_at: string | null
+          id: string
+          is_active: boolean
+          kit_label: string | null
+          landing_page_url: string | null
+          qr_position: Json
+          qr_scope: string
+          short_code: string
+          updated_at: string
+          vehicle_id: string | null
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          assignment_id?: string | null
+          campaign_id: string
+          created_at?: string
+          created_by?: string | null
+          destination_type: Database["public"]["Enums"]["qr_destination_type"]
+          destination_url: string
+          driver_id?: string | null
+          final_image_url?: string | null
+          final_pdf_url?: string | null
+          generated_at?: string | null
+          id?: string
+          is_active?: boolean
+          kit_label?: string | null
+          landing_page_url?: string | null
+          qr_position?: Json
+          qr_scope?: string
+          short_code?: string
+          updated_at?: string
+          vehicle_id?: string | null
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          assignment_id?: string | null
+          campaign_id?: string
+          created_at?: string
+          created_by?: string | null
+          destination_type?: Database["public"]["Enums"]["qr_destination_type"]
+          destination_url?: string
+          driver_id?: string | null
+          final_image_url?: string | null
+          final_pdf_url?: string | null
+          generated_at?: string | null
+          id?: string
+          is_active?: boolean
+          kit_label?: string | null
+          landing_page_url?: string | null
+          qr_position?: Json
+          qr_scope?: string
+          short_code?: string
+          updated_at?: string
+          vehicle_id?: string | null
+          whatsapp_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_qr_codes_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "campaign_driver_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_codes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_qr_scans: {
+        Row: {
+          advertiser_id: string
+          approx_confidence: number | null
+          approx_latitude: number | null
+          approx_longitude: number | null
+          approx_radius_m: number | null
+          approx_source: string | null
+          assignment_id: string | null
+          browser_name: string | null
+          campaign_id: string
+          city: string | null
+          country: string | null
+          destination_url: string | null
+          device_type: string | null
+          driver_id: string | null
+          geo_source: string | null
+          id: string
+          ip_hash: string | null
+          latitude: number | null
+          location_candidate_count: number
+          location_processed_at: string | null
+          longitude: number | null
+          metadata: Json
+          os_name: string | null
+          processed_at: string
+          qr_code_id: string
+          referrer: string | null
+          region: string | null
+          scan_key: string | null
+          scanned_at: string
+          user_agent: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          approx_confidence?: number | null
+          approx_latitude?: number | null
+          approx_longitude?: number | null
+          approx_radius_m?: number | null
+          approx_source?: string | null
+          assignment_id?: string | null
+          browser_name?: string | null
+          campaign_id: string
+          city?: string | null
+          country?: string | null
+          destination_url?: string | null
+          device_type?: string | null
+          driver_id?: string | null
+          geo_source?: string | null
+          id?: string
+          ip_hash?: string | null
+          latitude?: number | null
+          location_candidate_count?: number
+          location_processed_at?: string | null
+          longitude?: number | null
+          metadata?: Json
+          os_name?: string | null
+          processed_at?: string
+          qr_code_id: string
+          referrer?: string | null
+          region?: string | null
+          scan_key?: string | null
+          scanned_at?: string
+          user_agent?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          approx_confidence?: number | null
+          approx_latitude?: number | null
+          approx_longitude?: number | null
+          approx_radius_m?: number | null
+          approx_source?: string | null
+          assignment_id?: string | null
+          browser_name?: string | null
+          campaign_id?: string
+          city?: string | null
+          country?: string | null
+          destination_url?: string | null
+          device_type?: string | null
+          driver_id?: string | null
+          geo_source?: string | null
+          id?: string
+          ip_hash?: string | null
+          latitude?: number | null
+          location_candidate_count?: number
+          location_processed_at?: string | null
+          longitude?: number | null
+          metadata?: Json
+          os_name?: string | null
+          processed_at?: string
+          qr_code_id?: string
+          referrer?: string | null
+          region?: string | null
+          scan_key?: string | null
+          scanned_at?: string
+          user_agent?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_qr_scans_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_scans_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_driver_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_scans_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_scans_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_scans_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_qr_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_qr_scans_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaigns: {
         Row: {
@@ -868,6 +889,143 @@ export type Database = {
           },
         ]
       }
+      driver_location_consents: {
+        Row: {
+          consented_at: string
+          created_at: string
+          driver_id: string
+          id: string
+          metadata: Json
+          revoked_at: string | null
+          source: string
+          terms_version: string
+        }
+        Insert: {
+          consented_at?: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          metadata?: Json
+          revoked_at?: string | null
+          source?: string
+          terms_version?: string
+        }
+        Update: {
+          consented_at?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          metadata?: Json
+          revoked_at?: string | null
+          source?: string
+          terms_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_location_consents_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_location_points: {
+        Row: {
+          accepted: boolean
+          accuracy_m: number | null
+          assignment_id: string
+          campaign_id: string
+          created_at: string
+          distance_from_prev_m: number
+          driver_id: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          metadata: Json
+          recorded_at: string
+          rejection_reason: string | null
+          session_id: string
+          speed_mps: number | null
+          vehicle_id: string
+        }
+        Insert: {
+          accepted?: boolean
+          accuracy_m?: number | null
+          assignment_id: string
+          campaign_id: string
+          created_at?: string
+          distance_from_prev_m?: number
+          driver_id: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          metadata?: Json
+          recorded_at: string
+          rejection_reason?: string | null
+          session_id: string
+          speed_mps?: number | null
+          vehicle_id: string
+        }
+        Update: {
+          accepted?: boolean
+          accuracy_m?: number | null
+          assignment_id?: string
+          campaign_id?: string
+          created_at?: string
+          distance_from_prev_m?: number
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          metadata?: Json
+          recorded_at?: string
+          rejection_reason?: string | null
+          session_id?: string
+          speed_mps?: number | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_location_points_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_driver_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_location_points_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_location_points_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_location_points_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "driver_tracking_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_location_points_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_payout_methods: {
         Row: {
           created_at: string
@@ -980,6 +1138,206 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      driver_tracking_daily_summaries: {
+        Row: {
+          assignment_id: string
+          campaign_id: string
+          city: string | null
+          created_at: string
+          distance_m: number
+          driver_id: string
+          driving_seconds: number
+          first_seen_at: string | null
+          id: string
+          last_seen_at: string | null
+          metadata: Json
+          peak_hour: number | null
+          points_count: number
+          regions: string[]
+          sessions_count: number
+          summary_date: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          assignment_id: string
+          campaign_id: string
+          city?: string | null
+          created_at?: string
+          distance_m?: number
+          driver_id: string
+          driving_seconds?: number
+          first_seen_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          metadata?: Json
+          peak_hour?: number | null
+          points_count?: number
+          regions?: string[]
+          sessions_count?: number
+          summary_date: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          assignment_id?: string
+          campaign_id?: string
+          city?: string | null
+          created_at?: string
+          distance_m?: number
+          driver_id?: string
+          driving_seconds?: number
+          first_seen_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          metadata?: Json
+          peak_hour?: number | null
+          points_count?: number
+          regions?: string[]
+          sessions_count?: number
+          summary_date?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_tracking_daily_summaries_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_driver_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_tracking_daily_summaries_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_tracking_daily_summaries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_tracking_daily_summaries_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_tracking_sessions: {
+        Row: {
+          assignment_id: string
+          campaign_id: string
+          consent_id: string | null
+          created_at: string
+          driver_id: string
+          duration_seconds: number
+          end_lat: number | null
+          end_lng: number | null
+          ended_at: string | null
+          id: string
+          last_point_at: string | null
+          metadata: Json
+          points_count: number
+          source: string
+          start_lat: number | null
+          start_lng: number | null
+          started_at: string
+          status: string
+          total_distance_m: number
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          assignment_id: string
+          campaign_id: string
+          consent_id?: string | null
+          created_at?: string
+          driver_id: string
+          duration_seconds?: number
+          end_lat?: number | null
+          end_lng?: number | null
+          ended_at?: string | null
+          id?: string
+          last_point_at?: string | null
+          metadata?: Json
+          points_count?: number
+          source?: string
+          start_lat?: number | null
+          start_lng?: number | null
+          started_at?: string
+          status?: string
+          total_distance_m?: number
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          assignment_id?: string
+          campaign_id?: string
+          consent_id?: string | null
+          created_at?: string
+          driver_id?: string
+          duration_seconds?: number
+          end_lat?: number | null
+          end_lng?: number | null
+          ended_at?: string | null
+          id?: string
+          last_point_at?: string | null
+          metadata?: Json
+          points_count?: number
+          source?: string
+          start_lat?: number | null
+          start_lng?: number | null
+          started_at?: string
+          status?: string
+          total_distance_m?: number
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_tracking_sessions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_driver_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_tracking_sessions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_tracking_sessions_consent_id_fkey"
+            columns: ["consent_id"]
+            isOneToOne: false
+            referencedRelation: "driver_location_consents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_tracking_sessions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_tracking_sessions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drivers: {
         Row: {
@@ -1863,6 +2221,51 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_model_images: {
+        Row: {
+          active: boolean
+          aliases: string[]
+          brand_key: string | null
+          created_at: string
+          display_brand: string | null
+          display_model: string | null
+          id: string
+          image_path: string
+          is_default: boolean
+          model_key: string | null
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          aliases?: string[]
+          brand_key?: string | null
+          created_at?: string
+          display_brand?: string | null
+          display_model?: string | null
+          id?: string
+          image_path: string
+          is_default?: boolean
+          model_key?: string | null
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          aliases?: string[]
+          brand_key?: string | null
+          created_at?: string
+          display_brand?: string | null
+          display_model?: string | null
+          id?: string
+          image_path?: string
+          is_default?: boolean
+          model_key?: string | null
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           brand: string | null
@@ -1952,9 +2355,17 @@ export type Database = {
       }
     }
     Functions: {
+      apply_driver_to_campaign: {
+        Args: { _campaign_id: string; _driver_id: string; _vehicle_id: string }
+        Returns: string
+      }
       assign_self_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
+      }
+      driver_can_view_available_campaign: {
+        Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
       }
       driver_is_assigned_to_campaign: {
         Args: { _campaign_id: string; _user_id: string }
@@ -1963,6 +2374,10 @@ export type Database = {
       driver_owns_assignment: {
         Args: { _assignment_id: string; _user_id: string }
         Returns: boolean
+      }
+      end_driver_tracking_session: {
+        Args: { _session_id: string }
+        Returns: Json
       }
       enqueue_email: {
         Args: {
@@ -1973,9 +2388,54 @@ export type Database = {
         }
         Returns: string
       }
+      ensure_assignment_qr_code: {
+        Args: { _assignment_id: string }
+        Returns: {
+          advertiser_id: string
+          assignment_id: string | null
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          destination_type: Database["public"]["Enums"]["qr_destination_type"]
+          destination_url: string
+          driver_id: string | null
+          final_image_url: string | null
+          final_pdf_url: string | null
+          generated_at: string | null
+          id: string
+          is_active: boolean
+          kit_label: string | null
+          landing_page_url: string | null
+          qr_position: Json
+          qr_scope: string
+          short_code: string
+          updated_at: string
+          vehicle_id: string | null
+          whatsapp_phone: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "campaign_qr_codes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_admin_driver_rankings: { Args: { _limit?: number }; Returns: Json }
+      get_campaign_qr_analytics: {
+        Args: { _campaign_id: string }
+        Returns: Json
+      }
+      get_driver_tracking_analytics: {
+        Args: { _campaign_id: string }
+        Returns: Json
+      }
       get_my_roles: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      get_my_tracking_status: {
+        Args: { _assignment_id: string }
+        Returns: Json
       }
       has_role: {
         Args: {
@@ -1984,7 +2444,50 @@ export type Database = {
         }
         Returns: boolean
       }
+      haversine_meters: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
+      ingest_driver_location_point: {
+        Args: {
+          _accuracy_m?: number
+          _heading?: number
+          _lat: number
+          _lng: number
+          _metadata?: Json
+          _recorded_at?: string
+          _session_id: string
+          _speed_mps?: number
+        }
+        Returns: Json
+      }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      list_available_campaigns_for_driver: {
+        Args: { _driver_id: string }
+        Returns: {
+          art_url: string
+          available_slots: number
+          city: string
+          description: string
+          id: string
+          monthly_payout: number
+          name: string
+          period_end: string
+          period_start: string
+          plan_value: number
+        }[]
+      }
+      list_eligible_drivers_for_campaign: {
+        Args: { _campaign_id: string }
+        Returns: {
+          city: string
+          full_name: string
+          id: string
+          phone: string
+          regions: string[]
+          vehicles: Json
+        }[]
+      }
       log_email_diagnostic: {
         Args: {
           _error_message?: string
@@ -1996,6 +2499,7 @@ export type Database = {
         }
         Returns: string
       }
+      normalize_vehicle_text: { Args: { _input: string }; Returns: string }
       notify_user: {
         Args: {
           _body: string
@@ -2006,17 +2510,29 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_pending_qr_scan_locations: {
+        Args: { _limit?: number }
+        Returns: number
+      }
+      process_qr_scan_location: { Args: { _scan_id: string }; Returns: Json }
+      purge_old_driver_location_points: { Args: never; Returns: number }
+      revoke_driver_location_consent: { Args: never; Returns: Json }
+      start_driver_tracking_session: {
+        Args: { _assignment_id: string; _terms_version?: string }
+        Returns: string
+      }
       track_campaign_qr_scan: {
         Args: {
           _metadata?: Json
-          _referrer?: string | null
+          _referrer?: string
           _short_code: string
-          _user_agent?: string | null
+          _user_agent?: string
         }
         Returns: {
           destination_url: string
         }[]
       }
+      unaccent: { Args: { "": string }; Returns: string }
       user_owns_advertiser: {
         Args: { _advertiser_id: string; _user_id: string }
         Returns: boolean
@@ -2067,7 +2583,6 @@ export type Database = {
         | "paused"
         | "completed"
         | "cancelled"
-      qr_destination_type: "whatsapp" | "landing_page"
       doc_review_status: "pending" | "approved" | "rejected"
       driver_payout_method_status:
         | "incomplete"
@@ -2134,6 +2649,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "resubmission_requested"
+      qr_destination_type: "whatsapp" | "landing_page"
       vehicle_status: "pending_review" | "approved" | "rejected" | "suspended"
       webhook_processing_status:
         | "received"
@@ -2313,7 +2829,6 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      qr_destination_type: ["whatsapp", "landing_page"],
       doc_review_status: ["pending", "approved", "rejected"],
       driver_payout_method_status: [
         "incomplete",
@@ -2388,6 +2903,7 @@ export const Constants = {
         "rejected",
         "resubmission_requested",
       ],
+      qr_destination_type: ["whatsapp", "landing_page"],
       vehicle_status: ["pending_review", "approved", "rejected", "suspended"],
       webhook_processing_status: [
         "received",
