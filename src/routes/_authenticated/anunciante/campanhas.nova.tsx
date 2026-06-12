@@ -11,7 +11,7 @@ import { upsertCampaignQrCode, type QrDestinationType } from "@/lib/trackable-qr
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CitySuggestions, CITY_DATALIST_ID } from "@/components/CitySuggestions";
+import { listAvailableCities } from "@/lib/cities";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -65,6 +65,11 @@ function NewCampaignPage() {
   const { data: plans = [], isLoading: isLoadingPlans } = useQuery({
     queryKey: ["active-campaign-plans"],
     queryFn: listActiveCampaignPlans,
+  });
+
+  const { data: cities = [], isLoading: isLoadingCities } = useQuery({
+    queryKey: ["available-cities"],
+    queryFn: listAvailableCities,
   });
 
   useEffect(() => {
@@ -200,14 +205,25 @@ function NewCampaignPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="city">Cidade *</Label>
-              <Input
-                id="city"
-                list={CITY_DATALIST_ID}
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-                placeholder="Ex.: São Paulo"
-              />
-              <CitySuggestions />
+              <Select value={form.city} onValueChange={(value) => setForm({ ...form, city: value })}>
+                <SelectTrigger id="city">
+                  <SelectValue placeholder={isLoadingCities ? "Carregando cidades…" : "Selecione onde rodar"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((c) => (
+                    <SelectItem key={c.city_key} value={c.display_name}>
+                      {c.display_name}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {c.drivers > 0 ? `${c.drivers} motorista${c.drivers > 1 ? "s" : ""}` : "sem motorista ainda"}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!isLoadingCities && cities.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nenhuma cidade disponível no momento.</p>
+              )}
+              <p className="text-xs text-muted-foreground">Apenas cidades onde a Driver Ads opera.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="regions">Regiões (opcional)</Label>

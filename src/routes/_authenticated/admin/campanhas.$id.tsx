@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { QrArtExporter } from "@/components/campaigns/QrArtExporter";
 import { VehicleImage } from "@/components/VehicleImage";
+import { CampaignArt } from "@/components/CampaignArt";
 import {
   ensureAssignmentQrCode,
   getCampaignQrCode,
@@ -126,13 +127,19 @@ function CampaignDetailAdmin() {
           <CardDescription>{adv?.company_name} · {campaign.city}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <Info label="Período" value={`${fmt(campaign.period_start)} → ${fmt(campaign.period_end)}`} />
-            <Info label="Veículos" value={String(campaign.vehicles_qty)} />
-            <Info label="Valor do plano" value={`R$ ${Number(campaign.plan_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
-            <Info label="Regiões" value={campaign.regions?.length ? campaign.regions.join(", ") : "—"} />
-            {adv && <Info label="Responsável" value={`${adv.responsible} · ${adv.email}`} />}
-            {adv && <Info label="Telefone" value={adv.phone} />}
+          <div className="grid gap-4 md:grid-cols-[260px_1fr]">
+            <div>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Arte da campanha</p>
+              <CampaignArt path={campaign.art_url} name={campaign.name} />
+            </div>
+            <div className="grid gap-3 text-sm sm:grid-cols-2 self-start">
+              <Info label="Período" value={`${fmt(campaign.period_start)} → ${fmt(campaign.period_end)}`} />
+              <Info label="Veículos" value={String(campaign.vehicles_qty)} />
+              <Info label="Valor do plano" value={`R$ ${Number(campaign.plan_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+              <Info label="Regiões" value={campaign.regions?.length ? campaign.regions.join(", ") : "—"} />
+              {adv && <Info label="Responsável" value={`${adv.responsible} · ${adv.email}`} />}
+              {adv && <Info label="Telefone" value={adv.phone} />}
+            </div>
           </div>
           {campaign.description && (
             <div>
@@ -215,14 +222,17 @@ function CampaignDetailAdmin() {
             <div className="space-y-3">
               {assignments.map((a) => (
                 <div key={a.id} className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{a.driver?.full_name ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {a.vehicle?.brand ?? ""} {a.vehicle?.model} · {a.vehicle?.plate} · {a.driver?.city}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Repasse: R$ {Number(a.monthly_payout).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês
-                    </p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <VehicleImage brand={a.vehicle?.brand} model={a.vehicle?.model} size={56} />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{a.driver?.full_name ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {a.vehicle?.brand ?? ""} {a.vehicle?.model} · {a.vehicle?.plate} · {a.driver?.city}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Repasse: R$ {Number(a.monthly_payout).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/mês
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <StatusBadge status={a.status} />

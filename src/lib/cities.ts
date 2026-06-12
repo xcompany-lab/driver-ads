@@ -19,3 +19,14 @@ export async function listServiceCities(): Promise<ServiceCity[]> {
   if (error) throw error;
   return (data ?? []) as ServiceCity[];
 }
+
+/**
+ * Cidades disponiveis para o anunciante escolher ao criar campanha:
+ * cadastradas (cities ativas) + cidades com motorista aprovado. Inclui a
+ * contagem de motoristas para indicar a disponibilidade.
+ */
+export async function listAvailableCities(): Promise<ServiceCity[]> {
+  const { data, error } = await (supabase as SupabaseWithRpc).rpc("list_available_cities");
+  if (error) throw error;
+  return (data ?? []) as ServiceCity[];
+}
