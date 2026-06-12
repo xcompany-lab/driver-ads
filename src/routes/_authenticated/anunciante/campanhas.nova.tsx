@@ -71,6 +71,8 @@ function NewCampaignPage() {
     queryKey: ["available-cities"],
     queryFn: listAvailableCities,
   });
+  // Anunciante so ve cidades que ja tem motorista para rodar.
+  const citiesWithDrivers = cities.filter((c) => c.drivers > 0);
 
   useEffect(() => {
     if (!form.plan_id && plans[0]?.id) {
@@ -210,17 +212,14 @@ function NewCampaignPage() {
                   <SelectValue placeholder={isLoadingCities ? "Carregando cidades…" : "Selecione onde rodar"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {cities.map((c) => (
+                  {citiesWithDrivers.map((c) => (
                     <SelectItem key={c.city_key} value={c.display_name}>
                       {c.display_name}
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {c.drivers > 0 ? `${c.drivers} motorista${c.drivers > 1 ? "s" : ""}` : "sem motorista ainda"}
-                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {!isLoadingCities && cities.length === 0 && (
+              {!isLoadingCities && citiesWithDrivers.length === 0 && (
                 <p className="text-xs text-muted-foreground">Nenhuma cidade disponível no momento.</p>
               )}
               <p className="text-xs text-muted-foreground">Apenas cidades onde a Driver Ads opera.</p>
@@ -311,15 +310,6 @@ function NewCampaignPage() {
                         <p className="font-display text-2xl font-bold">{formatPlanPrice(plan)}</p>
                         <p className="text-xs text-muted-foreground">/ mes</p>
                       </div>
-                      {plan.driver_payout_cents > 0 && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Repasse previsto ao motorista:{" "}
-                          {(plan.driver_payout_cents / 100).toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: plan.currency || "BRL",
-                          })}
-                        </p>
-                      )}
                     </button>
                   );
                 })}
