@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="none"/>
+  <g fill="none" stroke="#9aa3af" stroke-width="18" stroke-linejoin="round" stroke-linecap="round">
+    <!-- corpo do carro -->
+    <path d="M64 320
+             L96 232
+             C104 212 122 200 144 200
+             L256 200
+             C272 200 286 206 298 218
+             L356 274
+             L424 290
+             C444 295 458 313 458 334
+             L458 348
+             C458 357 451 364 442 364
+             L420 364" />
+    <path d="M92 364 L172 364" />
+    <path d="M252 364 L332 364" />
+    <path d="M64 320 L64 348 C64 357 71 364 80 364 L92 364" />
+    <!-- linha do teto/janelas -->
+    <path d="M150 200 L168 150 C172 138 183 130 196 130 L268 130 C280 130 291 137 296 148 L320 200" />
+    <path d="M236 132 L236 200" />
+  </g>
+  <!-- rodas -->
+  <g fill="#9aa3af">
+    <circle cx="132" cy="372" r="40"/>
+    <circle cx="292" cy="372" r="40"/>
+  </g>
+  <g fill="#f3f4f6">
+    <circle cx="132" cy="372" r="18"/>
+    <circle cx="292" cy="372" r="18"/>
+  </g>
+</svg>
