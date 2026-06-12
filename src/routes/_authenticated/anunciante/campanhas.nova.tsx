@@ -7,6 +7,7 @@ import { useSession } from "@/hooks/useSession";
 import { getMyAdvertiser } from "@/lib/advertiser";
 import { createMyCampaign, uploadCampaignArt, updateMyCampaign } from "@/lib/campaigns";
 import { formatPlanPrice, listActiveCampaignPlans } from "@/lib/campaign-plans";
+import { listCatalogByTier, vehicleImageUrl } from "@/lib/vehicle-catalog";
 import { upsertCampaignQrCode, type QrDestinationType } from "@/lib/trackable-qr";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -336,6 +337,12 @@ function NewCampaignPage() {
                 <p className="font-display text-2xl font-bold text-primary">{brl(totalMonthlyCents)} <span className="text-sm font-normal text-muted-foreground">/ mês</span></p>
               </div>
             )}
+
+            {selectedPlan && (
+              <PlanVehiclePreview
+                tier={(selectedPlan.metadata as { vehicle_tier?: string } | null)?.vehicle_tier ?? "standard"}
+              />
+            )}
           </div>
 
           <div className="space-y-2">
@@ -429,6 +436,38 @@ function NewCampaignPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function PlanVehiclePreview({ tier }: { tier: string }) {
+  const { data = [] } = useQuery({
+    queryKey: ["catalog-tier", tier],
+    queryFn: () => listCatalogByTier(tier, 6),
+  });
+  if (!data.length) return null;
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">
+        {tier === "black" ? "Veículos Black que rodam neste plano:" : "Exemplos de veículos deste plano:"}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {data.map((m) => (
+          <div key={m.id} className="w-20">
+            <div className="flex h-16 w-20 items-center justify-center overflow-hidden rounded-md border bg-muted/40">
+              <img
+                src={vehicleImageUrl(m.image_path) ?? ""}
+                alt={m.display_model ?? ""}
+                loading="lazy"
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <p className="mt-1 truncate text-center text-[10px] text-muted-foreground">
+              {m.display_brand ? `${m.display_brand} ` : ""}{m.display_model}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

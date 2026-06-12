@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/admin/catalogo-veiculos")({
   component: VehicleCatalogAdmin,
@@ -69,6 +70,7 @@ function VehicleCatalogAdmin() {
                       {entry.is_default ? "Silhueta padrão" : `${entry.display_brand ?? "—"} ${entry.display_model ?? ""}`.trim()}
                     </p>
                     {entry.is_default && <Badge variant="secondary"><Star className="mr-1 h-3 w-3" /> Padrão</Badge>}
+                    {entry.tier === "black" && <Badge className="bg-foreground text-background">Black</Badge>}
                     {!entry.active && <Badge variant="outline">Inativo</Badge>}
                   </div>
                   {entry.aliases.length > 0 && (
@@ -117,6 +119,7 @@ function CatalogDialog({ entry, trigger }: { entry?: VehicleModelImage; trigger:
   const [priority, setPriority] = useState(String(entry?.priority ?? 100));
   const [isDefault, setIsDefault] = useState(entry?.is_default ?? false);
   const [active, setActive] = useState(entry?.active ?? true);
+  const [tier, setTier] = useState(entry?.tier ?? "standard");
   const [file, setFile] = useState<File | null>(null);
 
   const save = useMutation({
@@ -136,6 +139,7 @@ function CatalogDialog({ entry, trigger }: { entry?: VehicleModelImage; trigger:
         image_path: imagePath,
         is_default: isDefault,
         active,
+        tier,
         priority: Number(priority) || 100,
       });
     },
@@ -178,10 +182,23 @@ function CatalogDialog({ entry, trigger }: { entry?: VehicleModelImage; trigger:
               <Input id="cat-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder="HB20" />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="cat-aliases">Apelidos (separados por vírgula)</Label>
-            <Input id="cat-aliases" value={aliases} onChange={(e) => setAliases(e.target.value)} placeholder="hb 20, hb20s, hb20 sense" />
-            <p className="text-xs text-muted-foreground">Variações comuns do modelo para ajudar o casamento.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="cat-aliases">Apelidos (separados por vírgula)</Label>
+              <Input id="cat-aliases" value={aliases} onChange={(e) => setAliases(e.target.value)} placeholder="hb 20, hb20s, hb20 sense" />
+              <p className="text-xs text-muted-foreground">Variações comuns do modelo para ajudar o casamento.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cat-tier">Categoria</Label>
+              <Select value={tier} onValueChange={setTier}>
+                <SelectTrigger id="cat-tier"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">Standard</SelectItem>
+                  <SelectItem value="black">Black (premium)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Black aparece no plano Driver Ads Black.</p>
+            </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">

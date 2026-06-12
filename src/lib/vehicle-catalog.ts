@@ -124,6 +124,20 @@ export function resolveVehicleImageUrl(
 // CRUD do catálogo (tela admin)
 // ---------------------------------------------------------------------------
 
+/** Lista modelos do catalogo de uma categoria (tier), para previas por plano. */
+export async function listCatalogByTier(tier: string, limit = 8): Promise<VehicleModelImage[]> {
+  const { data, error } = await supabase
+    .from("vehicle_model_images")
+    .select("*")
+    .eq("tier", tier)
+    .eq("active", true)
+    .eq("is_default", false)
+    .order("priority", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function listVehicleCatalog(): Promise<VehicleModelImage[]> {
   const { data, error } = await supabase
     .from("vehicle_model_images")

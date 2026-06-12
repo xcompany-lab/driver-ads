@@ -2264,6 +2264,7 @@ export type Database = {
           is_default: boolean
           model_key: string | null
           priority: number
+          tier: string
           updated_at: string
         }
         Insert: {
@@ -2278,6 +2279,7 @@ export type Database = {
           is_default?: boolean
           model_key?: string | null
           priority?: number
+          tier?: string
           updated_at?: string
         }
         Update: {
@@ -2292,6 +2294,7 @@ export type Database = {
           is_default?: boolean
           model_key?: string | null
           priority?: number
+          tier?: string
           updated_at?: string
         }
         Relationships: []
@@ -2505,6 +2508,25 @@ export type Database = {
           period_end: string
           period_start: string
           plan_value: number
+        }[]
+      }
+      list_available_cities: {
+        Args: never
+        Returns: {
+          city_key: string
+          display_name: string
+          drivers: number
+        }[]
+      }
+      list_campaign_assigned_vehicles: {
+        Args: { _campaign_id: string }
+        Returns: {
+          brand: string
+          driver_first_name: string
+          model: string
+          plate: string
+          status: Database["public"]["Enums"]["assignment_status"]
+          vehicle_id: string
         }[]
       }
       list_eligible_drivers_for_campaign: {
