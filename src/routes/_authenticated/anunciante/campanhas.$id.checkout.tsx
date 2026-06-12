@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, CheckCircle2, CreditCard, QrCode } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -245,14 +245,23 @@ function CheckoutPage() {
     }
   };
 
+  const bannerUrl = supabase.storage.from("vehicles").getPublicUrl("brand/checkout-banner.png").data.publicUrl;
+  const avatarUrl = supabase.storage.from("vehicles").getPublicUrl("brand/checkout-avatar.png").data.publicUrl;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <Button asChild variant="ghost" size="sm">
         <Link to="/anunciante/campanhas/$id" params={{ id }}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar para campanha
         </Link>
       </Button>
+
+      <BrandImage
+        src={bannerUrl}
+        alt="Driver Ads"
+        className="w-full rounded-xl border object-cover shadow-sm"
+      />
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Contratar assinatura</h1>
@@ -332,35 +341,61 @@ function CheckoutPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Resumo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Plano</span>
-              <span className="font-medium">{plan.name}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Valor mensal</span>
-              <span className="font-semibold">{brl(plan.monthly_price_cents)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Cobrança</span>
-              <span>Recorrente, mensal</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Status financeiro</span>
-              <StatusBadge status={billing?.campaign?.billing_status ?? campaign.billing_status ?? "none"} />
-            </div>
-            <p className="pt-2 text-xs text-muted-foreground">
-              Ao confirmar você autoriza a cobrança mensal recorrente no cartão informado, com
-              cancelamento livre a qualquer momento. A campanha física só entra em circulação
-              após confirmação do pagamento e aprovação operacional.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Resumo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Plano</span>
+                <span className="font-medium">{plan.name}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Valor mensal</span>
+                <span className="font-semibold">{brl(plan.monthly_price_cents)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Cobrança</span>
+                <span>Recorrente, mensal</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Status financeiro</span>
+                <StatusBadge status={billing?.campaign?.billing_status ?? campaign.billing_status ?? "none"} />
+              </div>
+              <p className="pt-2 text-xs text-muted-foreground">
+                Ao confirmar você autoriza a cobrança mensal recorrente no cartão informado, com
+                cancelamento livre a qualquer momento. A campanha física só entra em circulação
+                após confirmação do pagamento e aprovação operacional.
+              </p>
+            </CardContent>
+          </Card>
+
+          <BrandImage
+            src={avatarUrl}
+            alt="Driver Ads"
+            wrapperClassName="overflow-hidden rounded-xl border shadow-sm"
+            className="aspect-square w-full object-cover"
+          />
+        </div>
       </div>
     </div>
   );
+}
+
+function BrandImage({
+  src,
+  alt,
+  className,
+  wrapperClassName,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  wrapperClassName?: string;
+}) {
+  const [ok, setOk] = useState(true);
+  if (!ok) return null;
+  const img = <img src={src} alt={alt} loading="lazy" className={className} onError={() => setOk(false)} />;
+  return wrapperClassName ? <div className={wrapperClassName}>{img}</div> : img;
 }
