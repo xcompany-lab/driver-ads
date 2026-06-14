@@ -5,6 +5,7 @@
     "scheme": "driveradsdriver",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
@@ -22,6 +23,10 @@
     },
     "android": {
       "package": "br.com.driverads.motorista",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
       ]
@@ -44,7 +49,18 @@
           "cameraPermission": "A Driver Ads usa a camera para registrar documentos e comprovantes de instalacao quando voce escolher tirar uma foto."
         }
       ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#07142d"
+        }
+      ],
       "expo-status-bar"
-    ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
   }
 }
