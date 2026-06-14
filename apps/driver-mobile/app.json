@@ -61,6 +61,12 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "311b911e-10b9-4cc9-be06-8e7c40d5c325"
+      }
+    },
+    "owner": "madaraschumacher"
   }
 }
