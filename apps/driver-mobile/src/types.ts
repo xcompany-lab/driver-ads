@@ -78,6 +78,7 @@ export interface AvailableCampaign {
   plan_value: number;
   monthly_payout: number;
   available_slots: number;
+  vehicle_tier: string;
 }
 
 export interface TrackingStatus {

@@ -32,6 +32,7 @@ import {
   listMyVehicles,
   listProofsForAssignment,
   respondToAssignment,
+  resolveVehicleTiers,
   saveVehicle,
   signIn,
   signOut,
@@ -87,6 +88,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicleTiers, setVehicleTiers] = useState<Record<string, string>>({});
   const [assignments, setAssignments] = useState<DriverAssignment[]>([]);
   const [availableCampaigns, setAvailableCampaigns] = useState<AvailableCampaign[]>([]);
   const [payoutMethod, setPayoutMethod] = useState<DriverPayoutMethod | null>(null);
@@ -120,6 +122,7 @@ export default function App() {
     if (!session) {
       setDriver(null);
       setVehicles([]);
+      setVehicleTiers({});
       setAssignments([]);
       setAvailableCampaigns([]);
       setPayoutMethod(null);
@@ -155,7 +158,9 @@ export default function App() {
         getMyPayoutMethod(nextDriver.id),
         listMyDriverPayouts(nextDriver.id),
       ]);
+      const nextVehicleTiers = await resolveVehicleTiers(nextVehicles);
       setVehicles(nextVehicles);
+      setVehicleTiers(nextVehicleTiers);
       setAssignments(nextAssignments);
       setAvailableCampaigns(nextAvailable);
       setPayoutMethod(nextMethod);
@@ -262,6 +267,7 @@ export default function App() {
           <CampaignsScreen
             driver={driver}
             vehicles={vehicles}
+            vehicleTiers={vehicleTiers}
             assignments={assignments}
             availableCampaigns={availableCampaigns}
             busy={busy}
@@ -454,6 +460,7 @@ function HomeScreen({
 function CampaignsScreen({
   driver,
   vehicles,
+  vehicleTiers,
   assignments,
   availableCampaigns,
   busy,
@@ -462,6 +469,7 @@ function CampaignsScreen({
 }: {
   driver: Driver | null;
   vehicles: Vehicle[];
+  vehicleTiers: Record<string, string>;
   assignments: DriverAssignment[];
   availableCampaigns: AvailableCampaign[];
   busy: boolean;
@@ -469,19 +477,39 @@ function CampaignsScreen({
   onChanged: () => Promise<void>;
 }) {
   const [vehicleId, setVehicleId] = useState<string | null>(vehicles[0]?.id ?? null);
+  const approvedVehicles = useMemo(
+    () => vehicles.filter((vehicle) => vehicle.status === "approved" || vehicle.crlv_status === "approved"),
+    [vehicles],
+  );
+  const blackVehicle = useMemo(
+    () => approvedVehicles.find((vehicle) => vehicleTiers[vehicle.id] === "black") ?? null,
+    [approvedVehicles, vehicleTiers],
+  );
 
   useEffect(() => {
-    if (!vehicleId && vehicles[0]?.id) setVehicleId(vehicles[0].id);
-  }, [vehicles, vehicleId]);
+    if (!vehicleId && approvedVehicles[0]?.id) setVehicleId(approvedVehicles[0].id);
+    if (vehicleId && !approvedVehicles.some((vehicle) => vehicle.id === vehicleId)) {
+      setVehicleId(approvedVehicles[0]?.id ?? null);
+    }
+  }, [approvedVehicles, vehicleId]);
 
-  async function handleApply(campaignId: string) {
-    if (!driver?.id || !vehicleId) {
-      Alert.alert("Driver Ads", "Cadastre e aprove um veiculo antes de se candidatar.");
+  function vehicleForCampaign(campaign: AvailableCampaign) {
+    return campaign.vehicle_tier === "black" ? blackVehicle?.id ?? null : vehicleId ?? approvedVehicles[0]?.id ?? null;
+  }
+
+  async function handleApply(campaign: AvailableCampaign) {
+    const selectedVehicleId = vehicleForCampaign(campaign);
+    if (!driver?.id || !selectedVehicleId) {
+      const message =
+        campaign.vehicle_tier === "black"
+          ? "Esta campanha Black exige um veiculo Black aprovado no seu cadastro."
+          : "Cadastre e aprove um veiculo antes de se candidatar.";
+      Alert.alert("Driver Ads", message);
       return;
     }
     setBusy(true);
     try {
-      await applyToCampaign(campaignId, driver.id, vehicleId);
+      await applyToCampaign(campaign.id, driver.id, selectedVehicleId);
       await onChanged();
       Alert.alert("Driver Ads", "Candidatura enviada.");
     } catch (error) {
@@ -510,14 +538,17 @@ function CampaignsScreen({
       <View style={styles.card}>
         <Text style={styles.subtitle}>Veiculo para candidatura</Text>
         <Segmented
-          options={vehicles.map((vehicle) => ({
+          options={approvedVehicles.map((vehicle) => ({
             value: vehicle.id,
-            label: `${vehicle.plate} - ${vehicle.model}`,
+            label: `${vehicle.plate} - ${vehicle.model}${vehicleTiers[vehicle.id] === "black" ? " Black" : ""}`,
           }))}
           value={vehicleId}
           onChange={setVehicleId}
-          emptyLabel="Nenhum veiculo cadastrado"
+          emptyLabel="Nenhum veiculo aprovado"
         />
+        <Text style={styles.muted}>
+          Campanhas Black usam automaticamente um veiculo Black aprovado, quando houver.
+        </Text>
       </View>
 
       <View style={styles.card}>
@@ -526,13 +557,14 @@ function CampaignsScreen({
           <EmptyState text="Nenhuma campanha disponivel para sua cidade/perfil agora." />
         ) : (
           availableCampaigns.map((campaign) => (
-            <View key={campaign.id} style={styles.listItem}>
-              {campaign.art_url ? <CampaignImage path={campaign.art_url} /> : null}
-              <Text style={styles.itemTitle}>{campaign.name}</Text>
-              <Text style={styles.muted}>{campaign.city} · {formatDate(campaign.period_start)} a {formatDate(campaign.period_end)}</Text>
-              <Text style={styles.muted}>Repasse mensal: {formatCurrency(Number(campaign.monthly_payout || 0))}</Text>
-              <PrimaryButton label="Quero me candidatar" onPress={() => handleApply(campaign.id)} disabled={busy || !vehicleId} />
-            </View>
+            <AvailableCampaignItem
+              key={campaign.id}
+              campaign={campaign}
+              busy={busy}
+              approvedVehicles={approvedVehicles}
+              selectedVehicleId={vehicleForCampaign(campaign)}
+              onApply={handleApply}
+            />
           ))
         )}
       </View>
@@ -547,7 +579,7 @@ function CampaignsScreen({
               <StatusPill status={assignment.status} />
               <Text style={styles.itemTitle}>{assignment.campaign?.name ?? "Campanha"}</Text>
               <Text style={styles.muted}>
-                {assignment.vehicle?.plate ?? "-"} · {assignment.vehicle?.model ?? "veiculo"} ·{" "}
+                {assignment.vehicle?.plate ?? "-"} - {assignment.vehicle?.model ?? "veiculo"} -{" "}
                 {formatCurrency(Number(assignment.monthly_payout || 0))}
               </Text>
               {assignment.status === "invited" && (
@@ -560,6 +592,49 @@ function CampaignsScreen({
           ))
         )}
       </View>
+    </View>
+  );
+}
+
+function AvailableCampaignItem({
+  campaign,
+  busy,
+  approvedVehicles,
+  selectedVehicleId,
+  onApply,
+}: {
+  campaign: AvailableCampaign;
+  busy: boolean;
+  approvedVehicles: Vehicle[];
+  selectedVehicleId: string | null;
+  onApply: (campaign: AvailableCampaign) => Promise<void>;
+}) {
+  const requiresBlack = campaign.vehicle_tier === "black";
+  const selectedVehicle = approvedVehicles.find((vehicle) => vehicle.id === selectedVehicleId);
+
+  return (
+    <View style={styles.listItem}>
+      {campaign.art_url ? <CampaignImage path={campaign.art_url} /> : null}
+      <View style={styles.itemTitleRow}>
+        <Text style={styles.itemTitle}>{campaign.name}</Text>
+        {requiresBlack ? <Text style={styles.blackBadge}>Black</Text> : null}
+      </View>
+      <Text style={styles.muted}>
+        {campaign.city} - {formatDate(campaign.period_start)} a {formatDate(campaign.period_end)}
+      </Text>
+      <Text style={styles.muted}>Repasse mensal: {formatCurrency(Number(campaign.monthly_payout || 0))}</Text>
+      {selectedVehicle ? (
+        <Text style={styles.muted}>
+          Veiculo: {selectedVehicle.plate} - {selectedVehicle.model}
+        </Text>
+      ) : requiresBlack ? (
+        <Text style={styles.warningText}>Requer veiculo Black aprovado no seu cadastro.</Text>
+      ) : null}
+      <PrimaryButton
+        label="Quero me candidatar"
+        onPress={() => onApply(campaign)}
+        disabled={busy || !selectedVehicleId}
+      />
     </View>
   );
 }
@@ -621,7 +696,7 @@ function TrackingScreen({
         <Segmented
           options={assignments.map((assignment) => ({
             value: assignment.id,
-            label: `${assignment.campaign?.name ?? "Campanha"} · ${assignment.vehicle?.plate ?? "-"}`,
+            label: `${assignment.campaign?.name ?? "Campanha"} - ${assignment.vehicle?.plate ?? "-"}`,
           }))}
           value={selectedId}
           onChange={setSelectedId}
@@ -770,7 +845,7 @@ function EarningsScreen({
               <View>
                 <Text style={styles.itemTitle}>{formatCurrency(Number(payout.amount || 0))}</Text>
                 <Text style={styles.muted}>
-                  {payout.assignment?.campaign?.name ?? "Campanha"} · {formatDate(payout.reference_month)}
+                  {payout.assignment?.campaign?.name ?? "Campanha"} - {formatDate(payout.reference_month)}
                 </Text>
               </View>
               <StatusPill status={payout.status} />
@@ -950,8 +1025,8 @@ function ProfileScreen({
         ) : (
           vehicles.map((item) => (
             <View key={item.id} style={styles.listItem}>
-              <Text style={styles.itemTitle}>{item.plate} · {item.model}</Text>
-              <Text style={styles.muted}>{[item.brand, item.year, item.color].filter(Boolean).join(" · ") || "Dados basicos"}</Text>
+              <Text style={styles.itemTitle}>{item.plate} - {item.model}</Text>
+              <Text style={styles.muted}>{[item.brand, item.year, item.color].filter(Boolean).join(" - ") || "Dados basicos"}</Text>
               <StatusPill status={item.status} />
               <DocRow label="CRLV" status={item.crlv_status} onPress={() => handleCrlv(item.id)} />
             </View>
@@ -1420,6 +1495,31 @@ const styles = StyleSheet.create({
     color: "#061a3a",
     fontSize: 16,
     fontWeight: "800",
+  },
+  itemTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  blackBadge: {
+    borderRadius: 999,
+    backgroundColor: "#06142d",
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: "900",
+    overflow: "hidden",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    textTransform: "uppercase",
+  },
+  warningText: {
+    borderRadius: 8,
+    backgroundColor: "#fff7ed",
+    color: "#9a3412",
+    fontSize: 12,
+    fontWeight: "700",
+    padding: 10,
   },
   primaryButton: {
     minHeight: 48,

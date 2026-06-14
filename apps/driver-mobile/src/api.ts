@@ -202,6 +202,28 @@ export async function listAvailableCampaigns(driverId: string): Promise<Availabl
   return (data ?? []) as AvailableCampaign[];
 }
 
+export async function resolveVehicleTier(brand?: string | null, model?: string | null) {
+  const { data, error } = await supabase.rpc("resolve_vehicle_tier", {
+    _brand: brand ?? "",
+    _model: model ?? "",
+  });
+  if (error) throw error;
+  return String(data || "standard");
+}
+
+export async function resolveVehicleTiers(vehicles: Vehicle[]) {
+  const pairs = await Promise.all(
+    vehicles.map(async (vehicle) => {
+      try {
+        return [vehicle.id, await resolveVehicleTier(vehicle.brand, vehicle.model)] as const;
+      } catch {
+        return [vehicle.id, "standard"] as const;
+      }
+    }),
+  );
+  return Object.fromEntries(pairs) as Record<string, string>;
+}
+
 export async function applyToCampaign(campaignId: string, driverId: string, vehicleId: string) {
   const { error } = await supabase.rpc("apply_driver_to_campaign", {
     _campaign_id: campaignId,
