@@ -15,6 +15,8 @@ export async function requestLocationPermissions() {
 }
 
 export async function startNativeLocationUpdates() {
+  if (!hasBackgroundLocationTaskApi()) return;
+
   const alreadyStarted = await Location.hasStartedLocationUpdatesAsync(TRACKING_TASK_NAME);
   if (alreadyStarted) return;
 
@@ -33,8 +35,18 @@ export async function startNativeLocationUpdates() {
 }
 
 export async function stopNativeLocationUpdates() {
+  if (!hasBackgroundLocationTaskApi()) return;
+
   const started = await Location.hasStartedLocationUpdatesAsync(TRACKING_TASK_NAME);
   if (started) {
     await Location.stopLocationUpdatesAsync(TRACKING_TASK_NAME);
   }
+}
+
+function hasBackgroundLocationTaskApi() {
+  return (
+    typeof Location.hasStartedLocationUpdatesAsync === "function" &&
+    typeof Location.startLocationUpdatesAsync === "function" &&
+    typeof Location.stopLocationUpdatesAsync === "function"
+  );
 }

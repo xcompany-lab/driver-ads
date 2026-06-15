@@ -187,11 +187,13 @@ export default function App() {
         setVehicleTiers({});
       }
 
-      const failed = [vehiclesResult, assignmentsResult, availableResult, methodResult, payoutsResult].find(
-        (item) => item.status === "rejected",
-      );
-      if (failed?.status === "rejected") {
-        setLoadError(errorMessage(failed.reason));
+      const criticalFailures = [
+        ["Veiculos", vehiclesResult],
+        ["Campanhas vinculadas", assignmentsResult],
+      ] as const;
+      const failedCritical = criticalFailures.find(([, result]) => result.status === "rejected");
+      if (failedCritical?.[1].status === "rejected") {
+        setLoadError(`${failedCritical[0]}: ${errorMessage(failedCritical[1].reason)}`);
       }
     } catch (error) {
       setLoadError(errorMessage(error));
@@ -1376,7 +1378,18 @@ function resultValue<T>(result: PromiseSettledResult<T>, fallback: T) {
 }
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Falha inesperada.";
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error) {
+    const candidate = error as { message?: unknown; error_description?: unknown; details?: unknown; code?: unknown };
+    if (typeof candidate.message === "string" && candidate.message.trim()) return candidate.message;
+    if (typeof candidate.error_description === "string" && candidate.error_description.trim()) {
+      return candidate.error_description;
+    }
+    if (typeof candidate.details === "string" && candidate.details.trim()) return candidate.details;
+    if (typeof candidate.code === "string" && candidate.code.trim()) return candidate.code;
+  }
+  if (typeof error === "string" && error.trim()) return error;
+  return "Falha inesperada.";
 }
 
 function showError(error: unknown) {
