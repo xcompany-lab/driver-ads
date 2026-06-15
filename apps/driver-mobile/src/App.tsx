@@ -80,6 +80,8 @@ const PIX_OPTIONS: { value: PixKeyType; label: string }[] = [
   { value: "random", label: "Aleatoria" },
 ];
 
+const EARNING_ASSIGNMENT_STATUSES = ["accepted", "awaiting_installation", "active"];
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [tab, setTab] = useState<Tab>("home");
@@ -246,8 +248,16 @@ export default function App() {
   }
 
   async function handleSignOut() {
-    await stopNativeLocationUpdates();
-    await clearActiveTrackingSession();
+    try {
+      await stopNativeLocationUpdates();
+    } catch {
+      // Logout must not be blocked by a native/web location cleanup failure.
+    }
+    try {
+      await clearActiveTrackingSession();
+    } catch {
+      // Keep going; Supabase session cleanup is the important part.
+    }
     await signOut();
   }
 
@@ -338,6 +348,7 @@ export default function App() {
         {tab === "earnings" && (
           <EarningsScreen
             driver={driver}
+            assignments={assignments}
             payoutMethod={payoutMethod}
             payouts={payouts}
             busy={busy}
@@ -508,6 +519,9 @@ function HomeScreen({
   setTab: (tab: Tab) => void;
 }) {
   const activeAssignments = assignments.filter((item) => item.status === "active").length;
+  const expectedMonthly = assignments
+    .filter((item) => EARNING_ASSIGNMENT_STATUSES.includes(item.status))
+    .reduce((sum, item) => sum + Number(item.monthly_payout || 0), 0);
   const pendingDocs = driver
     ? ["cnh_front_status", "selfie_doc_status", "address_proof_status"].filter((key) => (driver as any)[key] !== "approved")
         .length
@@ -536,8 +550,8 @@ function HomeScreen({
 
       <View style={styles.card}>
         <Text style={styles.subtitle}>Resumo financeiro</Text>
-        <Text style={styles.bigNumber}>{formatCurrency(payouts.reduce((sum, payout) => sum + Number(payout.amount || 0), 0))}</Text>
-        <Text style={styles.muted}>Total registrado em repasses no painel.</Text>
+        <Text style={styles.bigNumber}>{formatCurrency(expectedMonthly)}</Text>
+        <Text style={styles.muted}>Repasse mensal previsto pelas campanhas vinculadas.</Text>
       </View>
     </View>
   );
@@ -849,6 +863,7 @@ function ProofHistory({ assignmentId }: { assignmentId: string }) {
 
 function EarningsScreen({
   driver,
+  assignments,
   payoutMethod,
   payouts,
   busy,
@@ -856,6 +871,7 @@ function EarningsScreen({
   onChanged,
 }: {
   driver: Driver | null;
+  assignments: DriverAssignment[];
   payoutMethod: DriverPayoutMethod | null;
   payouts: DriverPayout[];
   busy: boolean;
@@ -866,6 +882,14 @@ function EarningsScreen({
   const [pixKey, setPixKey] = useState("");
   const [legalName, setLegalName] = useState(driver?.full_name ?? "");
   const [documentNumber, setDocumentNumber] = useState(driver?.cpf ?? "");
+  const earningAssignments = useMemo(
+    () => assignments.filter((item) => EARNING_ASSIGNMENT_STATUSES.includes(item.status)),
+    [assignments],
+  );
+  const expectedMonthly = useMemo(
+    () => earningAssignments.reduce((sum, item) => sum + Number(item.monthly_payout || 0), 0),
+    [earningAssignments],
+  );
 
   useEffect(() => {
     if (driver?.full_name) setLegalName(driver.full_name);
@@ -903,6 +927,30 @@ function EarningsScreen({
       <HeaderBlock title="Ganhos" subtitle="Repasse mensal, chave Pix e historico financeiro." />
 
       <View style={styles.card}>
+        <Text style={styles.subtitle}>A receber mensal</Text>
+        <Text style={styles.bigNumber}>{formatCurrency(expectedMonthly)}</Text>
+        <Text style={styles.muted}>Valor previsto pelas campanhas aceitas, em instalacao ou ativas.</Text>
+        {earningAssignments.length === 0 ? (
+          <EmptyState text="Nenhuma campanha com repasse mensal previsto agora." />
+        ) : (
+          earningAssignments.map((assignment) => (
+            <View key={assignment.id} style={styles.compactItem}>
+              <View style={styles.flex}>
+                <Text style={styles.itemTitle}>{assignment.campaign?.name ?? "Campanha"}</Text>
+                <Text style={styles.muted}>
+                  {assignment.vehicle?.plate ?? "-"} - {assignment.vehicle?.model ?? "veiculo"}
+                </Text>
+              </View>
+              <View style={styles.stackSmall}>
+                <Text style={styles.itemTitle}>{formatCurrency(Number(assignment.monthly_payout || 0))}</Text>
+                <StatusPill status={assignment.status} />
+              </View>
+            </View>
+          ))
+        )}
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.subtitle}>Chave Pix para recebimento</Text>
         {payoutMethod ? (
           <View style={styles.noticeInfo}>
@@ -922,9 +970,9 @@ function EarningsScreen({
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.subtitle}>Repasses</Text>
+        <Text style={styles.subtitle}>Historico de repasses</Text>
         {payouts.length === 0 ? (
-          <EmptyState text="Nenhum repasse registrado ainda." />
+          <EmptyState text="Nenhum repasse fechado ou pago ainda." />
         ) : (
           payouts.map((payout) => (
             <View key={payout.id} style={styles.compactItem}>
