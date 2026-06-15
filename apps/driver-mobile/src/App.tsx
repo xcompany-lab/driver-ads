@@ -84,8 +84,10 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [tab, setTab] = useState<Tab>("home");
   const [loading, setLoading] = useState(true);
+  const [dataReady, setDataReady] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [vehicleTiers, setVehicleTiers] = useState<Record<string, string>>({});
@@ -120,6 +122,8 @@ export default function App() {
 
   useEffect(() => {
     if (!session) {
+      setDataReady(false);
+      setLoadError(null);
       setDriver(null);
       setVehicles([]);
       setVehicleTiers({});
@@ -146,28 +150,51 @@ export default function App() {
 
   async function refreshAll() {
     setRefreshing(true);
+    setLoadError(null);
     try {
       const nextDriver = await getMyDriver();
       setDriver(nextDriver);
-      if (!nextDriver?.id) return;
+      if (!nextDriver?.id) {
+        setVehicles([]);
+        setVehicleTiers({});
+        setAssignments([]);
+        setAvailableCampaigns([]);
+        setPayoutMethod(null);
+        setPayouts([]);
+        return;
+      }
 
-      const [nextVehicles, nextAssignments, nextAvailable, nextMethod, nextPayouts] = await Promise.all([
+      const [vehiclesResult, assignmentsResult, availableResult, methodResult, payoutsResult] = await Promise.allSettled([
         listMyVehicles(nextDriver.id),
         listMyAssignments(nextDriver.id),
         listAvailableCampaigns(nextDriver.id),
         getMyPayoutMethod(nextDriver.id),
         listMyDriverPayouts(nextDriver.id),
       ]);
-      const nextVehicleTiers = await resolveVehicleTiers(nextVehicles);
+
+      const nextVehicles = resultValue(vehiclesResult, [] as Vehicle[]);
       setVehicles(nextVehicles);
-      setVehicleTiers(nextVehicleTiers);
-      setAssignments(nextAssignments);
-      setAvailableCampaigns(nextAvailable);
-      setPayoutMethod(nextMethod);
-      setPayouts(nextPayouts);
+      setAssignments(resultValue(assignmentsResult, [] as DriverAssignment[]));
+      setAvailableCampaigns(resultValue(availableResult, [] as AvailableCampaign[]));
+      setPayoutMethod(resultValue(methodResult, null as DriverPayoutMethod | null));
+      setPayouts(resultValue(payoutsResult, [] as DriverPayout[]));
+
+      try {
+        setVehicleTiers(await resolveVehicleTiers(nextVehicles));
+      } catch {
+        setVehicleTiers({});
+      }
+
+      const failed = [vehiclesResult, assignmentsResult, availableResult, methodResult, payoutsResult].find(
+        (item) => item.status === "rejected",
+      );
+      if (failed?.status === "rejected") {
+        setLoadError(errorMessage(failed.reason));
+      }
     } catch (error) {
-      showError(error);
+      setLoadError(errorMessage(error));
     } finally {
+      setDataReady(true);
       setRefreshing(false);
       setLoading(false);
     }
@@ -236,6 +263,19 @@ export default function App() {
     return <AuthScreen busy={busy} setBusy={setBusy} />;
   }
 
+  if (!dataReady) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator />
+        <Text style={styles.muted}>Carregando seus dados...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!driver) {
+    return <DriverNotFoundScreen email={session.user.email ?? "conta atual"} onRefresh={refreshAll} onSignOut={handleSignOut} />;
+  }
+
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="dark" />
@@ -253,6 +293,12 @@ export default function App() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshAll} />}
       >
+        {loadError && (
+          <View style={styles.noticeWarning}>
+            <Text style={styles.noticeTitle}>Alguns dados nao carregaram</Text>
+            <Text style={styles.muted}>{loadError}</Text>
+          </View>
+        )}
         {tab === "home" && (
           <HomeScreen
             driver={driver}
@@ -320,6 +366,46 @@ export default function App() {
             <Text style={[styles.navText, tab === item.id && styles.navTextActive]}>{item.label}</Text>
           </Pressable>
         ))}
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function DriverNotFoundScreen({
+  email,
+  onRefresh,
+  onSignOut,
+}: {
+  email: string;
+  onRefresh: () => Promise<void>;
+  onSignOut: () => Promise<void>;
+}) {
+  return (
+    <SafeAreaView style={styles.screen}>
+      <StatusBar style="dark" />
+      <View style={styles.topbar}>
+        <View>
+          <Text style={styles.brand}>DRIVER ADS</Text>
+          <Text style={styles.topbarSubtitle}>Portal do motorista</Text>
+        </View>
+        <Pressable onPress={onSignOut} style={styles.logoutButton}>
+          <Text style={styles.link}>Sair</Text>
+        </Pressable>
+      </View>
+      <View style={styles.content}>
+        <View style={styles.card}>
+          <Text style={styles.subtitle}>Perfil de motorista nao encontrado</Text>
+          <Text style={styles.muted}>
+            Voce esta logado como {email}, mas o app nao encontrou um registro de motorista vinculado a esta conta.
+          </Text>
+          <Text style={styles.muted}>
+            Se voce acabou de trocar de conta no navegador, saia e entre novamente com o e-mail do motorista.
+          </Text>
+          <View style={styles.buttonRow}>
+            <PrimaryButton label="Tentar novamente" onPress={onRefresh} compact />
+            <SecondaryAction label="Sair" onPress={onSignOut} />
+          </View>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -1237,9 +1323,16 @@ async function getCurrentGeo() {
   }
 }
 
+function resultValue<T>(result: PromiseSettledResult<T>, fallback: T) {
+  return result.status === "fulfilled" ? result.value : fallback;
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Falha inesperada.";
+}
+
 function showError(error: unknown) {
-  const message = error instanceof Error ? error.message : "Falha inesperada.";
-  Alert.alert("Driver Ads", message);
+  Alert.alert("Driver Ads", errorMessage(error));
 }
 
 function firstName(name = "Motorista") {
