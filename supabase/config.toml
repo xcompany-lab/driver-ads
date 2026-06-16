@@ -15,6 +15,9 @@ verify_jwt = true
 [functions.pagou-billing-state]
 verify_jwt = true
 
+[functions.pagou-public-checkout]
+verify_jwt = false
+
 [functions.pagou-execute-payout]
 verify_jwt = true
 
@@ -26,5 +29,4 @@ verify_jwt = true
 
 [functions.public-signup]
 verify_jwt = false
-
 

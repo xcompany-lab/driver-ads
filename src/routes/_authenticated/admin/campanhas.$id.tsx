@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Check, X, Pause, Play, UserPlus, Trash2, Ban, QrCode } from "lucide-react";
+import { ArrowLeft, Check, X, Pause, Play, UserPlus, Trash2, Ban, QrCode, Copy, ExternalLink, LinkIcon } from "lucide-react";
 import {
   getCampaignAdmin,
   listAssignmentsForCampaign,
@@ -43,6 +43,7 @@ import {
 import { getCampaignPlanById, planVehicleTier } from "@/lib/campaign-plans";
 import { useVehicleCatalog } from "@/hooks/useVehicleCatalog";
 import { resolveVehicleTier } from "@/lib/vehicle-catalog";
+import { ensureCampaignCheckoutLink } from "@/lib/public-checkout";
 
 export const Route = createFileRoute("/_authenticated/admin/campanhas/$id")({
   component: CampaignDetailAdmin,
@@ -212,6 +213,8 @@ function CampaignDetailAdmin() {
         </CardContent>
       </Card>
 
+      <PublicCheckoutLinkCard campaignId={id} advertiserPhone={adv?.phone ?? ""} />
+
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
@@ -322,6 +325,72 @@ function Info({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-0.5">{value}</p>
     </div>
+  );
+}
+
+function PublicCheckoutLinkCard({ campaignId, advertiserPhone }: { campaignId: string; advertiserPhone: string }) {
+  const [url, setUrl] = useState("");
+
+  const generate = useMutation({
+    mutationFn: () => ensureCampaignCheckoutLink(campaignId),
+    onSuccess: (link) => {
+      const checkoutUrl = `${window.location.origin}/checkout/${link.token}`;
+      setUrl(checkoutUrl);
+      toast.success("Link de checkout gerado");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const copy = async () => {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado");
+    } catch {
+      toast.error("Nao foi possivel copiar o link");
+    }
+  };
+
+  const whatsappHref = url && advertiserPhone.replace(/\D/g, "").length >= 10
+    ? `https://wa.me/55${advertiserPhone.replace(/\D/g, "").replace(/^55/, "")}?text=${encodeURIComponent(
+        `Ola! Segue o link para pagamento da sua campanha Driver Ads: ${url}`,
+      )}`
+    : "";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="inline-flex items-center gap-2 text-base">
+          <LinkIcon className="h-4 w-4 text-primary" /> Checkout do anunciante
+        </CardTitle>
+        <CardDescription>
+          Gere um link publico para o cliente pagar sem precisar entrar no portal.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input readOnly value={url || "Gere o link para copiar ou enviar ao cliente"} className="font-mono text-xs" />
+          <Button onClick={() => generate.mutate()} disabled={generate.isPending}>
+            {generate.isPending ? "Gerando..." : url ? "Regerar" : "Gerar link"}
+          </Button>
+          <Button variant="outline" onClick={copy} disabled={!url}>
+            <Copy className="mr-1 h-4 w-4" /> Copiar
+          </Button>
+          {url && (
+            <Button variant="outline" asChild>
+              <a href={url} target="_blank" rel="noreferrer">
+                <ExternalLink className="mr-1 h-4 w-4" /> Abrir
+              </a>
+            </Button>
+          )}
+        </div>
+        {whatsappHref && (
+          <Button variant="secondary" asChild>
+            <a href={whatsappHref} target="_blank" rel="noreferrer">Enviar pelo WhatsApp</a>
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

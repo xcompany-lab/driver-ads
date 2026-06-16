@@ -16,6 +16,7 @@ import { Route as AnunciantesRouteImport } from './routes/anunciantes'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QCodeRouteImport } from './routes/q.$code'
+import { Route as CheckoutTokenRouteImport } from './routes/checkout.$token'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as AuthMotoristaRouteImport } from './routes/auth/motorista'
 import { Route as AuthConfirmRouteImport } from './routes/auth/confirm'
@@ -87,6 +88,11 @@ const IndexRoute = IndexRouteImport.update({
 const QCodeRoute = QCodeRouteImport.update({
   id: '/q/$code',
   path: '/q/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutTokenRoute = CheckoutTokenRouteImport.update({
+  id: '/checkout/$token',
+  path: '/checkout/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/checkout/$token': typeof CheckoutTokenRoute
   '/q/$code': typeof QCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
@@ -368,6 +375,7 @@ export interface FileRoutesByTo {
   '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/checkout/$token': typeof CheckoutTokenRoute
   '/q/$code': typeof QCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
@@ -416,6 +424,7 @@ export interface FileRoutesById {
   '/auth/confirm': typeof AuthConfirmRoute
   '/auth/motorista': typeof AuthMotoristaRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/checkout/$token': typeof CheckoutTokenRoute
   '/q/$code': typeof QCodeRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/anunciantes': typeof AuthenticatedAdminAnunciantesRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
+    | '/checkout/$token'
     | '/q/$code'
     | '/admin/analytics'
     | '/admin/anunciantes'
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
+    | '/checkout/$token'
     | '/q/$code'
     | '/admin/analytics'
     | '/admin/anunciantes'
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/auth/confirm'
     | '/auth/motorista'
     | '/auth/reset-password'
+    | '/checkout/$token'
     | '/q/$code'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/anunciantes'
@@ -598,6 +610,7 @@ export interface RootRouteChildren {
   AuthConfirmRoute: typeof AuthConfirmRoute
   AuthMotoristaRoute: typeof AuthMotoristaRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  CheckoutTokenRoute: typeof CheckoutTokenRoute
   QCodeRoute: typeof QCodeRoute
   ApiPublicAuthEmailHookRoute: typeof ApiPublicAuthEmailHookRoute
   ApiPublicPasswordRecoveryRoute: typeof ApiPublicPasswordRecoveryRoute
@@ -653,6 +666,13 @@ declare module '@tanstack/react-router' {
       path: '/q/$code'
       fullPath: '/q/$code'
       preLoaderRoute: typeof QCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/$token': {
+      id: '/checkout/$token'
+      path: '/checkout/$token'
+      fullPath: '/checkout/$token'
+      preLoaderRoute: typeof CheckoutTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/reset-password': {
@@ -1050,6 +1070,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthConfirmRoute: AuthConfirmRoute,
   AuthMotoristaRoute: AuthMotoristaRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
+  CheckoutTokenRoute: CheckoutTokenRoute,
   QCodeRoute: QCodeRoute,
   ApiPublicAuthEmailHookRoute: ApiPublicAuthEmailHookRoute,
   ApiPublicPasswordRecoveryRoute: ApiPublicPasswordRecoveryRoute,

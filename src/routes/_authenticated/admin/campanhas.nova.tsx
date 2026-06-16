@@ -8,6 +8,7 @@ import { listAdvertisers } from "@/lib/admin";
 import { createCampaignAdmin } from "@/lib/campaigns-admin";
 import { uploadCampaignArt, updateMyCampaign } from "@/lib/campaigns";
 import { formatPlanPrice, listActiveCampaignPlans } from "@/lib/campaign-plans";
+import { listCatalogByTier, vehicleImageUrl } from "@/lib/vehicle-catalog";
 import { upsertCampaignQrCode, type QrDestinationType } from "@/lib/trackable-qr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/_authenticated/admin/campanhas/nova")({
   component: NewAdminCampaignPage,
 });
+
+const MAX_VEHICLES = 40;
+
+const brl = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 interface FormState {
   advertiser_id: string;
@@ -89,6 +95,8 @@ function NewAdminCampaignPage() {
     () => plans.find((plan) => plan.id === form.plan_id) ?? null,
     [form.plan_id, plans],
   );
+  const vehiclesQty = Math.min(Math.max(Number(form.vehicles_qty || 1), 1), MAX_VEHICLES);
+  const totalMonthlyCents = selectedPlan ? selectedPlan.monthly_price_cents * vehiclesQty : 0;
 
   const create = useMutation({
     mutationFn: async () => {
@@ -106,11 +114,11 @@ function NewAdminCampaignPage() {
         description: form.description.trim() || null,
         city: form.city.trim(),
         regions,
-        vehicles_qty: Number(form.vehicles_qty || 1),
+        vehicles_qty: vehiclesQty,
         period_start: form.period_start,
         period_end: form.period_end,
         plan_id: selectedPlan.id,
-        plan_value: selectedPlan.monthly_price_cents / 100,
+        plan_value: totalMonthlyCents / 100,
         observations: form.observations.trim() || null,
         status: "pending_review",
       });
@@ -149,7 +157,7 @@ function NewAdminCampaignPage() {
     form.city.trim().length > 1 &&
     form.period_start &&
     form.period_end &&
-    Number(form.vehicles_qty) > 0 &&
+    vehiclesQty > 0 &&
     !!selectedPlan &&
     new Date(form.period_end) >= new Date(form.period_start) &&
     (form.qr_destination_type === "whatsapp"
@@ -272,10 +280,12 @@ function NewAdminCampaignPage() {
                 id="vehicles_qty"
                 type="number"
                 min={1}
+                max={MAX_VEHICLES}
                 step={1}
                 value={form.vehicles_qty}
                 onChange={(event) => setForm({ ...form, vehicles_qty: event.target.value })}
               />
+              <p className="text-xs text-muted-foreground">Maximo de {MAX_VEHICLES} veiculos por campanha.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="period_start">Inicio *</Label>
@@ -337,7 +347,7 @@ function NewAdminCampaignPage() {
                       </div>
                       <div className="mt-4 flex items-end justify-between gap-3">
                         <p className="font-display text-2xl font-bold">{formatPlanPrice(plan)}</p>
-                        <p className="text-xs text-muted-foreground">/ mes</p>
+                        <p className="text-xs text-muted-foreground">/ veiculo · mes</p>
                       </div>
                       {plan.driver_payout_cents > 0 && (
                         <p className="mt-2 text-xs text-muted-foreground">
@@ -352,6 +362,24 @@ function NewAdminCampaignPage() {
                   );
                 })}
               </div>
+            )}
+            {selectedPlan && (
+              <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium">Total mensal da campanha</p>
+                    <p className="text-xs text-muted-foreground">
+                      {vehiclesQty} veiculo{vehiclesQty > 1 ? "s" : ""} x {brl(selectedPlan.monthly_price_cents)}
+                    </p>
+                  </div>
+                  <p className="font-display text-2xl font-bold">{brl(totalMonthlyCents)}</p>
+                </div>
+              </div>
+            )}
+            {selectedPlan && (
+              <PlanVehiclePreview
+                tier={(selectedPlan.metadata as { vehicle_tier?: string } | null)?.vehicle_tier ?? "standard"}
+              />
             )}
           </div>
 
@@ -439,6 +467,49 @@ function NewAdminCampaignPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function PlanVehiclePreview({ tier }: { tier: string }) {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["vehicle-catalog-tier", tier],
+    queryFn: () => listCatalogByTier(tier, 6),
+  });
+
+  if (isLoading) {
+    return <div className="rounded-lg border p-4 text-sm text-muted-foreground">Carregando previa dos veiculos...</div>;
+  }
+
+  if (!items.length) return null;
+
+  return (
+    <div className="rounded-lg border bg-background p-4">
+      <div className="mb-3">
+        <p className="text-sm font-semibold">Carros da categoria {tier === "black" ? "Black" : "Standard"}</p>
+        <p className="text-xs text-muted-foreground">Previa dos modelos usados nessa categoria de plano.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {items.map((item) => {
+          const src = vehicleImageUrl(item.image_path);
+          return (
+            <div key={item.id} className="rounded-lg border bg-muted/20 p-3">
+              {src && (
+                <img
+                  src={src}
+                  alt={`${item.display_brand ?? ""} ${item.display_model}`}
+                  className="h-24 w-full rounded-md object-contain"
+                  loading="lazy"
+                />
+              )}
+              <p className="mt-2 truncate text-sm font-medium">
+                {item.display_brand ? `${item.display_brand} ` : ""}
+                {item.display_model}
+              </p>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
