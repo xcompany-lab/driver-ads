@@ -31,7 +31,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   const unique = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`;
   const path = `${userId}/avatar-${unique}.${ext(file)}`;
   const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, file, {
-    upsert: true,
+    upsert: false,
     contentType: file.type || undefined,
   });
   if (error) throw error;
@@ -43,6 +43,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
 export async function updateMyAvatar(userId: string, avatarUrl: string) {
   const { error } = await supabase
     .from("profiles")
-    .upsert({ id: userId, avatar_url: avatarUrl }, { onConflict: "id" });
+    .update({ avatar_url: avatarUrl })
+    .eq("id", userId);
   if (error) throw error;
 }
